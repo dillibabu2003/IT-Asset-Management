@@ -47,7 +47,7 @@ const mockFormFields = [
   },
 ];
 
-export default function CreateAssetForm({ open, onClose }) {
+export default function CustomForm({ open, onClose, currentSection }) {
   const [fields, setFields] = useState([]);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -90,19 +90,13 @@ export default function CreateAssetForm({ open, onClose }) {
     <Dialog 
       open={open} 
       onClose={onClose}
-      sx={
-        {
-
-          maxWidth:"sm"
-        }
-      }
       fullWidth
       TransitionProps={{
         enter: true,
         exit: true,
       }}
     >
-      <DialogTitle>Create New Asset</DialogTitle>
+      <DialogTitle>Create New {`${currentSection}`}</DialogTitle>
       <DialogContent>
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
