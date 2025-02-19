@@ -27,7 +27,7 @@ import {
 } from '@mui/material';
 import { Edit, Trash2, Search, Plus, FileSpreadsheet, FileText, Download, Settings } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import CreateAssetForm from './CreateAssetForm';
+import CustomForm from './CustomForm';
 
 const mockAssets = [
   {
@@ -51,15 +51,15 @@ const mockAssets = [
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
 });
-
-export default function AssetList() {
+//fields, documents should be passed
+export default function CustomTable({currentSection,fields,documents}) {
   const [columns, setColumns] = useState([
     { id: 'id', label: 'Asset ID', visible: true, sortable: true },
     { id: 'name', label: 'Name/Description', visible: true, sortable: true },
     { id: 'category', label: 'Category', visible: true, sortable: true },
     { id: 'status', label: 'Status', visible: true, sortable: true },
     { id: 'dueDate', label: 'Due Date', visible: true, sortable: true },
-  ]);
+  ]); //pass the fields as initial state
 
   const [orderBy, setOrderBy] = useState('id');
   const [order, setOrder] = useState('asc');
@@ -105,16 +105,16 @@ export default function AssetList() {
 
   return (
     <Paper sx={{ p: 3 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2, flexWrap: "wrap", gap: "10px" }}>
         <TextField
-          placeholder="Search assets..."
+          placeholder={`Search ${currentSection}...`}
           size="small"
           InputProps={{
             startAdornment: <Search size={20} style={{ marginRight: 8 }} />,
           }}
-          sx={{ width: 300 }}
+          sx={{ width: 300, flexGrow: 1 }}
         />
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: "wrap" }}>
           <Button
             variant="outlined"
             startIcon={<Settings size={20} />}
@@ -135,7 +135,7 @@ export default function AssetList() {
             startIcon={<Plus size={20} />}
             onClick={() => setShowCreateAssetForm(true)}
           >
-            Create New Asset
+            Create New {`${currentSection}`}
           </Button>
           <Button
             variant="outlined"
@@ -153,19 +153,30 @@ export default function AssetList() {
         open={Boolean(columnsMenuAnchor)}
         onClose={() => setColumnsMenuAnchor(null)}
       >
+        <React.Fragment>
         {columns.map((column) => (
           <MenuItem key={column.id} onClick={() => handleColumnToggle(column.id)}>
             <FormControlLabel
-              control={
-                <Checkbox
-                  checked={column.visible}
-                  onChange={() => handleColumnToggle(column.id)}
-                />
-              }
-              label={column.label}
+            
+            control={
+              <Checkbox
+              checked={column.visible}
+              onChange={() => handleColumnToggle(column.id)}
+              />
+            }
+            label={column.label}
             />
           </MenuItem>
         ))}
+        <Button
+              variant="contained"
+              color="primary"
+              sx={{m:1, mx:2}}
+              onClick={() => setColumnsMenuAnchor(null)}
+            >
+              Apply Changes
+            </Button>
+        </React.Fragment>
       </Menu>
 
       <Popover
@@ -199,20 +210,20 @@ export default function AssetList() {
         </Box>
       </Popover>
 
-      <Dialog
+      {/* <Dialog
         open={showCreateAssetForm}
         keepMounted
         onClose={() => setShowCreateAssetForm(false)}
         aria-describedby="create-asset-form"
-      >
-        <DialogTitle>Create New Asset</DialogTitle>
-        <DialogContent>
-          <CreateAssetForm open={showCreateAssetForm} onClose={() => setShowCreateAssetForm(false)} />
-        </DialogContent>
-        <DialogActions>
+      > */}
+        {/* <DialogTitle>Create New Asset</DialogTitle> */}
+          <CustomForm currentSection={currentSection} open={showCreateAssetForm} onClose={() => setShowCreateAssetForm(false)} aria-describedby="create-asset-form"/>
+        {/* <DialogContent>
+        </DialogContent> */}
+        {/* <DialogActions>
           <Button onClick={() => setShowCreateAssetForm(false)}>Close</Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
       <TableContainer>
         <Table>
