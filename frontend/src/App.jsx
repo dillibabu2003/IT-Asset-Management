@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material';
-import Dashboard from './components/Dashboard';
-import AssetList from './components/AssetList';
-
 import "./App.css";
 import { MainLayout } from './layouts/MainLayout';
-import { Routes, Route, Link, Outlet } from 'react-router';
+import { Routes, Route, Link } from 'react-router';
+import CustomTable from './components/CustomTable';
+import CustomDashboard from './components/CustomDashboard';
 
 export const LinkBehavior = React.forwardRef((props, ref) => {
   const { href, ...other } = props;
@@ -46,28 +45,20 @@ function App() {
         //Login Page Here
         <Route path="/login" element={"Login here"} />
 
-        //Protected Route
-        {/* <Route path="/" element={<MainLayout />}>
-        <Route path='/dashboard'>
-                  <Route index element={<Dashboard/>}/>
-                  <Route path='/asset' element={<AssetList/>}/>
-        </Route>
-        </Route> */}
 
+        //Protected Routes to be configured.
         <Route element={<MainLayout />}>
         //dashboard routes
           <Route path="/dashboard">
-            <Route index element={<Dashboard />} />
-            <Route path=":dashboardId" element={<Dashboard />} />
+            <Route index element={<CustomDashboard />} />
+            <Route path=":dashboardId" element={<CustomDashboard />} />
           </Route>
-
         //asset routes
           <Route path="/assets">
-            <Route index element={<AssetList/>}/>
+            <Route index element={<CustomTable />} />
           </Route>
-
-          
         </Route>
+
       </Routes>
     </MuiThemeProvider>
   );
