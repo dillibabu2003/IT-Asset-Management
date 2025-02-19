@@ -32,7 +32,8 @@ function AssetStatus() {
           hover: {
             brightness: 0.1
           }
-        }
+        },
+        showInLegend: true
       }
     },
     tooltip: {

@@ -11,13 +11,13 @@ const recentAssets = [
 const getStatusColor = (status) => {
   switch (status) {
     case 'Available':
-      return 'success';
+      return ['#F0FDF4','#15803D'];
     case 'Checked Out':
-      return 'warning';
+      return ['#FEFCE8',"#AD7523"];
     case 'Maintenance':
-      return 'error';
+      return ['#FEF2F2','#BD2929'];
     default:
-      return 'default';
+      return ['#ffffff','#6B7280'];
   }
 };
 
@@ -33,20 +33,21 @@ function RecentAssets() {
         </TableRow>
       </TableHead>
       <TableBody>
-        {recentAssets.map((asset) => (
-          <TableRow key={asset.name}>
+        {recentAssets.map((asset) => {
+          const color= getStatusColor(asset.status);
+          return (<TableRow key={asset.name}>
             <TableCell>{asset.name}</TableCell>
             <TableCell>
               <Chip 
                 label={asset.status} 
-                color={getStatusColor(asset.status)}
+                style={{ background:`${color[0]}`, color:`${color[1]}`} }
                 size="small"
               />
             </TableCell>
             <TableCell>{asset.category}</TableCell>
             <TableCell>{asset.lastUpdated}</TableCell>
-          </TableRow>
-        ))}
+          </TableRow>)
+})}
       </TableBody>
     </Table>
   );

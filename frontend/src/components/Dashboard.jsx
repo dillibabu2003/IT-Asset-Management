@@ -9,6 +9,8 @@ import DashboardNav from './DashboardNav';
 function Dashboard() {
   const [activeTab, setActiveTab] = useState(0);
 
+  // tiles  --> stats
+
   const stats = [
     { title: 'Total Assets', value: '2,547', icon: <BoxIcon />, color: '#1976d2' },
     { title: 'Active Licenses', value: '1,345', icon: <Key />, color: '#2e7d32' },
@@ -41,7 +43,6 @@ function Dashboard() {
                 <StatCard {...stat} />
               </Grid>
             ))}
-            
             <Grid item xs={12} md={8}>
               <Paper sx={{ p: 3 }}>
                 <Typography variant="h6" gutterBottom>Recent Assets</Typography>
