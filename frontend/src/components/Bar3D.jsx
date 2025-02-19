@@ -42,7 +42,6 @@ const Bar3D = () => {
         showInLegend:false
     },
     series:[{
-        // name:undefined,
         data:data,
         colorByPoint:true,
         showInLegend:false

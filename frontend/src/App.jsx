@@ -5,45 +5,16 @@ import { MainLayout } from './layouts/MainLayout';
 import { Routes, Route, Link } from 'react-router';
 import CustomTable from './components/CustomTable';
 import CustomDashboard from './components/CustomDashboard';
-
-export const LinkBehavior = React.forwardRef((props, ref) => {
-  const { href, ...other } = props;
-  return <RouterLink ref={ref} to={href} {...other} />;
-});
+import LandingPage from './components/Landing';
+import SignIn from './components/SignIn';
 
 function App() {
-  const theme = createTheme({
-    components: {
-      MuiLink: {
-        defaultProps: {
-          component: LinkBehavior,
-        },
-      },
-      MuiButtonBase: {
-        defaultProps: {
-          LinkComponent: LinkBehavior,
-        },
-      },
-      MuiListItemButton: {
-        defaultProps: {
-          LinkComponent: LinkBehavior,
-        },
-      },
-      MuiIconButton: {
-        defaultProps: {
-          LinkComponent: LinkBehavior,
-        },
-      },
-    },
-  });
-
   return (
-    <MuiThemeProvider theme={theme}>
       <Routes>
         //Home Page Here
-        <Route index element={<Link to='/dashboard'>Go to dashboard</Link>} />
+        <Route index element={<LandingPage/>} />
         //Login Page Here
-        <Route path="/login" element={"Login here"} />
+        <Route path="/login" element={<SignIn/>} />
 
 
         //Protected Routes to be configured.
@@ -60,7 +31,6 @@ function App() {
         </Route>
 
       </Routes>
-    </MuiThemeProvider>
   );
 }
 
