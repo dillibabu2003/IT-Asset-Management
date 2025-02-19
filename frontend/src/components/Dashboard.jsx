@@ -6,6 +6,7 @@ import RecentAssets from './RecentAssets';
 import AssetStatus from './AssetStatus';
 import DashboardNav from './DashboardNav';
 import Pie3D from './Pie3D';
+import Bar3D from './Bar3D';
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState(0);
@@ -56,6 +57,7 @@ function Dashboard() {
                 <Typography variant="h6" gutterBottom>Asset Status</Typography>
                 {/* <AssetStatus /> */}
                 <Pie3D/>
+                <Bar3D/>
               </Paper>
             </Grid>
           </Grid>

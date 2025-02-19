@@ -12,7 +12,7 @@ const data = [
   ];
 
 const Pie3D = () => {
-
+ 
     const options = {
         chart: {
             type: 'pie',
