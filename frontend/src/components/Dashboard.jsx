@@ -5,6 +5,7 @@ import StatCard from './StatCard';
 import RecentAssets from './RecentAssets';
 import AssetStatus from './AssetStatus';
 import DashboardNav from './DashboardNav';
+import Pie3D from './Pie3D';
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState(0);
@@ -53,7 +54,8 @@ function Dashboard() {
             <Grid item xs={12} md={4}>
               <Paper sx={{ p: 3 }}>
                 <Typography variant="h6" gutterBottom>Asset Status</Typography>
-                <AssetStatus />
+                {/* <AssetStatus /> */}
+                <Pie3D/>
               </Paper>
             </Grid>
           </Grid>

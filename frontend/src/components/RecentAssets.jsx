@@ -6,6 +6,8 @@ const recentAssets = [
   { name: 'iPhone 14 Pro', status: 'Checked Out', category: 'Phones', lastUpdated: '5 hours ago' },
   { name: 'Dell XPS 15', status: 'Maintenance', category: 'Laptops', lastUpdated: '1 day ago' },
   { name: 'iPad Pro 12.9"', status: 'Available', category: 'Tablets', lastUpdated: '2 days ago' },
+  { name: 'iPad Pro 12.9"', status: 'Available', category: 'Tablets', lastUpdated: '2 days ago' },
+  { name: 'iPad Pro 12.9"', status: 'Available', category: 'Tablets', lastUpdated: '2 days ago' },
 ];
 
 const getStatusColor = (status) => {
