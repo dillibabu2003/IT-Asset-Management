@@ -1,15 +1,8 @@
 import React, { useEffect } from 'react';
 import { Drawer, List, ListItem, ListItemIcon, ListItemText, Collapse } from '@mui/material';
-import {
-  LayoutDashboard,
-  Box as BoxIcon,
-  Key,
-  ClipboardList,
-  Receipt,
-  ChevronDown,
-  ChevronRight
-} from 'lucide-react';
+
 import { Link, useLocation } from "react-router";
+import Icon from './Icon';
 
 
 const drawerWidth = 250;
@@ -41,7 +34,7 @@ function SubItem({item,openItems}) {
             selected={location==`/${item.id}/${subItem.id}`}
             >
             <ListItemIcon sx={{ minWidth: 40 }}>
-              {subItem.icon}
+              <Icon name={subItem.icon}/>
             </ListItemIcon>
             <ListItemText primary={subItem.text} />
           </ListItem>
@@ -52,14 +45,15 @@ function SubItem({item,openItems}) {
   )
 }
 
-function Sidebar(component) {
+function Sidebar() {
   const location = useLocation();
   const [openItems, setOpenItems] = React.useState({
     Dashboard: false
   });
 
-  //listen to location change and update the links
   useEffect(()=>{
+    console.log("rerendering sidebar");
+    
   },[location.pathname]);
 
 
@@ -84,23 +78,23 @@ function Sidebar(component) {
   const menuItems = [
     {
       text: 'Dashboard',
-      icon: <LayoutDashboard />,
+      icon: "layout-dashboard",
       id: 'dashboard',
       subItems: [
-        { text: 'Assets Dashboard', id:"assets", icon: <BoxIcon /> },
-        { text: 'Licenses Dashboard', id:"licenses", icon: <Key /> },
-        { text: 'Invoices Dashboard', id:"invoices", icon: <Receipt /> },
-        { text: 'Configure Dashboard', id:"configure", icon: <Receipt /> }
+        { text: 'Assets Dashboard', id:"assets", icon: "box" },
+        { text: 'Licenses Dashboard', id:"licenses", icon: "key" },
+        { text: 'Invoices Dashboard', id:"invoices", icon: "receipt" },
+        { text: 'Configure Dashboard', id:"configure", icon: "receipt" }
       ]
     },
     {
       text: 'Assets',
-      icon: <BoxIcon />,
+      icon: "box",
       id: 'assets',
     },
-    { text: 'Licenses', icon: <Key />, id: 'licenses' },
-    { text: 'Checkouts', icon: <ClipboardList />, id: 'checkouts' },
-    { text: 'Invoices', icon: <Receipt />, id: 'invoices' },
+    { text: 'Licenses', icon: "key", id: 'licenses' },
+    { text: 'Checkouts', icon: "clipboard-list", id: 'checkouts' },
+    { text: 'Invoices', icon: "receipt", id: 'invoices' },
   ];
 
   return (
@@ -143,11 +137,11 @@ function Sidebar(component) {
               selected={location.pathname.startsWith("/" + item.id)}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>
-                {item.icon}
+                <Icon name={item.icon}/>
               </ListItemIcon>
               <ListItemText primary={item.text} />
               {item.subItems && (
-                openItems[item.text] ? <ChevronDown size={18} /> : <ChevronRight size={18} />
+                openItems[item.text] ? <Icon name="chevron-down" size={18} /> : <Icon name="chevron-right" size={18} />
               )}
             </ListItem>
             </Link>

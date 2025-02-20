@@ -1,9 +1,11 @@
 import React from 'react';
 import { Paper, Box, Typography } from '@mui/material';
+import Icon from './Icon';
+import { BOX_SHADOW } from '../utils/constants';
 
-function StatCard({ title, value, icon, color }) {
+function StatCard({ name, value, icon, color }) {
   return (
-    <Paper sx={{ p: 3 }}>
+    <Paper sx={{ p: 3, boxShadow: BOX_SHADOW }} >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Box sx={{ 
           backgroundColor: `${color}15`,
@@ -15,12 +17,13 @@ function StatCard({ title, value, icon, color }) {
             width: 24,
             height: 24
           }
-        }}>
-          {icon}
+        }}
+        >
+          <Icon name={icon} />
         </Box>
         <Box>
           <Typography color="text.secondary" variant="body2">
-            {title}
+            {name}
           </Typography>
           <Typography variant="h5" component="div">
             {value}

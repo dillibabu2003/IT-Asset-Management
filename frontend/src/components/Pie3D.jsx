@@ -11,7 +11,7 @@ const data = [
     { name: 'Other', y: 265, color: '#757575' },
   ];
 
-const Pie3D = () => {
+const Pie3D = ({data}) => {
  
     const options = {
         chart: {
