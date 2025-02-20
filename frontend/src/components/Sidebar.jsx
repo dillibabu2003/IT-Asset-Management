@@ -55,7 +55,7 @@ function SubItem({item,openItems}) {
 function Sidebar(component) {
   const location = useLocation();
   const [openItems, setOpenItems] = React.useState({
-    Dashboard: false
+    Dashboard: true
   });
 
   //listen to location change and update the links

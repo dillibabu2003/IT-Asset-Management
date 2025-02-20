@@ -1,18 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import { Box as BoxIcon, Key, Plug2, Package } from 'lucide-react';
 import StatCard from './StatCard';
 import RecentAssets from './RecentAssets';
-import Pie3D from './Pie3D';
-import Bar3D from './Bar3D';
-
-
+import axiosInstance from "../utils/axios";
+import CustomVisualRender from "./CustomVisualRender";
 
 import { useParams } from 'react-router';
 
 function CustomDashboard() {
+  const [data,setData]=useState(null);
   const currentDashboardId = useParams().dashboardId || "main";
   console.log(currentDashboardId);
+
+  useEffect(()=>{
+    console.log("Fetching the data of "+currentDashboardId);
+    async function fetchData(id) {
+      try {
+        const response = await axiosInstance.get(`/${id}`);
+        let currData=response.data;
+        setData(currData);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchData(currentDashboardId);
+  },[currentDashboardId]);
   
   const stats = [
     { title: 'Total Assets', value: '2,547', icon: <BoxIcon />, color: '#1976d2' },
@@ -22,30 +35,35 @@ function CustomDashboard() {
   ];
 
   return (
+    !data ? <p>Fetching data...</p>:
     <Box>
       <p>{currentDashboardId}</p>
       <Grid container spacing={3}>
-            {stats.map((stat) => (
-              <Grid item xs={12} sm={6} md={3} key={stat.title}>
+            {data?.tiles.map((stat,index) => (
+              <Grid item xs={12} sm={6} md={3} key={stat.name}>
                 <StatCard {...stat} />
               </Grid>
             ))}
-            <Grid item xs={12} md={8}>
+        </Grid>
+            {/* <Grid item xs={12} md={8}>
               <Paper sx={{ p: 3 }}>
                 <Typography variant="h6" gutterBottom>Recent Assets</Typography>
                 <RecentAssets />
               </Paper>
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
+            </Grid> */}
+            <Grid container mt={3} spacing={3}>
+                {
+                  data?.elements.map((element,index)=>{
+                return (
+            <Grid item key={index} xs={12} md={element.type=="table"?8:4}>
               <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>Asset Status</Typography>
-                {/* <AssetStatus /> */}
-                <Pie3D/>
-                <Bar3D/>
+                <Typography variant="h6" gutterBottom>{element.name}</Typography>
+                    <CustomVisualRender element={element}/>
               </Paper>
-            </Grid>
-          </Grid>
+            </Grid>)
+                  })
+                }
+                </Grid>
     </Box>
   );
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Paper, Box, Typography } from '@mui/material';
 
-function StatCard({ title, value, icon, color }) {
+function StatCard({ name, value, icon, color }) {
   return (
     <Paper sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -11,16 +11,16 @@ function StatCard({ title, value, icon, color }) {
           p: 1,
           display: 'flex',
           '& > svg': { 
-            color: color,
+            color: color || "#1976d2",
             width: 24,
             height: 24
           }
         }}>
-          {icon}
+          {icon || "No icon"}
         </Box>
         <Box>
           <Typography color="text.secondary" variant="body2">
-            {title}
+            {name}
           </Typography>
           <Typography variant="h5" component="div">
             {value}
