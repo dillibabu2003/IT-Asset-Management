@@ -1,5 +1,6 @@
 import React from 'react';
 import { Paper, Box, Typography } from '@mui/material';
+import Icon from './Icon';
 
 function StatCard({ name, value, icon, color }) {
   return (
@@ -16,7 +17,7 @@ function StatCard({ name, value, icon, color }) {
             height: 24
           }
         }}>
-          {icon || "No icon"}
+          <Icon name={icon}/>
         </Box>
         <Box>
           <Typography color="text.secondary" variant="body2">

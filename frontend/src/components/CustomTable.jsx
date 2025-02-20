@@ -25,9 +25,9 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import { Edit, Trash2, Search, Plus, FileSpreadsheet, FileText, Download, Settings } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import CustomForm from './CustomForm';
+import Icon from './Icon';
 
 const mockAssets = [
   {
@@ -110,21 +110,21 @@ export default function CustomTable({currentSection,fields,documents}) {
           placeholder={`Search ${currentSection}...`}
           size="small"
           InputProps={{
-            startAdornment: <Search size={20} style={{ marginRight: 8 }} />,
+            startAdornment: <Icon name="search" size={20} style={{ marginRight: 8 }} />,
           }}
           sx={{ width: 300, flexGrow: 1 }}
         />
         <div style={{ display: 'flex', gap: '8px', flexWrap: "wrap" }}>
           <Button
             variant="outlined"
-            startIcon={<Settings size={20} />}
+            startIcon={<Icon name="settings" size={20} />}
             onClick={(e) => setColumnsMenuAnchor(e.currentTarget)}
           >
             Columns
           </Button>
           <Button
             variant="outlined"
-            startIcon={<Download size={20} />}
+            startIcon={<Icon name="download" size={20} />}
             onClick={exportToExcel}
           >
             Export to Excel
@@ -132,7 +132,7 @@ export default function CustomTable({currentSection,fields,documents}) {
           <Button
             variant="contained"
             color="primary"
-            startIcon={<Plus size={20} />}
+            startIcon={<Icon name="plus" size={20} />}
             onClick={() => setShowCreateAssetForm(true)}
           >
             Create New {`${currentSection}`}
@@ -140,7 +140,7 @@ export default function CustomTable({currentSection,fields,documents}) {
           <Button
             variant="outlined"
             color="primary"
-            startIcon={<Plus size={20} />}
+            startIcon={<Icon name="plus" size={20} />}
             onClick={(e) => setImportMenuAnchor(e.currentTarget)}
           >
             Bulk Import
@@ -195,14 +195,14 @@ export default function CustomTable({currentSection,fields,documents}) {
         <Box sx={{ p: 1 }}>
           <Button
             fullWidth
-            startIcon={<FileSpreadsheet size={20} />}
+            startIcon={<Icon name="file-spreadsheet" size={20} />}
             sx={{ mb: 1, justifyContent: 'flex-start' }}
           >
             Import From Excel
           </Button>
           <Button
             fullWidth
-            startIcon={<FileText size={20} />}
+            startIcon={<Icon name="file-text" size={20} />}
             sx={{ justifyContent: 'flex-start' }}
           >
             Import From Invoice
@@ -270,10 +270,10 @@ export default function CustomTable({currentSection,fields,documents}) {
                 ))}
                 <TableCell>
                   <IconButton size="small" color="primary">
-                    <Edit size={20} />
+                    <Icon name="edit" size={20} />
                   </IconButton>
                   <IconButton size="small" color="error">
-                    <Trash2 size={20} />
+                    <Icon name="trash-2" size={20} />
                   </IconButton>
                 </TableCell>
               </TableRow>

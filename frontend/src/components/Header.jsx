@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppBar, Avatar, Box, IconButton, InputBase, Toolbar, Typography, alpha } from '@mui/material';
-import { Search, Bell } from 'lucide-react';
+import Icon from './Icon';
 
 function Header() {
   return (
@@ -26,7 +26,7 @@ function Header() {
               display: 'flex',
               alignItems: 'center',
             }}>
-              <Search size={20} color="#666" />
+              <Icon name="search" size={20} color="#666" />
             </Box>
             <InputBase
               placeholder="Search..."
@@ -42,7 +42,7 @@ function Header() {
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <IconButton size="large" color="inherit">
-              <Bell size={20} />
+              <Icon name="bell" size={20} />
             </IconButton>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box sx={{ textAlign: 'right' }}>

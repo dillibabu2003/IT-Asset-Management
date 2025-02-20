@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
-import { Box as BoxIcon, Key, Plug2, Package } from 'lucide-react';
 import StatCard from './StatCard';
-import RecentAssets from './RecentAssets';
 import axiosInstance from "../utils/axios";
 import CustomVisualRender from "./CustomVisualRender";
 
@@ -27,12 +25,12 @@ function CustomDashboard() {
     fetchData(currentDashboardId);
   },[currentDashboardId]);
   
-  const stats = [
-    { title: 'Total Assets', value: '2,547', icon: <BoxIcon />, color: '#1976d2' },
-    { title: 'Active Licenses', value: '1,345', icon: <Key />, color: '#2e7d32' },
-    { title: 'Accessories', value: '856', icon: <Plug2 />, color: '#9c27b0' },
-    { title: 'Consumables', value: '432', icon: <Package />, color: '#ed6c02' },
-  ];
+  // const stats = [
+  //   { title: 'Total Assets', value: '2,547', icon: <BoxIcon />, color: '#1976d2' },
+  //   { title: 'Active Licenses', value: '1,345', icon: <Key />, color: '#2e7d32' },
+  //   { title: 'Accessories', value: '856', icon: <Plug2 />, color: '#9c27b0' },
+  //   { title: 'Consumables', value: '432', icon: <Package />, color: '#ed6c02' },
+  // ];
 
   return (
     !data ? <p>Fetching data...</p>:

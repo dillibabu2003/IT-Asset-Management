@@ -17,7 +17,7 @@ import {
   Stack,
   InputAdornment
 } from '@mui/material';
-import { Upload, Search, Download, Eye, MoreVertical, Filter } from 'lucide-react';
+import Icon from './Icon';
 
 const invoices = [
   { id: '#INV-2025001', vendor: 'Apple Inc.', date: 'Jan 15, 2025', amount: 1299.00, status: 'Processed' },
@@ -58,7 +58,7 @@ function InvoiceSection() {
         <Typography variant="h5" fontWeight="500">Invoices</Typography>
         <Button 
           variant="contained" 
-          startIcon={<Upload size={18} />}
+          startIcon={<Icon name="upload" size={18} />}
           sx={{ textTransform: 'none' }}
         >
           Upload Invoice
@@ -80,7 +80,7 @@ function InvoiceSection() {
         onDrop={handleDrag}
       >
         <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Upload size={48} color="#666" />
+          <Icon name="upload" size={48} color="#666" />
           <Typography variant="h6" sx={{ mt: 2 }}>
             Drag and drop your invoice here
           </Typography>
@@ -105,7 +105,7 @@ function InvoiceSection() {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Search size={20} />
+                  <Icon name="search" size={20} />
                 </InputAdornment>
               ),
             }}
@@ -113,14 +113,14 @@ function InvoiceSection() {
           <Box sx={{ flexGrow: 1 }} />
           <Button
             variant="outlined"
-            startIcon={<Filter size={18} />}
+            startIcon={<Icon name="filter" size={18} />}
             sx={{ textTransform: 'none' }}
           >
             Filter
           </Button>
           <Button
             variant="outlined"
-            startIcon={<Download size={18} />}
+            startIcon={<Icon name="download" size={18} />}
             sx={{ textTransform: 'none' }}
           >
             Export
@@ -156,13 +156,13 @@ function InvoiceSection() {
                   <TableCell align="right">
                     <Stack direction="row" spacing={1} justifyContent="flex-end">
                       <IconButton size="small">
-                        <Eye size={18} />
+                        <Icon name="eye" size={18} />
                       </IconButton>
                       <IconButton size="small">
-                        <Download size={18} />
+                        <Icon name="download" size={18} />
                       </IconButton>
                       <IconButton size="small">
-                        <MoreVertical size={18} />
+                        <Icon name="more-vertical" size={18} />
                       </IconButton>
                     </Stack>
                   </TableCell>

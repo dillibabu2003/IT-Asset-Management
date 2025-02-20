@@ -1,15 +1,7 @@
 import React, { useEffect } from 'react';
 import { Drawer, List, ListItem, ListItemIcon, ListItemText, Collapse } from '@mui/material';
-import {
-  LayoutDashboard,
-  Box as BoxIcon,
-  Key,
-  ClipboardList,
-  Receipt,
-  ChevronDown,
-  ChevronRight
-} from 'lucide-react';
 import { Link, useLocation } from "react-router";
+import Icon from './Icon';
 
 
 const drawerWidth = 250;
@@ -84,23 +76,23 @@ function Sidebar(component) {
   const menuItems = [
     {
       text: 'Dashboard',
-      icon: <LayoutDashboard />,
+      icon: <Icon name="layout-dashboard" />,
       id: 'dashboard',
       subItems: [
-        { text: 'Assets Dashboard', id:"assets", icon: <BoxIcon /> },
-        { text: 'Licenses Dashboard', id:"licenses", icon: <Key /> },
-        { text: 'Invoices Dashboard', id:"invoices", icon: <Receipt /> },
-        { text: 'Configure Dashboard', id:"configure", icon: <Receipt /> }
+        { text: 'Assets Dashboard', id:"assets", icon: <Icon name="box" /> },
+        { text: 'Licenses Dashboard', id:"licenses", icon: <Icon name="key" /> },
+        { text: 'Invoices Dashboard', id:"invoices", icon: <Icon name="receipt" /> },
+        { text: 'Configure Dashboard', id:"configure", icon: <Icon name="receipt" /> }
       ]
     },
     {
       text: 'Assets',
-      icon: <BoxIcon />,
+      icon: <Icon name="box" />,
       id: 'assets',
     },
-    { text: 'Licenses', icon: <Key />, id: 'licenses' },
-    { text: 'Checkouts', icon: <ClipboardList />, id: 'checkouts' },
-    { text: 'Invoices', icon: <Receipt />, id: 'invoices' },
+    { text: 'Licenses', icon: <Icon name="key" />, id: 'licenses' },
+    { text: 'Checkouts', icon: <Icon name="clipboard-list" />, id: 'checkouts' },
+    { text: 'Invoices', icon: <Icon name="receipt" />, id: 'invoices' },
   ];
 
   return (
@@ -147,7 +139,7 @@ function Sidebar(component) {
               </ListItemIcon>
               <ListItemText primary={item.text} />
               {item.subItems && (
-                openItems[item.text] ? <ChevronDown size={18} /> : <ChevronRight size={18} />
+                openItems[item.text] ? <Icon name="chevron-down" size={18} /> : <Icon name="chevron-right" size={18} />
               )}
             </ListItem>
             </Link>

@@ -12,10 +12,10 @@ import {
   IconButton,
   Divider,
 } from '@mui/material';
-import { ShoppingCart, Package, Trash2, Calendar } from 'lucide-react';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import Icon from "./Icon";
 
 export default function CheckoutAssets() {
   return (
@@ -30,7 +30,7 @@ export default function CheckoutAssets() {
       <Box display="flex" gap={2} mb={3}>
         <Button
           variant="contained"
-          startIcon={<ShoppingCart />}
+          startIcon={<Icon name="shopping-cart" />}
           sx={{ mr: 1 }}
         >
           Individual Checkout
@@ -38,7 +38,7 @@ export default function CheckoutAssets() {
         <Button
           variant="contained"
           color="secondary"
-          startIcon={<Package />}
+          startIcon={<Icon name="package-2" />}
         >
           Bulk Checkout
         </Button>
@@ -62,7 +62,7 @@ export default function CheckoutAssets() {
                     />
                   </LocalizationProvider>
                   <IconButton edge="end" aria-label="delete" color="error">
-                    <Trash2 size={20} />
+                    <Icon name="trash-2" size={20} />
                   </IconButton>
                 </>
               }
@@ -86,7 +86,7 @@ export default function CheckoutAssets() {
                     />
                   </LocalizationProvider>
                   <IconButton edge="end" aria-label="delete" color="error">
-                    <Trash2 size={20} />
+                    <Icon name="trash-2" size={20} />
                   </IconButton>
                 </>
               }
