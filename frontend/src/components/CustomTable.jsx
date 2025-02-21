@@ -21,7 +21,6 @@ import {
   Popover,
 } from '@mui/material';
 import * as XLSX from 'xlsx';
-import CustomForm from './CustomForm';
 import Icon from './Icon';
 import { PAGE_LIMIT } from '../utils/constants';
 
@@ -31,8 +30,6 @@ export default function CustomTable({currentSection,data,page,setPage}) {
   const [orderBy, setOrderBy] = useState("");
   const [order, setOrder] = useState('asc');
   const [columnsMenuAnchor, setColumnsMenuAnchor] = useState(null);
-  const [importMenuAnchor, setImportMenuAnchor] = useState(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -56,18 +53,18 @@ export default function CustomTable({currentSection,data,page,setPage}) {
 
   const exportToExcel = () => {
     const visibleColumns = columns.filter(col => col.visible);
-    const data = sortedAssets.map(asset => {
+    const data = sortedDocuments.map(document => {
       const row = {};
       visibleColumns.forEach(col => {
-        row[col.label] = asset[col.id];
+        row[col.label] = document[col.id];
       });
       return row;
     });
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Assets');
-    XLSX.writeFile(wb, 'assets.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, `${currentSection}`);
+    XLSX.writeFile(wb, `${currentSection}.xlsx`);
   };
 
   return (
@@ -79,7 +76,7 @@ export default function CustomTable({currentSection,data,page,setPage}) {
           InputProps={{
             startAdornment: <Icon name="search" size={20} style={{ marginRight: 8 }} />,
           }}
-          sx={{ width: 300, flexGrow: 1 }}
+          sx={{ maxWidth: 500, flexGrow: 1 }}
         />
         <div style={{ display: 'flex', gap: '8px', flexWrap: "wrap" }}>
           <Button
@@ -94,24 +91,9 @@ export default function CustomTable({currentSection,data,page,setPage}) {
             startIcon={<Icon name="download" size={20} />}
             onClick={exportToExcel}
           >
-            Export to Excel
+            Export
           </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Icon name="plus" size={20} />}
-            onClick={() => setShowCreateForm(true)}
-          >
-            Create New {`${currentSection}`}
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<Icon name="plus" size={20} />}
-            onClick={(e) => setImportMenuAnchor(e.currentTarget)}
-          >
-            Bulk Import
-          </Button>
+          
         </div>
       </div>
 
@@ -146,38 +128,8 @@ export default function CustomTable({currentSection,data,page,setPage}) {
         </React.Fragment>
       </Menu>
 
-      <Popover
-        open={Boolean(importMenuAnchor)}
-        anchorEl={importMenuAnchor}
-        onClose={() => setImportMenuAnchor(null)}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-      >
-        <Box sx={{ p: 1 }}>
-          <Button
-            fullWidth
-            startIcon={<Icon name="file-spreadsheet" size={20} />}
-            sx={{ mb: 1, justifyContent: 'flex-start' }}
-          >
-            Import From Excel
-          </Button>
-          <Button
-            fullWidth
-            startIcon={<Icon name="file-text" size={20} />}
-            sx={{ justifyContent: 'flex-start' }}
-          >
-            Import From Invoice
-          </Button>
-        </Box>
-      </Popover>
+      
 
-          <CustomForm currentSection={currentSection} fields={data.fields} open={showCreateForm} onClose={() => setShowCreateForm(false)} aria-describedby={`create-${currentSection}-form`}/>
 
       <TableContainer>
         <Table>

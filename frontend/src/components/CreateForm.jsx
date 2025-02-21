@@ -11,68 +11,14 @@ import {
   FormControl,
   InputLabel,
   Box,
-  CircularProgress,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
-// Mock API response
-const mockFormFields = [
-  { id: 'name', label: 'Asset Name', type: 'text', required: true },
-  { id: 'number', label: 'Asset Number', type: 'text', required: true },
-  { id: 'description', label: 'Description', type: 'textarea' },
-  {
-    id: 'category',
-    label: 'Category',
-    type: 'select',
-    options: [
-      { value: 'Electronics', label: 'Electronics' },
-      { value: 'Furniture', label: 'Furniture' },
-      { value: 'Software', label: 'Software' },
-      { value: 'Equipment', label: 'Equipment' },
-    ],
-    required: true,
-  },
-  { id: 'purchaseDate', label: 'Purchase Date', type: 'date' },
-  {
-    id: 'status',
-    label: 'Status',
-    type: 'select',
-    options: [
-      { value: 'Available', label: 'Available' },
-      { value: 'In Use', label: 'In Use' },
-      { value: 'Maintenance', label: 'Maintenance' },
-      { value: 'Retired', label: 'Retired' },
-    ],
-    required: true,
-  },
-];
 
-export default function CustomForm({ open, onClose, currentSection }) {
-  const [fields, setFields] = useState([]);
+export default function CustomForm({ isOpen, closeDialog, currentSection,fields }) {
   const [formData, setFormData] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchFormFields = async () => {
-      setLoading(true);
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setFields(mockFormFields);
-        
-        const initialData = {};
-        mockFormFields.forEach(field => {
-          initialData[field.id] = '';
-        });
-        setFormData(initialData);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (open) {
-      fetchFormFields();
-    }
-  }, [open]);
+  const [loading, setLoading] = useState(false);
+  
 
   const handleChange = (fieldId, value) => {
     setFormData(prev => ({
@@ -81,15 +27,16 @@ export default function CustomForm({ open, onClose, currentSection }) {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     console.log('Form data:', formData);
-    onClose();
+    
+    closeDialog();
   };
 
   return (
     <Dialog 
-      open={open} 
-      onClose={onClose}
+      open={isOpen} 
+      onClose={closeDialog}
       fullWidth
       TransitionProps={{
         enter: true,
@@ -98,13 +45,8 @@ export default function CustomForm({ open, onClose, currentSection }) {
     >
       <DialogTitle>Create New {`${currentSection}`}</DialogTitle>
       <DialogContent>
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
-            <CircularProgress />
-          </Box>
-        ) : (
           <Box component="form" noValidate sx={{ mt: 2 }}>
-            {fields.map((field) => (
+            {fields.map((field) => ( field.create &&
               <Box key={field.id} sx={{ mb: 2 }}>
                 {field.type === 'select' ? (
                   <FormControl fullWidth>
@@ -156,17 +98,16 @@ export default function CustomForm({ open, onClose, currentSection }) {
               </Box>
             ))}
           </Box>
-        )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={closeDialog}>Cancel</Button>
         <Button 
           onClick={handleSubmit} 
           variant="contained" 
           color="primary"
           disabled={loading}
         >
-          Create Asset
+          Create {currentSection}
         </Button>
       </DialogActions>
     </Dialog>
