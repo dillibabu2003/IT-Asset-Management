@@ -1,15 +1,7 @@
 import React, { useEffect } from 'react';
 import { Drawer, List, ListItem, ListItemIcon, ListItemText, Collapse } from '@mui/material';
-import {
-  LayoutDashboard,
-  Box as BoxIcon,
-  Key,
-  ClipboardList,
-  Receipt,
-  ChevronDown,
-  ChevronRight
-} from 'lucide-react';
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useParams } from "react-router";
+import Icon from './Icon';
 
 
 const drawerWidth = 250;
@@ -17,7 +9,7 @@ const drawerWidth = 250;
 function SubItem({item,openItems}) {
   const location = useLocation().pathname;  
   return (
-    <Collapse in={openItems[item.text]} timeout="auto" unmountOnExit>
+    <Collapse in={openItems[item.id]} timeout="auto" unmountOnExit>
       <List component="div"               
       >
         {item.subItems.map((subItem) => (
@@ -51,19 +43,27 @@ function SubItem({item,openItems}) {
     </Collapse>
   )
 }
-
 function Sidebar(component) {
   const location = useLocation();
   const [openItems, setOpenItems] = React.useState({
-    Dashboard: false
+    dashboard: location.pathname.startsWith("/dashboard"),
+    users: location.pathname.startsWith("/users"),
+    assets: location.pathname.startsWith("/assets"),
+    licenses: location.pathname.startsWith("/licenses"),
+    invoices: location.pathname.startsWith("/invoices"),
+    checkouts: location.pathname.startsWith("/checkouts"),
   });
+  console.log(openItems);
+  
 
   //listen to location change and update the links
   useEffect(()=>{
   },[location.pathname]);
 
 
-  const handleClick = (text,hasSubItems) => {
+  const handleClick = (id,hasSubItems) => {
+    console.log(id);
+    
       //close all opened subitem categories
       setOpenItems((prev) => {
         const closedItems={};
@@ -76,31 +76,42 @@ function Sidebar(component) {
       //open the subitem category of current clicked navlink if subitems exist 
       setOpenItems(prev => ({
         ...prev,
-        [text]: !prev[text]
+        [id]: !prev[id]
       }));
+    }
+    else{
+      setOpenItems(prev => ({...prev,[id]:true}))
     }
   };
 
   const menuItems = [
     {
       text: 'Dashboard',
-      icon: <LayoutDashboard />,
+      icon: <Icon name="layout-dashboard" />,
       id: 'dashboard',
       subItems: [
-        { text: 'Assets Dashboard', id:"assets", icon: <BoxIcon /> },
-        { text: 'Licenses Dashboard', id:"licenses", icon: <Key /> },
-        { text: 'Invoices Dashboard', id:"invoices", icon: <Receipt /> },
-        { text: 'Configure Dashboard', id:"configure", icon: <Receipt /> }
+        { text: 'Assets Dashboard', id:"assets", icon: <Icon name="box" /> },
+        { text: 'Licenses Dashboard', id:"licenses", icon: <Icon name="key" /> },
+        { text: 'Invoices Dashboard', id:"invoices", icon: <Icon name="receipt" /> },
+        { text: 'Configure Dashboard', id:"configure", icon: <Icon name="receipt" /> }
       ]
     },
     {
       text: 'Assets',
-      icon: <BoxIcon />,
+      icon: <Icon name="box" />,
       id: 'assets',
     },
-    { text: 'Licenses', icon: <Key />, id: 'licenses' },
-    { text: 'Checkouts', icon: <ClipboardList />, id: 'checkouts' },
-    { text: 'Invoices', icon: <Receipt />, id: 'invoices' },
+    { text: 'Licenses', icon: <Icon name="key" />, id: 'licenses' },
+    { text: 'Checkouts', icon: <Icon name="clipboard-list" />, id: 'checkouts' },
+    { text: 'Invoices', icon: <Icon name="receipt" />, id: 'invoices' },
+    { 
+      text: 'Users',
+      icon: <Icon name="users"/>,
+      id: 'users',
+      subItems: [
+        { text: 'Create User', icon: <Icon name="user-plus"/>, id: 'create' },
+      ]
+     },
   ];
 
   return (
@@ -125,10 +136,10 @@ function Sidebar(component) {
               button
               onClick={() => {
                 if (item.subItems) {
-                  handleClick(item.text,true);
+                  handleClick(item.id,true);
                 }
                 else{
-                  handleClick(item.text,false);
+                  handleClick(item.id,false);
                 }
               }}
               sx={{
@@ -140,14 +151,14 @@ function Sidebar(component) {
                   },
                 },
               }}
-              selected={location.pathname.startsWith("/" + item.id)}
+              selected={openItems[item.id]}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>
                 {item.icon}
               </ListItemIcon>
               <ListItemText primary={item.text} />
               {item.subItems && (
-                openItems[item.text] ? <ChevronDown size={18} /> : <ChevronRight size={18} />
+                openItems[item.id] ? <Icon name="chevron-down" size={18} /> : <Icon name="chevron-right" size={18} />
               )}
             </ListItem>
             </Link>

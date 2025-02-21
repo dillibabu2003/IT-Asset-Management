@@ -19,53 +19,18 @@ import {
   Box,
   TableSortLabel,
   Popover,
-  Dialog,
-  Slide,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
-import { Edit, Trash2, Search, Plus, FileSpreadsheet, FileText, Download, Settings } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import CustomForm from './CustomForm';
+import Icon from './Icon';
+import { PAGE_LIMIT } from '../utils/constants';
+import axiosInstance from '../utils/axios';
 
-const mockAssets = [
-  {
-    id: '#AST001',
-    name: 'Office Laptop',
-    description: 'Dell XPS 13',
-    category: 'Electronics',
-    status: 'Available',
-    dueDate: '2025-01-15',
-  },
-  {
-    id: '#AST002',
-    name: 'Office Chair',
-    description: 'Herman Miller Aeron',
-    category: 'Furniture',
-    status: 'Ready to Deploy',
-    dueDate: '2025-01-14',
-  },
-];
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="down" ref={ref} {...props} />;
-});
-//fields, documents should be passed
-export default function CustomTable({currentSection,fields,documents}) {
-  const [columns, setColumns] = useState([
-    { id: 'id', label: 'Asset ID', visible: true, sortable: true },
-    { id: 'name', label: 'Name/Description', visible: true, sortable: true },
-    { id: 'category', label: 'Category', visible: true, sortable: true },
-    { id: 'status', label: 'Status', visible: true, sortable: true },
-    { id: 'dueDate', label: 'Due Date', visible: true, sortable: true },
-  ]); //pass the fields as initial state
-
-  const [orderBy, setOrderBy] = useState('id');
+export default function CustomTable({ currentSection, data, page, setPage }) {
+  const [columns, setColumns] = useState(data.fields);
+  const [orderBy, setOrderBy] = useState("");
   const [order, setOrder] = useState('asc');
   const [columnsMenuAnchor, setColumnsMenuAnchor] = useState(null);
-  const [importMenuAnchor, setImportMenuAnchor] = useState(null);
-  const [showCreateAssetForm, setShowCreateAssetForm] = useState(false);
+  const [filteredDocuments, setFilteredDocuments] = useState(data.documents);
 
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -73,7 +38,7 @@ export default function CustomTable({currentSection,fields,documents}) {
     setOrderBy(property);
   };
 
-  const sortedAssets = [...mockAssets].sort((a, b) => {
+  const sortedDocuments = [...filteredDocuments].sort((a, b) => {
     if (order === 'asc') {
       return a[orderBy] < b[orderBy] ? -1 : 1;
     } else {
@@ -89,18 +54,41 @@ export default function CustomTable({currentSection,fields,documents}) {
 
   const exportToExcel = () => {
     const visibleColumns = columns.filter(col => col.visible);
-    const data = sortedAssets.map(asset => {
+    const data = sortedDocuments.map(document => {
       const row = {};
       visibleColumns.forEach(col => {
-        row[col.label] = asset[col.id];
+        row[col.label] = document[col.id];
       });
       return row;
     });
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Assets');
-    XLSX.writeFile(wb, 'assets.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, `${currentSection}`);
+    XLSX.writeFile(wb, `${currentSection}.xlsx`);
+  };
+
+  const searchText = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+       const abortController = new AbortController();
+      async function fetchData() {
+        try {
+            const response = await axiosInstance.get(`/assets/search?val=${searchValue}`, { signal: abortController.signal });
+            console.log(response);
+        } catch (error) {
+            console.error(error);
+
+            console.log("Error occurred while fetching data");
+
+        }
+      }
+    fetchData();
+    
+    const regex = new RegExp(searchValue, 'i');
+    const filtered = data.documents.filter(document =>
+      Object.values(document).some(value => regex.test(value))
+    );
+    setFilteredDocuments(filtered);
   };
 
   return (
@@ -110,40 +98,25 @@ export default function CustomTable({currentSection,fields,documents}) {
           placeholder={`Search ${currentSection}...`}
           size="small"
           InputProps={{
-            startAdornment: <Search size={20} style={{ marginRight: 8 }} />,
+            startAdornment: <Icon name="search" size={20} style={{ marginRight: 8 }} />,
           }}
-          sx={{ width: 300, flexGrow: 1 }}
+          sx={{ maxWidth: 500, flexGrow: 1 }}
+          onChange={(e) => searchText(e)}
         />
         <div style={{ display: 'flex', gap: '8px', flexWrap: "wrap" }}>
           <Button
             variant="outlined"
-            startIcon={<Settings size={20} />}
+            startIcon={<Icon name="settings" size={20} />}
             onClick={(e) => setColumnsMenuAnchor(e.currentTarget)}
           >
             Columns
           </Button>
           <Button
             variant="outlined"
-            startIcon={<Download size={20} />}
+            startIcon={<Icon name="download" size={20} />}
             onClick={exportToExcel}
           >
-            Export to Excel
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Plus size={20} />}
-            onClick={() => setShowCreateAssetForm(true)}
-          >
-            Create New {`${currentSection}`}
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<Plus size={20} />}
-            onClick={(e) => setImportMenuAnchor(e.currentTarget)}
-          >
-            Bulk Import
+            Export
           </Button>
         </div>
       </div>
@@ -154,76 +127,29 @@ export default function CustomTable({currentSection,fields,documents}) {
         onClose={() => setColumnsMenuAnchor(null)}
       >
         <React.Fragment>
-        {columns.map((column) => (
-          <MenuItem key={column.id} onClick={() => handleColumnToggle(column.id)}>
-            <FormControlLabel
-            
-            control={
-              <Checkbox
-              checked={column.visible}
-              onChange={() => handleColumnToggle(column.id)}
+          {columns.map((column) => (
+            <MenuItem key={column.id} onClick={() => handleColumnToggle(column.id)}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={column.visible}
+                    onChange={() => handleColumnToggle(column.id)}
+                  />
+                }
+                label={column.label}
               />
-            }
-            label={column.label}
-            />
-          </MenuItem>
-        ))}
-        <Button
-              variant="contained"
-              color="primary"
-              sx={{m:1, mx:2}}
-              onClick={() => setColumnsMenuAnchor(null)}
-            >
-              Apply Changes
-            </Button>
+            </MenuItem>
+          ))}
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ m: 1, mx: 2 }}
+            onClick={() => setColumnsMenuAnchor(null)}
+          >
+            Apply Changes
+          </Button>
         </React.Fragment>
       </Menu>
-
-      <Popover
-        open={Boolean(importMenuAnchor)}
-        anchorEl={importMenuAnchor}
-        onClose={() => setImportMenuAnchor(null)}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-      >
-        <Box sx={{ p: 1 }}>
-          <Button
-            fullWidth
-            startIcon={<FileSpreadsheet size={20} />}
-            sx={{ mb: 1, justifyContent: 'flex-start' }}
-          >
-            Import From Excel
-          </Button>
-          <Button
-            fullWidth
-            startIcon={<FileText size={20} />}
-            sx={{ justifyContent: 'flex-start' }}
-          >
-            Import From Invoice
-          </Button>
-        </Box>
-      </Popover>
-
-      {/* <Dialog
-        open={showCreateAssetForm}
-        keepMounted
-        onClose={() => setShowCreateAssetForm(false)}
-        aria-describedby="create-asset-form"
-      > */}
-        {/* <DialogTitle>Create New Asset</DialogTitle> */}
-          <CustomForm currentSection={currentSection} open={showCreateAssetForm} onClose={() => setShowCreateAssetForm(false)} aria-describedby="create-asset-form"/>
-        {/* <DialogContent>
-        </DialogContent> */}
-        {/* <DialogActions>
-          <Button onClick={() => setShowCreateAssetForm(false)}>Close</Button>
-        </DialogActions>
-      </Dialog> */}
 
       <TableContainer>
         <Table>
@@ -231,49 +157,45 @@ export default function CustomTable({currentSection,fields,documents}) {
             <TableRow>
               {columns.filter(col => col.visible).map((column) => (
                 <TableCell key={column.id}>
-                  {column.sortable ? (
-                    <TableSortLabel
-                      active={orderBy === column.id}
-                      direction={orderBy === column.id ? order : 'asc'}
-                      onClick={() => handleSort(column.id)}
-                    >
-                      {column.label}
-                    </TableSortLabel>
-                  ) : (
-                    column.label
-                  )}
+                  <TableSortLabel
+                    active={orderBy === column.id}
+                    direction={orderBy === column.id ? order : 'asc'}
+                    onClick={() => handleSort(column.id)}
+                  >
+                    {column.label}
+                  </TableSortLabel>
                 </TableCell>
               ))}
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedAssets.map((asset) => (
-              <TableRow key={asset.id}>
+            {sortedDocuments.map((document) => (
+              <TableRow key={document.id}>
                 {columns.filter(col => col.visible).map((column) => (
                   <TableCell key={column.id}>
                     {column.id === 'name' ? (
                       <div>
-                        <div>{asset.name}</div>
-                        <div style={{ color: 'gray', fontSize: '0.875rem' }}>{asset.description}</div>
+                        <div>{document.name}</div>
+                        <div style={{ color: 'gray', fontSize: '0.875rem' }}>{document.description}</div>
                       </div>
                     ) : column.id === 'status' ? (
                       <Chip
-                        label={asset.status}
-                        color={asset.status === 'Available' ? 'success' : 'warning'}
+                        label={document.status}
+                        color={document.status === 'Available' ? 'success' : 'warning'}
                         size="small"
                       />
                     ) : (
-                      asset[column.id]
+                      document[column.id]
                     )}
                   </TableCell>
                 ))}
                 <TableCell>
                   <IconButton size="small" color="primary">
-                    <Edit size={20} />
+                    <Icon name="pencil" size={20} />
                   </IconButton>
                   <IconButton size="small" color="error">
-                    <Trash2 size={20} />
+                    <Icon name="trash-2" size={20} />
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -283,8 +205,8 @@ export default function CustomTable({currentSection,fields,documents}) {
       </TableContainer>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-        <div>Showing 1 to 2 of 50 results</div>
-        <Pagination count={5} color="primary" />
+        <div>Showing {(page - 1) * PAGE_LIMIT + 1} to {(page - 1) * PAGE_LIMIT + PAGE_LIMIT} of {data.total}</div>
+        <Pagination count={Math.ceil(data.total / PAGE_LIMIT)} color="primary" onChange={(event, page) => { console.log(page); setPage(page) }} />
       </Box>
     </Paper>
   );

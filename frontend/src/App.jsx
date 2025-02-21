@@ -1,12 +1,21 @@
 import React from 'react';
-import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material';
+// import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material';
 import "./App.css";
 import { MainLayout } from './layouts/MainLayout';
 import { Routes, Route, Link } from 'react-router';
-import CustomTable from './components/CustomTable';
-import CustomDashboard from './components/CustomDashboard';
 import LandingPage from './components/Landing';
 import SignIn from './components/SignIn';
+import DashboardPage from './pages/Dashboard';
+import AssetsPage from './pages/Assets';
+import LicensePage from './pages/Licenses';
+import InvoicesPage from './pages/Invoices';
+import CheckoutPage from './pages/Checkout';
+import UserPage from './pages/User';
+
+export const LinkBehavior = React.forwardRef((props, ref) => {
+  const { href, ...other } = props;
+  return <RouterLink ref={ref} to={href} {...other} />;
+});
 
 function App() {
   return (
@@ -20,14 +29,21 @@ function App() {
         //Protected Routes to be configured.
         <Route element={<MainLayout />}>
         //dashboard routes
-          <Route path="/dashboard">
-            <Route index element={<CustomDashboard />} />
-            <Route path=":dashboardId" element={<CustomDashboard />} />
+          <Route path="/dashboard" element={<DashboardPage />}>
+            <Route path=":dashboardId" element={<DashboardPage />} />
           </Route>
+
         //asset routes
-          <Route path="/assets">
-            <Route index element={<CustomTable />} />
+          <Route path="/assets" element={<AssetsPage/>} />
+          <Route path="/licenses" element={<LicensePage/>} />
+          <Route path="/checkouts" element={<CheckoutPage/>} />
+          <Route path="/invoices" element={<InvoicesPage/>} />
+          <Route path="/users"  >
+            <Route index element={<UserPage/>} />
+            <Route path="create" element={"create user"}/>
+            <Route path=":userId" element={"User with some id"} />
           </Route>
+            
         </Route>
 
       </Routes>
