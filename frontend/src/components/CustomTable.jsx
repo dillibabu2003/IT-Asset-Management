@@ -19,53 +19,20 @@ import {
   Box,
   TableSortLabel,
   Popover,
-  Dialog,
-  Slide,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
 import * as XLSX from 'xlsx';
 import CustomForm from './CustomForm';
 import Icon from './Icon';
+import { PAGE_LIMIT } from '../utils/constants';
 
-const mockAssets = [
-  {
-    id: '#AST001',
-    name: 'Office Laptop',
-    description: 'Dell XPS 13',
-    category: 'Electronics',
-    status: 'Available',
-    dueDate: '2025-01-15',
-  },
-  {
-    id: '#AST002',
-    name: 'Office Chair',
-    description: 'Herman Miller Aeron',
-    category: 'Furniture',
-    status: 'Ready to Deploy',
-    dueDate: '2025-01-14',
-  },
-];
 
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="down" ref={ref} {...props} />;
-});
-//fields, documents should be passed
-export default function CustomTable({currentSection,fields,documents}) {
-  const [columns, setColumns] = useState([
-    { id: 'id', label: 'Asset ID', visible: true, sortable: true },
-    { id: 'name', label: 'Name/Description', visible: true, sortable: true },
-    { id: 'category', label: 'Category', visible: true, sortable: true },
-    { id: 'status', label: 'Status', visible: true, sortable: true },
-    { id: 'dueDate', label: 'Due Date', visible: true, sortable: true },
-  ]); //pass the fields as initial state
-
-  const [orderBy, setOrderBy] = useState('id');
+export default function CustomTable({currentSection,data,page,setPage}) {
+  const [columns, setColumns] = useState(data.fields);
+  const [orderBy, setOrderBy] = useState("");
   const [order, setOrder] = useState('asc');
   const [columnsMenuAnchor, setColumnsMenuAnchor] = useState(null);
   const [importMenuAnchor, setImportMenuAnchor] = useState(null);
-  const [showCreateAssetForm, setShowCreateAssetForm] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -73,7 +40,7 @@ export default function CustomTable({currentSection,fields,documents}) {
     setOrderBy(property);
   };
 
-  const sortedAssets = [...mockAssets].sort((a, b) => {
+  const sortedDocuments = [...data.documents].sort((a, b) => {
     if (order === 'asc') {
       return a[orderBy] < b[orderBy] ? -1 : 1;
     } else {
@@ -133,7 +100,7 @@ export default function CustomTable({currentSection,fields,documents}) {
             variant="contained"
             color="primary"
             startIcon={<Icon name="plus" size={20} />}
-            onClick={() => setShowCreateAssetForm(true)}
+            onClick={() => setShowCreateForm(true)}
           >
             Create New {`${currentSection}`}
           </Button>
@@ -210,20 +177,7 @@ export default function CustomTable({currentSection,fields,documents}) {
         </Box>
       </Popover>
 
-      {/* <Dialog
-        open={showCreateAssetForm}
-        keepMounted
-        onClose={() => setShowCreateAssetForm(false)}
-        aria-describedby="create-asset-form"
-      > */}
-        {/* <DialogTitle>Create New Asset</DialogTitle> */}
-          <CustomForm currentSection={currentSection} open={showCreateAssetForm} onClose={() => setShowCreateAssetForm(false)} aria-describedby="create-asset-form"/>
-        {/* <DialogContent>
-        </DialogContent> */}
-        {/* <DialogActions>
-          <Button onClick={() => setShowCreateAssetForm(false)}>Close</Button>
-        </DialogActions>
-      </Dialog> */}
+          <CustomForm currentSection={currentSection} fields={data.fields} open={showCreateForm} onClose={() => setShowCreateForm(false)} aria-describedby={`create-${currentSection}-form`}/>
 
       <TableContainer>
         <Table>
@@ -231,7 +185,7 @@ export default function CustomTable({currentSection,fields,documents}) {
             <TableRow>
               {columns.filter(col => col.visible).map((column) => (
                 <TableCell key={column.id}>
-                  {column.sortable ? (
+                 
                     <TableSortLabel
                       active={orderBy === column.id}
                       direction={orderBy === column.id ? order : 'asc'}
@@ -239,38 +193,36 @@ export default function CustomTable({currentSection,fields,documents}) {
                     >
                       {column.label}
                     </TableSortLabel>
-                  ) : (
-                    column.label
-                  )}
+                  
                 </TableCell>
               ))}
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedAssets.map((asset) => (
-              <TableRow key={asset.id}>
+            {sortedDocuments.map((document) => (
+              <TableRow key={document.id}>
                 {columns.filter(col => col.visible).map((column) => (
                   <TableCell key={column.id}>
                     {column.id === 'name' ? (
                       <div>
-                        <div>{asset.name}</div>
-                        <div style={{ color: 'gray', fontSize: '0.875rem' }}>{asset.description}</div>
+                        <div>{document.name}</div>
+                        <div style={{ color: 'gray', fontSize: '0.875rem' }}>{document.description}</div>
                       </div>
                     ) : column.id === 'status' ? (
                       <Chip
-                        label={asset.status}
-                        color={asset.status === 'Available' ? 'success' : 'warning'}
+                        label={document.status}
+                        color={document.status === 'Available' ? 'success' : 'warning'}
                         size="small"
                       />
                     ) : (
-                      asset[column.id]
+                      document[column.id]
                     )}
                   </TableCell>
                 ))}
                 <TableCell>
                   <IconButton size="small" color="primary">
-                    <Icon name="edit" size={20} />
+                    <Icon name="pencil" size={20} />
                   </IconButton>
                   <IconButton size="small" color="error">
                     <Icon name="trash-2" size={20} />
@@ -283,8 +235,9 @@ export default function CustomTable({currentSection,fields,documents}) {
       </TableContainer>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-        <div>Showing 1 to 2 of 50 results</div>
-        <Pagination count={5} color="primary" />
+        <div>Showing {(page-1)*PAGE_LIMIT+1} to {(page-1)*PAGE_LIMIT+PAGE_LIMIT} of {data.total}</div>
+        <Pagination count={Math.ceil(data.total/PAGE_LIMIT)} color="primary" onChange={(event, page) => {console.log(page);
+         setPage(page)}} />
       </Box>
     </Paper>
   );
