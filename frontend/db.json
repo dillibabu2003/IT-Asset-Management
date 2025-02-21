@@ -65,7 +65,7 @@
             
         ]
     },
-    "assets": {
+    "dashboardassets": {
         "name": "Assets",
         "tiles": [
             {
@@ -262,5 +262,181 @@
             ],
             "elements": null
         }
+    },
+    "assets": {
+        "name": "Assets",
+        "fields": [
+            {
+                "note":"in backend convert name to snake case",
+                "id": "serial_number",
+                "label": "Serial Number",
+                "visible": true
+            },
+            {   
+                "id": "name",
+                "label": "Name",
+                "visible": true
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "visible": true
+            },
+            {
+                "id":"category" ,
+                "label": "Category",
+                "visible": true
+            },
+            {
+                "id": "lastUpdated",
+                "label": "Last Updated",
+                "visible": true
+            }
+        ],
+        "documents": [
+            {
+                "note":"here send the id of serial number",
+                "serial_number": 1,
+                "name": "Mac",
+                "status": "Available",
+                "category":"Laptop",
+                "lastUpdated": "2 days ago"
+            },
+            {
+               "serial_number": 2,
+                "name": "Mac",
+                "status": "Available",
+                "category":"Laptop",
+                "lastUpdated": "2 days ago"
+            }
+            ,
+            {
+                "serial_number": 3,
+                "name": "Dell Monitor",
+                "status": "Checked Out",
+                "category": "Monitor",
+                "lastUpdated": "1 day ago"
+            },
+            {
+                "serial_number": 4,
+                "name": "Logitech Mouse",
+                "status": "Available",
+                "category": "Mouse",
+                "lastUpdated": "3 days ago"
+            },
+            {
+                "serial_number": 5,
+                "name": "HP Laptop",
+                "status": "Maintenance",
+                "category": "Laptop",
+                "lastUpdated": "4 days ago"
+            },
+        {
+            "serial_number": 6,
+            "name": "HP Printer",
+            "status": "Available",
+            "category": "Printer",
+            "lastUpdated": "5 days ago"
+        },
+        {
+            "serial_number": 7,
+            "name": "Samsung Monitor",
+            "status": "Checked Out",
+            "category": "Monitor",
+            "lastUpdated": "6 days ago"
+        },
+        {
+            "serial_number": 8,
+            "name": "Apple Keyboard",
+            "status": "Available",
+            "category": "Keyboard",
+            "lastUpdated": "7 days ago"
+        },
+        {
+            "serial_number": 9,
+            "name": "Dell Laptop",
+            "status": "Maintenance",
+            "category": "Laptop",
+            "lastUpdated": "8 days ago"
+        },
+        {
+            "serial_number": 10,
+            "name": "HP Mouse",
+            "status": "Available",
+            "category": "Mouse",
+            "lastUpdated": "9 days ago"
+        },
+        {
+            "serial_number": 11,
+            "name": "Lenovo Laptop",
+            "status": "Checked Out",
+            "category": "Laptop",
+            "lastUpdated": "10 days ago"
+        },
+        {
+            "serial_number": 12,
+            "name": "Asus Monitor",
+            "status": "Available",
+            "category": "Monitor",
+            "lastUpdated": "11 days ago"
+        },
+        {
+            "serial_number": 13,
+            "name": "Microsoft Surface",
+            "status": "Maintenance",
+            "category": "Laptop",
+            "lastUpdated": "12 days ago"
+        },
+        {
+            "serial_number": 14,
+            "name": "Logitech Webcam",
+            "status": "Available",
+            "category": "Webcam",
+            "lastUpdated": "13 days ago"
+        },
+        {
+            "serial_number": 15,
+            "name": "HP Docking Station",
+            "status": "Checked Out",
+            "category": "Docking Station",
+            "lastUpdated": "14 days ago"
+        },
+        {
+            "serial_number": 16,
+            "name": "Dell Keyboard",
+            "status": "Available",
+            "category": "Keyboard",
+            "lastUpdated": "15 days ago"
+        },
+        {
+            "serial_number": 17,
+            "name": "Apple Mouse",
+            "status": "Maintenance",
+            "category": "Mouse",
+            "lastUpdated": "16 days ago"
+        },
+        {
+            "serial_number": 18,
+            "name": "Samsung Tablet",
+            "status": "Available",
+            "category": "Tablet",
+            "lastUpdated": "17 days ago"
+        },
+        {
+            "serial_number": 19,
+            "name": "HP Laptop",
+            "status": "Checked Out",
+            "category": "Laptop",
+            "lastUpdated": "18 days ago"
+        },
+        {
+            "serial_number": 20,
+            "name": "Dell Monitor",
+            "status": "Available",
+            "category": "Monitor",
+            "lastUpdated": "19 days ago"
+        }
+        ],
+        "total": 20
     }
 }
