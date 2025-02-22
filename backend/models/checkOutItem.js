@@ -9,7 +9,7 @@ const CheckOutItemSchema = new mongoose.Schema({
   },
   item_id: {
     type: mongoose.Schema.Types.ObjectId,
-    refPath: "item_type",
+    ref: "item_type",
     required: true,
     unique: true,
   },

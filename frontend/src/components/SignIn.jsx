@@ -11,8 +11,8 @@ import {
     Typography,
     IconButton,
 } from '@mui/material';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import { Navigate, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
+import Icon from './Icon';
 function SignIn() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
@@ -52,7 +52,7 @@ function SignIn() {
                 }}
             >
                 <Button
-                    startIcon={<ArrowLeft size={18} />}
+                    startIcon={<Icon name="arrow-left" size={18} />}
                     onClick={onBack}
                     sx={{ position: 'absolute', top: 24, left: 24 }}
                 >
@@ -103,7 +103,7 @@ function SignIn() {
                                         edge="end"
                                         size="small"
                                     >
-                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        {showPassword ? <Icon name="eye-off" size={18} /> : <Icon name="eye" size={18} />}
                                     </IconButton>
                                 ),
                             }}
