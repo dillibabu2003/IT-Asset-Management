@@ -1,0 +1,18 @@
+{
+  "name": "@it-asset-management/backend",
+  "version": "1.0.0",
+  "description": "Backend in node.js for IT Asset Management.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Backend",
+    "IT-Asset-Management"
+  ],
+  "author": "Dilli Babu, Pradeep",
+  "license": "ISC",
+  "dependencies": {
+    "mongoose": "^8.10.1"
+  }
+}
