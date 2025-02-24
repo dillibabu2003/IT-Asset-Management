@@ -5,7 +5,8 @@ const envSchema=zod.object({
     MONGO_URI: zod.string({message:"MONGO_URI is required"}),
     DB_NAME: zod.string({message: "DB name is required"}),
     ACCESS_TOKEN_SECRET: zod.string({message: "Access token is required."}),
-    REFRESH_TOKEN_SECRET: zod.string({message: "Refresh token is required."})
+    REFRESH_TOKEN_SECRET: zod.string({message: "Refresh token is required."}),
+    REDIS_URI: zod.string({message: "REDIS_URI is required."})
 });
 
 const loginSchema = zod.object({
