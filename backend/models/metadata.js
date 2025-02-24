@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const AssetMetadataSchema = new mongoose.Schema({
+const MetadataSchema = new mongoose.Schema({
 	id: {
 		type: String
 	},
@@ -31,4 +31,4 @@ const AssetMetadataSchema = new mongoose.Schema({
         }
     ]
 });
-module.exports=mongoose.model("AssetMetadata",AssetMetadataSchema);
+module.exports=mongoose.model("Metadata",MetadataSchema);

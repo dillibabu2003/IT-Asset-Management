@@ -5,4 +5,9 @@ const envSchema=zod.object({
     MONGO_URI: zod.string({message:"MONGO_URI is required"}),
     DB_NAME: zod.string({message: "DB name is required"})
 });
-module.exports={envSchema};
+
+const loginSchema = zod.object({
+    email: zod.string({message: "Email is required."}).email({message: "Email is not valid."}),
+    password: zod.string({message: "Password is required."})
+})
+module.exports={envSchema, loginSchema};

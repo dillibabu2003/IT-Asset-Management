@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const UserSchema = new mongoose.Schema({
   user_id: {
@@ -54,5 +55,17 @@ const UserSchema = new mongoose.Schema({
 });
 
 UserSchema.set("toJSON", { virtuals: true });
+
+UserSchema.methods.validatePassword = async function(plainTextPassword){
+  const isPasswordCorrect = await bcrypt.compare(plainTextPassword,this.password);
+  return isPasswordCorrect;
+}
+
+//Middleware to encrypt the password
+UserSchema.pre("save",async function(next){
+  if(!this.isModified(this.password)) next() ;
+  this.password=await bcrypt.hash(this.password,10);
+  next();
+});
 
 module.exports = mongoose.model("User", UserSchema);
