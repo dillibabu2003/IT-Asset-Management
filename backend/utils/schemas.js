@@ -3,7 +3,9 @@ const zod=require('zod');
 const envSchema=zod.object({
     PORT: zod.string({message:"Port is required and should be a number"}),
     MONGO_URI: zod.string({message:"MONGO_URI is required"}),
-    DB_NAME: zod.string({message: "DB name is required"})
+    DB_NAME: zod.string({message: "DB name is required"}),
+    ACCESS_TOKEN_SECRET: zod.string({message: "Access token is required."}),
+    REFRESH_TOKEN_SECRET: zod.string({message: "Refresh token is required."})
 });
 
 const loginSchema = zod.object({
