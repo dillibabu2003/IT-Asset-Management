@@ -42,6 +42,10 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
+  status: {
+    type: String,
+    enum: ["active","inactive","blocked","invalid_email"]
+  },
   gender: {
     type: String,
     enum: ["male", "female", "other"],

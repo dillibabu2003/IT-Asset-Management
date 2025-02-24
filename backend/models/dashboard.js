@@ -1,8 +1,14 @@
 const mongoose = require("mongoose");
 
 const DashboardSchema = new mongoose.Schema({
-    name: {
+    id: {
         type: String,
+        enum: ["main","assets","licenses","invoices","archives"],
+        required: true,
+    },
+    label:{
+        type: String,
+        enum: ["Main Dashboard","Assets Dashboard","Licenses Dashboard","Invoices Dashboard","Archives Dashboard"],
         required: true,
     },
     tiles:[
@@ -13,7 +19,7 @@ const DashboardSchema = new mongoose.Schema({
             },
             reference_object: {
                 type: String,
-                enum: ["assets","licenses","checkouts","archives"],
+                enum: ["assets","licenses","invoices","archives"],
                 required: true,
             },
             type: {
@@ -23,7 +29,7 @@ const DashboardSchema = new mongoose.Schema({
             },
             func: {
                 type: String,
-                enum: ["sum","count","average","max","min",],
+                enum: ["sum","count","avg","max","min",],
                 required: true,
             },
             field: {
@@ -52,7 +58,7 @@ const DashboardSchema = new mongoose.Schema({
             },
             reference_object:{
                 type: String,
-                enum: ["assets","licenses","checkouts","archives"],
+                enum: ["assets","licenses","invoices","archives"],
                 required: true,
             },
             type:{

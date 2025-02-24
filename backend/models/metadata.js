@@ -24,11 +24,9 @@ const AssetMetadataSchema = new mongoose.Schema({
         {
             label: {
                 type: String,
-				enum: ["Available", "Deployed", "Archived", "Reissue"]
             },
             value:{
                 type: String,
-				enum: ["available", "deployed", "archived", "reissue"]
             }
         }
     ]
