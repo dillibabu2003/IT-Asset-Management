@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 const MetadataSchema = new mongoose.Schema({
+	belongs_to:{
+		type: String,
+	},
 	id: {
 		type: String
 	},
@@ -12,9 +15,12 @@ const MetadataSchema = new mongoose.Schema({
 	},
 	required:{
 		type: Boolean,
+		required: true,
 	},
 	additional:{
-		type: Boolean
+		type: Boolean,
+		required: true,
+		default: false
 	},
 	type: {
 		type: String,

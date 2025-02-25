@@ -7,8 +7,8 @@ const UserSchema = new mongoose.Schema({
     required: true,
   },
   role: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Role",
+    type: String,
+    enum: ["guest","member","admin"],
     required: true,
   },
   firstname: {
@@ -18,13 +18,6 @@ const UserSchema = new mongoose.Schema({
   lastname: {
     type: String,
     required: true,
-  },
-  fullname: {
-    type: String,
-    virtual: true,
-    get() {
-      return `${this.firstname} ${this.lastname}`;
-    },
   },
   email: {
     type: String,
@@ -45,27 +38,43 @@ const UserSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["active","inactive","blocked","invalid_email"]
+    enum: ["active","inactive","blocked"]
   },
   gender: {
     type: String,
     enum: ["male", "female", "other"],
     required: true,
   },
+},{
+  virtuals: {
+    fullname: {
+      get() {
+        return `${this.firstname} ${this.lastname}`;
+      },
+    },
+  }
 });
 
-UserSchema.set("toJSON", { virtuals: true });
+UserSchema.set("toJSON", { virtuals: true,transform: (doc, ret) => {
+  delete ret._id;
+  delete ret.__v;
+  delete ret.id;
+  return ret;
+}, });
 
 UserSchema.methods.validatePassword = async function(plainTextPassword){
-  const isPasswordCorrect = await bcrypt.compare(plainTextPassword,this.password);
-  return isPasswordCorrect;
+  return new Promise((resolve, reject) => {
+    bcrypt.compare(plainTextPassword, this.password, (err, res) => {
+      if (err) resolve(false);
+      resolve(res);
+    })
+  })
 }
-
 //Middleware to encrypt the password
 UserSchema.pre("save",async function(next){
-  if(!this.isModified(this.password)) next() ;
-  this.password=await bcrypt.hash(this.password,10);
+  if(this.isModified("password")){
+      this.password=await bcrypt.hash(this.password,10);
+  }
   next();
 });
-
 module.exports = mongoose.model("User", UserSchema);
