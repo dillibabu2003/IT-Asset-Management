@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 function extractZodErrorMessages(zodError){
     let errorMessages={};
     zodError.issues.map((issue)=>{
@@ -5,6 +6,10 @@ function extractZodErrorMessages(zodError){
     });
     return errorMessages;
 } 
+async function decryptJWT(token,secret){
+    return await jwt.verify(token,secret);
+}
 module.exports={
-    extractZodErrorMessages
+    extractZodErrorMessages,
+    decryptJWT
 }
