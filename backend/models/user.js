@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const { statusEnum, genderEnum, roleEnum } = require("../utils/constants");
 
 const UserSchema = new mongoose.Schema({
   user_id: {
@@ -8,7 +9,7 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["guest","member","admin"],
+    enum: roleEnum,
     required: true,
   },
   firstname: {
@@ -38,11 +39,11 @@ const UserSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["active","inactive","blocked"]
+    enum: statusEnum
   },
   gender: {
     type: String,
-    enum: ["male", "female", "other"],
+    enum: genderEnum,
     required: true,
   },
 },{
