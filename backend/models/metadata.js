@@ -24,7 +24,7 @@ const MetadataSchema = new mongoose.Schema({
 	},
 	type: {
 		type: String,
-		enum: ["text","textarea","date","select"]
+		enum: ["text","textarea","date","select","numeric"]
 	},
 	options:[
         {

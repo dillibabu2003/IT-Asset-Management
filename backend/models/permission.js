@@ -1,5 +1,13 @@
 const mongoose = require("mongoose");
 
+const PermissionEnum = [
+  "view:invoices:dashboard","view:licenses:dashboard","view:assets:dashboard","view:users","view:assets","view:licenses","view:invoices","view:checkouts",
+  "edit:invoices:dashboard","edit:licenses:dashboard","edit:assets:dashboard","edit:users","edit:assets","edit:licenses","edit:invoices","edit:checkouts",
+  "create:invoices:dashboard","create:licenses:dashboard","create:assets:dashboard","create:users","create:assets","create:licenses","create:invoices","create:checkouts",
+  "delete:invoices:dashboard","delete:licenses:dashboard","delete:assets:dashboard","delete:users","delete:assets","delete:licenses","delete:invoices","delete:checkouts",
+];
+
+
 const PermissionSchema = new mongoose.Schema({
   role: {
     type: String,
@@ -7,35 +15,9 @@ const PermissionSchema = new mongoose.Schema({
     required: true
   },
   permissions:{
-    assets: {
-      dashboard: { type: Boolean, default: false },
-      create: { type: Boolean, default: false },
-      update: { type: Boolean, default: false },
-      view: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false },
-    },
-    licenses: {
-      dashboard: { type: Boolean, default: false },
-      create: { type: Boolean, default: false },
-      update: { type: Boolean, default: false },
-      view: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false },
-    },
-    invoices: {
-      dashboard: { type: Boolean, default: false },
-      create: { type: Boolean, default: false },
-      update: { type: Boolean, default: false },
-      view: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false },
-    },
-    checkouts: {
-      dashboard: { type: Boolean, default: false },
-      create: { type: Boolean, default: false },
-      update: { type: Boolean, default: false },
-      view: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false },
-    },
+    type: [String],
+    enum: PermissionEnum
   }
 });
 
-module.exports = mongoose.model("Permission", PermissionSchema);
+module.exports= mongoose.model("Permission", PermissionSchema);

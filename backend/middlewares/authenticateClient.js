@@ -17,8 +17,10 @@ const authMiddleware=async(req,res,next)=>{
     }catch(err){
         console.error(err);
         if(err instanceof jwt.JsonWebTokenError){
-            res.status(401).json(new ApiError(401,err,"Invalid token"));
+            res.status(401).json(new ApiError(401,err,"Invalid token")); 
+            return ;
         }
+        res.status(400).json(new ApiError(400,err,"Unknown error"));
     }
 }
 module.exports=authMiddleware;

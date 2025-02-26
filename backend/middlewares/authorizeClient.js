@@ -1,0 +1,46 @@
+const redisClient = require('../config/redis'); // Assuming you have a redis client configured
+const Permission = require('../models/permission'); // Assuming you have a database connection and models set up
+const ApiError = require('../utils/ApiError');
+
+const authorizeClient = (requiredPermissions) => {
+    return async (req, res, next) => {
+        try {
+            // const userId = req.user.id; // Assuming user ID is available in the request object
+            const userRole = req.user.role;
+            const redisKey = `${userRole}:permissions`
+
+            let permissions = await redisClient.get(redisKey);
+
+            if (!permissions) {
+                // Fetch permissions from the database
+                const permissionDocument = await Permission.findOne({role: userRole}).select("-__id -__v");
+                permissions = permissionDocument.permissions;
+                await redisClient.set(redisKey, JSON.stringify(permissions));
+            } else {
+                permissions = JSON.parse(permissions);
+            }
+
+            let permissionsEnabled=true;
+
+            for(const permission of requiredPermissions){
+                if (!permissions.includes(permission)) {
+                    permissionsEnabled = false;
+                    break;
+                }
+            };
+            // console.log(requiredPermissions);
+            // console.log(permissions);
+            
+            if (permissionsEnabled) {
+                return next();
+            } else {
+                return res.status(403).json(new ApiError(403,null,"Forbidden Access"));
+            }
+        } catch (error) {
+            console.error('Authorization error:', error);
+            return res.status(500).json(new ApiError(500,error,"Internal server error",error?.stack));
+        }
+    };
+};
+
+module.exports = authorizeClient;
