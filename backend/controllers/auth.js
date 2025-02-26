@@ -69,7 +69,28 @@ const handleLogout = asyncHandler(async (req,res,next)=>{
     }
     res.clearCookie("access_token").clearCookie("refresh_token").json(new ApiResponse(200, null, "Logged out successfully."));
 });
- 
- 
- 
-module.exports={handleLogin,handleLogout,handleRefreshAccessToken}
+
+const handleResetPassword=asyncHandler(async(req,res)=>{
+    const {email}=req.body.email;
+    if(!email){
+          return res.status(422).json({ message: "Email is required." });
+    }
+    const emailResponse = await fetch(cleanedEnv.EMAIL_API,{
+          method: "POST",
+          headers: {
+                "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+                "type": "forgot-password",
+                "email": email,
+          })
+    });
+    if(emailResponse.success){
+          res.status(200).json(new ApiResponse(200,null,emailResponse.message))
+    }else{
+          res.status(500).json(new ApiError(500,emailResponse.error,emailResponse.message))
+    }    
+})
+
+module.exports={handleLogin,handleLogout,handleRefreshAccessToken,handleResetPassword}
+
