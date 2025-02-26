@@ -1,23 +1,25 @@
+const fs = require("fs");
+const path = require("path");
+const { S3Client, PutObjectCommand, Permission } = require('@aws-sdk/client-s3');
+
 const User = require("../models/user");
 const asyncHandler = require("../utils/asyncHandler");
 const { userSchema } = require("../utils/schemas");
 const cleanedEnv=require("../utils/cleanedEnv");
 const {fullAccess}=require("../utils/constants")
-const fs = require("fs");
-const path = require("path");
-const { S3Client, PutObjectCommand, Permission } = require('@aws-sdk/client-s3');
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
+const {encryptData,decryptData} = require("../utils/encrypt");
 
 
 const client = new S3Client({
       credentials: {
-          accessKeyId:cleanedEnv.AWS_ACCESS_KEY,
-          secretAccessKey:cleanedEnv.AWS_SECRET_KEY
-      },
-      region:cleanedEnv.S3_REGION
-  })
-const uploadFileToS3 = async (filePath, bucketName, key) => {
+            accessKeyId:cleanedEnv.AWS_ACCESS_KEY,      
+            secretAccessKey:cleanedEnv.AWS_SECRET_KEY
+            },
+            region:cleanedEnv.S3_REGION
+      })
+      const uploadFileToS3 = async (filePath, bucketName, key) => {
       const fileStream = fs.createReadStream(filePath);
       const input = {
             Bucket: bucketName,
@@ -54,6 +56,23 @@ const createUser = asyncHandler(async (req, res) => {
                   user.profile_pic=`https://${cleanedEnv.S3_BUCKET_NAME}.s3.${cleanedEnv.S3_REGION}.amazonaws.com/${folder}/default.png`;
             }
             await user.save();
+            console.log(user.email);
+            
+            const emailResponse = await fetch(cleanedEnv.EMAIL_API,{
+                  method: "POST",
+                  headers: {
+                        "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                        "type": "verify-email",
+                        "email": user.email,
+                        "data":{
+                              password: encryptData(user.password)
+                        }
+                  })
+            });//if email is not sent by email server try manually using a cron with api key. (cron access only for permission cron:use)
+            console.log(await emailResponse.json());
+            
             delete user.password;
             delete user.__v;
             delete user._id;
