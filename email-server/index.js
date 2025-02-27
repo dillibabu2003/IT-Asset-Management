@@ -5,7 +5,7 @@ const {config} = require("dotenv");
 config();
 
 const {forgotPasswordTemplate,expirationTemplate,verifyEmailTemplate} = require("./html-templates");
-const { encryptData } = require("./encrypt");
+const { encryptData, decryptData } = require("./encrypt");
 const sendEmail = require("./email");
 
 const app = express();
@@ -47,7 +47,7 @@ app.post('/api/v1/send-email', async (req, res) => {
                 }
                 subject = "Verify Your Email";
                 link = FRONTEND_BASE_URI+"/verify-email?id="+encryptData(email);
-                html = verifyEmailTemplate(link,data.password);
+                html = verifyEmailTemplate(link,decryptData(data.password));
                 break;
             case 'expiry-alert':
                 if(!data.expiry_item_name || !data.expiry_date){
@@ -71,7 +71,7 @@ app.post('/api/v1/send-email', async (req, res) => {
         res.status(202).json({success: true, message: `Mail request received and a email will be sent to ${email}`});
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: "Failed to send email", error: err });
+        res.status(500).json({ success: false,error:err, message: "Failed to send email", error: err });
     }
 });
 

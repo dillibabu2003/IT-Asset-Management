@@ -82,4 +82,30 @@ const createUser = asyncHandler(async (req, res) => {
       }      
 });
 
-module.exports = { createUser };
+
+const getUserData=asyncHandler(async(req,res)=>{
+      const userId=req.body.user_id;
+      const userData=await User.findOne({user_id:userId});
+      if(!userData){
+            return res.status(400).json(new ApiError(400,null,"Invalid user id"));
+      }
+      res.status(200).json(new ApiResponse(200,userData,"User data fetched Successfully"));
+});
+
+const updateUserDetails=asyncHandler(async(req,res)=>{
+         const userId=req.body.user_id;
+         const userData=await User.findOneAndUpdate({user_id:userId},req.body);
+         if(!userData){
+            return res.status(400).json(new ApiError(400,null,"Invalid user id"));
+         }
+         res.status(200).json(new ApiResponse(200,userData,"User updated successfully")); 
+})
+const deleteUser=asyncHandler(async(req,res)=>{
+      const userId=req.body.user_id;
+      console.log("User id:",userId);
+      await User.findOneAndDelete({user_id:userId});
+      User.save();
+      return res.status(200).json(new ApiResponse(200,null,"User Deleted Successfully"));
+});
+
+module.exports = { createUser,getUserData,deleteUser,updateUserDetails};
