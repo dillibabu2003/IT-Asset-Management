@@ -11,6 +11,8 @@ import LicensePage from './pages/Licenses';
 import InvoicesPage from './pages/Invoices';
 import CheckoutPage from './pages/Checkout';
 import UserPage from './pages/User';
+import CreateUser from './components/CreateUser';
+import ManageUsers from './components/ManageUser';
 
 export const LinkBehavior = React.forwardRef((props, ref) => {
   const { href, ...other } = props;
@@ -40,7 +42,8 @@ function App() {
           <Route path="/invoices" element={<InvoicesPage/>} />
           <Route path="/users"  >
             <Route index element={<UserPage/>} />
-            <Route path="create" element={"create user"}/>
+            <Route path="create" element={<CreateUser/>}/>
+            <Route path="manage" element={<ManageUsers/>}/>
             <Route path=":userId" element={"User with some id"} />
           </Route>
             
