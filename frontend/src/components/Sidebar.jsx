@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Drawer, List, ListItem, ListItemIcon, ListItemText, Collapse } from '@mui/material';
 import { Link, useLocation, useParams } from "react-router";
 import Icon from './Icon';
-
+import ProtectedComponent from '../protectors/ProtectedComponent';
 
 const drawerWidth = 250;
 
@@ -13,6 +13,7 @@ function SubItem({item,openItems}) {
       <List component="div"               
       >
         {item.subItems.map((subItem) => (
+          <ProtectedComponent requiredPermission={subItem.requiredPermission}>
           <Link
             to={'/'+item.id+"/"+subItem.id}
             key={item.id+subItem.id}
@@ -38,6 +39,7 @@ function SubItem({item,openItems}) {
             <ListItemText primary={subItem.text} />
           </ListItem>
             </Link>
+            </ProtectedComponent>
         ))}
       </List>
     </Collapse>
@@ -89,27 +91,30 @@ function Sidebar(component) {
       text: 'Dashboard',
       icon: <Icon name="layout-dashboard" />,
       id: 'dashboard',
+      requiredPermission: "view:dashboard",
       subItems: [
-        { text: 'Assets Dashboard', id:"assets", icon: <Icon name="box" /> },
-        { text: 'Licenses Dashboard', id:"licenses", icon: <Icon name="key" /> },
-        { text: 'Invoices Dashboard', id:"invoices", icon: <Icon name="receipt" /> },
-        { text: 'Configure Dashboard', id:"configure", icon: <Icon name="receipt" /> }
+        { text: 'Assets Dashboard', id:"assets", icon: <Icon name="box" />, requiredPermission:"view:assets:dashboard"},
+        { text: 'Licenses Dashboard', id:"licenses", icon: <Icon name="key" />, requiredPermission:"view:licenses:dashboard"},
+        { text: 'Invoices Dashboard', id:"invoices", icon: <Icon name="receipt" />, requiredPermission:"view:invoices:dashboard"},
+        { text: 'Configure Dashboard', id:"configure", icon: <Icon name="receipt" />, requiredPermission:"edit:dashboard"}
       ]
     },
     {
       text: 'Assets',
       icon: <Icon name="box" />,
       id: 'assets',
+      requiredPermission:"view:assets"
     },
-    { text: 'Licenses', icon: <Icon name="key" />, id: 'licenses' },
-    { text: 'Checkouts', icon: <Icon name="clipboard-list" />, id: 'checkouts' },
-    { text: 'Invoices', icon: <Icon name="receipt" />, id: 'invoices' },
+    { text: 'Licenses', icon: <Icon name="key" />, id: 'licenses',requiredPermission:"view:licenses" },
+    { text: 'Checkouts', icon: <Icon name="clipboard-list" />, id: 'checkouts',requiredPermission:"view:checkouts" },
+    { text: 'Invoices', icon: <Icon name="receipt" />, id: 'invoices',requiredPermission:"view:invoices" },
     { 
       text: 'Users',
       icon: <Icon name="users"/>,
       id: 'users',
+      requiredPermission:"view:users",
       subItems: [
-        { text: 'Create User', icon: <Icon name="user-plus"/>, id: 'create' },
+        { text: 'Create User', icon: <Icon name="user-plus"/>, id: 'create',requiredPermission:"create:assets" },
       ]
      },
   ];
@@ -130,43 +135,57 @@ function Sidebar(component) {
     >
       <List>
         {menuItems.map((item) => (
+          <ProtectedComponent requiredPermission={item.requiredPermission}>
           <React.Fragment key={item.id}>
-            <Link to={"/"+item.id} >
-            <ListItem
-              button
-              onClick={() => {
-                if (item.subItems) {
-                  handleClick(item.id,true);
-                }
-                else{
-                  handleClick(item.id,false);
-                }
-              }}
-              sx={{
-                '&.Mui-selected': {
-                  backgroundColor: '#f0f7ff',
-                  color: '#1976d2',
-                  '& .MuiListItemIcon-root': {
+            {item.subItems ? (
+              <ListItem
+                button
+                onClick={() => handleClick(item.id, true)}
+                sx={{
+                  '&.Mui-selected': {
+                    backgroundColor: '#f0f7ff',
                     color: '#1976d2',
+                    '& .MuiListItemIcon-root': {
+                      color: '#1976d2',
+                    },
                   },
-                },
-              }}
-              selected={openItems[item.id]}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText primary={item.text} />
-              {item.subItems && (
-                openItems[item.id] ? <Icon name="chevron-down" size={18} /> : <Icon name="chevron-right" size={18} />
-              )}
-            </ListItem>
-            </Link>
-
+                }}
+                selected={openItems[item.id]}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText primary={item.text} />
+                {openItems[item.id] ? <Icon name="chevron-down" size={18} /> : <Icon name="chevron-right" size={18} />}
+              </ListItem>
+            ) : (
+              <Link to={"/" + item.id}>
+                <ListItem
+                  button
+                  onClick={() => handleClick(item.id, false)}
+                  sx={{
+                    '&.Mui-selected': {
+                      backgroundColor: '#f0f7ff',
+                      color: '#1976d2',
+                      '& .MuiListItemIcon-root': {
+                        color: '#1976d2',
+                      },
+                    },
+                  }}
+                  selected={openItems[item.id]}
+                >
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItem>
+              </Link>
+            )}
             {item.subItems && (
-                <SubItem key={item.id} item={item} openItems={openItems} />
+              <SubItem key={item.id} item={item} openItems={openItems} />
             )}
           </React.Fragment>
+          </ProtectedComponent>
         ))}
       </List>
     </Drawer>

@@ -4,13 +4,16 @@ import StatCard from '../components/StatCard';
 import axiosInstance from "../utils/axios";
 import CustomVisualRender from "../components/CustomVisualRender";
 
-import { useParams } from 'react-router';
+import { Navigate, useParams } from 'react-router';
 import Loader from '../components/Loader';
 import ConfigureDashboard from '../components/ConfigureDashboard';
 
 function DashboardPage() {
     const [data, setData] = useState(null);
     const currentDashboardId = useParams().dashboardId || "main";
+    if(!["assets","licenses","invoices"].includes(currentDashboardId)){
+        return <Navigate to="/NotFound" replace={true}></Navigate>
+    }
 
     useEffect(() => {
         console.log("Fetching the data of " + currentDashboardId);
@@ -28,7 +31,7 @@ function DashboardPage() {
     }, [currentDashboardId]);
 
     if(currentDashboardId == "configure"){
-        return <ConfigureDashboard />
+        return <ProtectedComponent requiredPermission="edit:dashboard"><ConfigureDashboard /></ProtectedComponent>
     }
 
     return (
