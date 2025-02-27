@@ -1,30 +1,41 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import {
     Box,
     Button,
     Checkbox,
     Container,
     FormControlLabel,
-    Link,
     Paper,
     TextField,
     Typography,
     IconButton,
 } from '@mui/material';
-import { useNavigate } from 'react-router';
-import Icon from './Icon';
+import { useNavigate,Link } from 'react-router';
+import Icon from '../components/Icon';
+import { useAuth } from '../providers/AuthProvider';
 function SignIn() {
     const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [rememberMe, setRememberMe] = useState(false);
     const navigate=useNavigate();
+    const {user,login} = useAuth();
+    useLayoutEffect(()=>{
+        if(user){
+            navigate('/assets', { replace: true });
+        }
+    },[user]);
     const onBack=()=>{
         navigate('/');
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        const formData = new FormData(e.target);
+        const response = await login(formData.get("email"),formData.get("password"));
+        if(response.success){
+            navigate('/assets', { replace: true });
+        }
+        else{
+            console.log(response.message);
+        }
     };
 
     return (
@@ -74,17 +85,20 @@ function SignIn() {
                         <Typography variant="h4" fontWeight="700" gutterBottom>
                             Welcome Back
                         </Typography>
-                        <Typography variant="body1" color="text.secondary"></Typography>
+                        <Typography variant="body1" color="text.secondary">
+
                             Sign in to continue to AssetManager
+                        </Typography>
                 
                     </Box>
 
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <TextField
                             label="Email Address"
+                            name="email"
                             type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            // value={email}
+                            // onChange={(e) => setEmail(e.target.value)}
                             required
                             fullWidth
                         />
@@ -92,8 +106,9 @@ function SignIn() {
                         <TextField
                             label="Password"
                             type={showPassword ? 'text' : 'password'}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            name="password"
+                            // value={password}
+                            // onChange={(e) => setPassword(e.target.value)}
                             required
                             fullWidth
                             InputProps={{
@@ -110,18 +125,8 @@ function SignIn() {
                         />
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={rememberMe}
-                                        onChange={(e) => setRememberMe(e.target.checked)}
-                                        color="primary"
-                                    />
-                                }
-                                label="Remember me"
-                            />
-                            <Link to='/' underline="hover" sx={{ typography: 'body2' }}>
-                                Forgot password?
+                            <Link to='/forgot-password' style={{color: "#1976d2"}}>
+                            Forgot password?
                             </Link>
                         </Box>
 

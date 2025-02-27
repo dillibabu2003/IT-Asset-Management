@@ -1,8 +1,12 @@
-import React from 'react';
-import { AppBar, Avatar, Box, IconButton, InputBase, Toolbar, Typography, alpha } from '@mui/material';
+import React, { useState } from 'react';
+import { AppBar, Avatar, Box, Button, IconButton, InputBase, Popover, Toolbar, Typography, alpha } from '@mui/material';
 import Icon from './Icon';
+import { useAuth } from '../providers/AuthProvider';
 
 function Header() {
+  const {user,logout} = useAuth();
+  
+  const [toggleProfileMenu,setToggleProfileMenu] = useState();
   return (
     <AppBar position="fixed" color="inherit" elevation={1} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <Toolbar>
@@ -46,13 +50,47 @@ function Header() {
             </IconButton>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box sx={{ textAlign: 'right' }}>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>John Doe</Typography>
-                <Typography variant="caption" color="text.secondary">Administrator</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>{user.fullname}</Typography>
+                <Typography variant="caption" color="text.secondary">{String(user.role).charAt(0).toUpperCase() + String(user.role).slice(1)}</Typography>
               </Box>
               <Avatar 
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
-                alt="John Doe"
+                src={user.profile_pic} 
+                alt={user.fullname}
+                sx={{cursor: "pointer"}}
+                onClick={(e)=>{setToggleProfileMenu(e.target)}}
               />
+              <Popover
+                  open={Boolean(toggleProfileMenu)}
+                  anchorEl={toggleProfileMenu}
+                  onClose={() => setToggleProfileMenu(null)}
+                  anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                  }}
+                
+              >
+                  <Box sx={{ p: 1, width: "fit-content", display: 'flex', flexDirection: "column" }}>
+                      <Button
+                          fullWidth
+                          startIcon={<Icon name="user" size={20} />}
+                          sx={{ mb: 1, justifyContent: 'flex-start', textWrap: 'nowrap', textTransform: 'capitalize',color: 'gray'  }}
+                      >
+                          Profile
+                      </Button>
+                      <Button
+                          fullWidth
+                          startIcon={<Icon name="file-text" size={20} />}
+                          sx={{ justifyContent: 'flex-start', textWrap: 'nowrap',textTransform: 'capitalize', color: 'gray' }}
+                          onClick={()=>{logout();}}
+                      >
+                          Logout
+                      </Button>
+                  </Box>
+              </Popover>
             </Box>
           </Box>
         </Box>

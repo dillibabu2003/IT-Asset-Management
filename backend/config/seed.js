@@ -10,6 +10,7 @@ const User = require('../models/user');
 const UserVisibility = require('../models/userPreference');
 const cleanedEnv = require('../utils/cleanedEnv');
 const metadata = require('../models/metadata');
+const Dashboard = require('../models/dashboard');
 
 mongoose.connect(cleanedEnv.MONGO_URI, {
     dbName: cleanedEnv.DB_NAME,
@@ -44,36 +45,55 @@ const seedDB = async () => {
     await user1.save();
     // await user2.save();
 
-    // const invoice1 = new Invoice({
-    //     invoice_id: 'INV001',
-    //     date_of_upload: new Date(),
-    //     date_of_received: new Date(),
-    //     name_of_the_vendor: 'Vendor A',
-    //     amount: 1000.00,
-    //     status: 'processed',
-    // });
+    const invoice1 = new Invoice({
+        invoice_id: 'INV001',
+        date_of_upload: new Date(),
+        date_of_received: new Date(),
+        name_of_the_vendor: 'Vendor A',
+        amount: 1000.00,
+        status: 'processed',
+    });
 
-    // await invoice1.save();
+    await invoice1.save();
 
-    // const asset1 = new Asset({
-    //     serial_no: 'SN001',
-    //     asset_id: 'A001',
-    //     date_of_received: new Date(),
-    //     name_of_the_vendor: 'Vendor A',
-    //     invoice_id: invoice1._id,
-    //     make: 'Dell',
-    //     model: 'XPS 13',
-    //     ram: '16GB',
-    //     storage: '512GB',
-    //     processor: 'Intel i7',
-    //     os_type: 'windows',
-    //     start: new Date(),
-    //     end: new Date(),
-    //     warranty: '2 years',
-    //     status: 'available',
-    // });
+    const asset1 = new Asset({
+        serial_no: 'SN001',
+        asset_id: 'A001',
+        date_of_received: new Date(),
+        name_of_the_vendor: 'Vendor A',
+        invoice_id: invoice1._id,
+        make: 'Dell',
+        model: 'XPS 13',
+        ram: '16GB',
+        storage: '512GB',
+        processor: 'Intel i7',
+        os_type: 'windows',
+        start: new Date(),
+        end: new Date(),
+        warranty: '2 years',
+        status: 'available',
+    });
 
-    // await asset1.save();
+    await asset1.save();
+    const asset2 = new Asset({
+        serial_no: 'SN002',
+        asset_id: 'A002',
+        date_of_received: new Date(),
+        name_of_the_vendor: 'Vendor B',
+        invoice_id: invoice1._id,
+        make: 'HP',
+        model: 'Spectre x360',
+        ram: '8GB',
+        storage: '256GB',
+        processor: 'Intel i5',
+        os_type: 'windows',
+        start: new Date(),
+        end: new Date(),
+        warranty: '1 year',
+        status: 'available',
+    });
+
+    await asset2.save();
 
     // const checkout1 = new Checkout({
     //     checkout_id: 'CO001',
@@ -113,46 +133,106 @@ const seedDB = async () => {
 
     // await license1.save();
 
+    const PermissionEnum = [
+        "view:invoices:dashboard", "view:licenses:dashboard", "view:assets:dashboard", "view:users", "view:assets", "view:licenses", "view:invoices", "view:checkouts",
+        "edit:invoices:dashboard", "edit:licenses:dashboard", "edit:assets:dashboard", "edit:users", "edit:assets", "edit:licenses", "edit:invoices", "edit:checkouts",
+        "create:invoices:dashboard", "create:licenses:dashboard", "create:assets:dashboard", "create:users", "create:assets", "create:licenses", "create:invoices", "create:checkouts",
+        "delete:invoices:dashboard", "delete:licenses:dashboard", "delete:assets:dashboard", "delete:users", "delete:assets", "delete:licenses", "delete:invoices", "delete:checkouts",
+    ];
+
     const permission1 = new Permission({
         role: 'admin',
-        permissions: {
-            users:{
-                create: true,
-                update: true,
-                delete: true,
-            },
-            assets: {
-                dashboard: true,
-                create: true,
-                update: true,
-                view: true,
-                delete: true,
-            },
-            licenses: {
-                dashboard: true,
-                create: true,
-                update: true,
-                view: true,
-                delete: true,
-            },
-            invoices: {
-                dashboard: true,
-                create: true,
-                update: true,
-                view: true,
-                delete: true,
-            },
-            checkouts: {
-                dashboard: true,
-                create: true,
-                update: true,
-                view: true,
-                delete: true,
-            },
-        },
+        permissions: PermissionEnum
     });
 
+    const permission2 = new Permission({
+        role: 'member',
+        permissions: PermissionEnum.filter(permission => !permission.startsWith('delete'))
+    });
+
+    const permission3 = new Permission({
+        role: 'guest',
+        permissions: PermissionEnum.filter(permission => permission.startsWith('view'))
+    });
+    
+
     await permission1.save();
+    await permission2.save();
+    await permission3.save();
+
+    const dashboards = [
+        {
+            id: "main",
+            label: "Main Dashboard",
+            tiles: [
+                {
+                    title: "Total Assets",
+                    reference_object: "assets",
+                    type: "single",
+                    func: "count",
+                    field: "asset_id",
+                    icon: "assets-icon",
+                    color: "blue",
+                },
+                {
+                    title: "Total Licenses",
+                    reference_object: "licenses",
+                    type: "single",
+                    func: "count",
+                    field: "license_id",
+                    icon: "licenses-icon",
+                    color: "green",
+                },
+            ],
+            elements: [
+                {
+                    title: "Assets by Status",
+                    reference_object: "assets",
+                    type: "pie",
+                    fields: ["status"],
+                    color: "blue",
+                    icon: "status-icon",
+                },
+                {
+                    title: "Licenses by Vendor",
+                    reference_object: "licenses",
+                    type: "bar",
+                    fields: ["name_of_the_vendor"],
+                    color: "green",
+                    icon: "vendor-icon",
+                },
+            ],
+        },
+        {
+            id: "assets",
+            label: "Assets Dashboard",
+            tiles: [
+                {
+                    title: "Available Assets",
+                    reference_object: "assets",
+                    type: "single",
+                    func: "count",
+                    field: "status",
+                    icon: "available-icon",
+                    color: "blue",
+                },
+            ],
+            elements: [
+                {
+                    title: "Assets by Vendor",
+                    reference_object: "assets",
+                    type: "bar",
+                    fields: ["name_of_the_vendor"],
+                    color: "blue",
+                    icon: "vendor-icon",
+                },
+            ],
+        },
+    ];
+
+    await Dashboard.insertMany(dashboards);
+
+
 
     const userVisibility = new UserVisibility({
         user_id: user1._id,
