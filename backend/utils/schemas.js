@@ -40,4 +40,14 @@ const userSchema=zod.object({
     gender: zod.enum(genderEnum,{message:"Gender is not valid"})
 })
 
-module.exports={envSchema, loginSchema,userSchema};
+const metadataSchema=zod.object({
+    bleongs_to: zod.string({message:"Belongsto is required"}),
+    id: zod.string({message:"Id is required"}),
+    label: zod.string({message:"label is required"}),
+    required: zod.boolean({message:"Required should be a boolean"}),
+    additional: zod.boolean({message:"Additional Field is required and should be a boolean"}),
+    type: zod.enum(["text","textarea","date","select"],{message:"type should be valid"}),
+    options: zod.array({message:"options is required and should be an array"})
+})
+
+module.exports={envSchema, loginSchema,userSchema,metadataSchema};
