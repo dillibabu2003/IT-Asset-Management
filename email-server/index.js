@@ -28,7 +28,7 @@ app.post('/api/v1/send-email', async (req, res) => {
     try {
         console.log(req.body);
         
-        const { email, type, data } = req.body;
+        const { email, type, data,code } = req.body;
 
         let subject, html, link;
         if(!email){
@@ -37,21 +37,24 @@ app.post('/api/v1/send-email', async (req, res) => {
        
         switch (type) {
             case 'forgot-password':
+                if(!code){
+                    return res.status(422).json({ success: false, message: "Code is missing." });
+                }
                 subject = "Reset Your Password";
-                link = FRONTEND_BASE_URI+"/forgot-password?id="+encryptData(email);
+                link = FRONTEND_BASE_URI+"/forgot-password?id="+encryptData(email)+"&code="+encryptData(code);
                 html = forgotPasswordTemplate(link);
                 break;
             case 'verify-email':
                 if(!data?.password){
-                    return res.status(422).json({ message: "Password is missing." });
+                    return res.status(422).json({success: false, message: "Password is missing." });
                 }
                 subject = "Verify Your Email";
-                link = FRONTEND_BASE_URI+"/verify-email?id="+encryptData(email);
+                link = FRONTEND_BASE_URI+"/verify-email/"+encryptData(email);
                 html = verifyEmailTemplate(link,decryptData(data.password));
                 break;
             case 'expiry-alert':
                 if(!data.expiry_item_name || !data.expiry_date){
-                    return res.status(422).json({ message: "Expiry Date or Expiry Item name is missing." });
+                    return res.status(422).json({success: false, message: "Expiry Date or Expiry Item name is missing." });
                 }
                 subject = `${data.expiry_item_name} Expiry Notice`;
                 html = expirationTemplate(data.expiry_item_name,data.expiry_date);

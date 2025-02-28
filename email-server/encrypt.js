@@ -34,7 +34,7 @@ const decryptData = (encryptedText) => {
 // const text="abcd";
 // const encrypted=encryptData(text);
 // console.log(encrypted);
-console.log(decryptData("4d118387644776e1224f13414bf9f2f263ccc81ed93e7a68590cd7c653054fc9"));
+// console.log(decryptData("4d118387644776e1224f13414bf9f2f263ccc81ed93e7a68590cd7c653054fc9"));
 
 module.exports={
     encryptData,decryptData
