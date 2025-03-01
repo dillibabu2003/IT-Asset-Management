@@ -1,5 +1,6 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableRow, Chip } from '@mui/material';
+import { convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -21,7 +22,7 @@ function DashboardTable({columns,documents}) {
         <TableRow>
         {columns.map((column,index) => (
                 <TableCell key={column+index}>
-                  {column}
+                  {convertSnakeCaseToPascaleCase(column)}
                 </TableCell>
               ))}
         </TableRow>
