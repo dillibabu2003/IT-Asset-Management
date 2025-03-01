@@ -11,7 +11,7 @@ export const MainLayout = () => {
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
         <Header />
         <Sidebar />
-         <LocalizationProvider dateAdapter={AdapterDayjs}>
+         
         <Box component="main" sx={{ flexGrow: 1 }}>
           <Toolbar /> 
           <Box  sx={{ p: 3 }}>
@@ -20,7 +20,6 @@ export const MainLayout = () => {
             </ProtectedRoute>
           </Box>
         </Box>
-      </LocalizationProvider>
       </Box>
   )
 }

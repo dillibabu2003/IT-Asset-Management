@@ -18,6 +18,7 @@ import {
   InputAdornment
 } from '@mui/material';
 import Icon from './Icon';
+import ProtectedComponent from '../protectors/ProtectedComponent';
 
 const invoices = [
   { id: '#INV-2025001', vendor: 'Apple Inc.', date: 'Jan 15, 2025', amount: 1299.00, status: 'Processed' },
@@ -56,6 +57,7 @@ function InvoiceSection() {
     <Box>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h5" fontWeight="500">Invoices</Typography>
+        <ProtectedComponent requiredPermission="create:invoice">
         <Button 
           variant="contained" 
           startIcon={<Icon name="upload" size={18} />}
@@ -63,8 +65,10 @@ function InvoiceSection() {
         >
           Upload Invoice
         </Button>
+        </ProtectedComponent>
       </Box>
 
+      <ProtectedComponent requiredPermission="create:invoice">
       <Paper 
         sx={{ 
           p: 3, 
@@ -95,6 +99,7 @@ function InvoiceSection() {
           </Typography>
         </Box>
       </Paper>
+      </ProtectedComponent>
 
       <Paper sx={{ p: 3 }}>
         <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>

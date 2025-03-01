@@ -6,6 +6,7 @@ import { PAGE_LIMIT } from "../utils/constants";
 import { Box, Button, Popover, Typography } from '@mui/material';
 import CreateForm from '../components/CreateForm';
 import Icon from '../components/Icon';
+import ProtectedComponent from '../protectors/ProtectedComponent';
 
 const LicensePage = () => {
 
@@ -39,7 +40,7 @@ const LicensePage = () => {
 
                 <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h5" fontWeight="500">Licenses</Typography>
-
+                    <ProtectedComponent requiredPermission={"create:licenses"}>
                     <Box sx={{ display: 'flex', gap: "8px", alignItems: "center" }}>
                         <Button
                             variant="contained"
@@ -92,7 +93,7 @@ const LicensePage = () => {
                         </Box>
 
                     </Box>
-
+                    </ProtectedComponent>
                 </Box>
                 {!data ? <Loader /> :
                     <React.Fragment>

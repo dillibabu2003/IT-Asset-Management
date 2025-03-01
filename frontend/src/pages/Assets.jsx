@@ -6,11 +6,12 @@ import { PAGE_LIMIT } from "../utils/constants";
 import { Box, Button, Popover, Typography } from '@mui/material';
 import CreateForm from '../components/CreateForm';
 import Icon from '../components/Icon';
+import ProtectedComponent from '../protectors/ProtectedComponent';
 
 const AssetsPage = () => {
 
 
-    const [data, setData] = useState();
+    const [data, setData] = useState(null);
     const [page, setPage] = useState(1);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [importMenuAnchor, setImportMenuAnchor] = useState(null);
@@ -43,6 +44,7 @@ const AssetsPage = () => {
                 <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h5" fontWeight="500">Assets</Typography>
 
+                        <ProtectedComponent requiredPermission={"create:assets"}>
                     <Box sx={{ display: 'flex', gap: "8px", alignItems: "center" }}>
                         <Button
                             variant="contained"
@@ -95,12 +97,13 @@ const AssetsPage = () => {
                         </Box>
 
                     </Box>
+                    </ProtectedComponent>
 
                 </Box>
                 {!data ? <Loader /> :
                     <React.Fragment>
-                        <CreateForm currentSection="asset" fields={data.fields} isOpen={showCreateForm} closeDialog={() => setShowCreateForm(false)} aria-describedby={`create-assets-form`} />
-                        <CustomTable currentSection="asset" page={page} data={data} setPage={setPage} />
+                        <CreateForm currentSection="assets" fields={data.fields} isOpen={showCreateForm} closeDialog={() => setShowCreateForm(false)} aria-describedby={`create-assets-form`} />
+                        <CustomTable currentSection="assets" page={page} data={data} setPage={setPage} />
                     </React.Fragment>
                 }
             </React.Fragment>

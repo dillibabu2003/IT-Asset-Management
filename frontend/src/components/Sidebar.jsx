@@ -114,7 +114,9 @@ function Sidebar(component) {
       id: 'users',
       requiredPermission:"view:users",
       subItems: [
-        { text: 'Create User', icon: <Icon name="user-plus"/>, id: 'create',requiredPermission:"create:assets" },
+        { text: 'Create User', icon: <Icon name="user-plus"/>, id: 'create',requiredPermission:"create:users" },
+        { text: 'View Users', icon: <Icon name="user"/>, id: 'view',requiredPermission:"view:users" },
+        { text: 'Manage User', icon: <Icon name="user"/>, id: 'manage',requiredPermission:"edit:users" },
       ]
      },
   ];
