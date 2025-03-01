@@ -12,7 +12,7 @@ axiosInstance.interceptors.response.use(
         const originalRequest = error.config;
         console.log(error);
         
-        if (error.response.status === 401 && error.response.data.errors.name === "TokenExpiredError") {
+        if (error.response?.status === 401 && error.response?.data?.errors?.name === "TokenExpiredError") {
             try {
                 await axiosInstance.post("/auth/refresh-access-token");
                 return axiosInstance(originalRequest);

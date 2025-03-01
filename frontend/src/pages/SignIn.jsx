@@ -13,6 +13,7 @@ import {
 import { useNavigate,Link } from 'react-router';
 import Icon from '../components/Icon';
 import { useAuth } from '../providers/AuthProvider';
+import {toast} from 'react-hot-toast';
 function SignIn() {
     const [showPassword, setShowPassword] = useState(false);
     const navigate=useNavigate();
@@ -31,10 +32,11 @@ function SignIn() {
         const formData = new FormData(e.target);
         const response = await login(formData.get("email"),formData.get("password"));
         if(response.success){
+            toast.success(response.message);
             navigate('/assets', { replace: true });
         }
         else{
-            console.log(response.message);
+            toast.error(response.errors.error);
         }
     };
 
