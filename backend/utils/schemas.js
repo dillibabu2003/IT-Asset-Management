@@ -34,8 +34,7 @@ const userSchema=zod.object({
     email: zod.string({message:"Email is required"}).email({message:"Email is not valid."}),
     password: zod.string({message:"Password is required"})
                 .regex(passwordRegex, {message: 'Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character'}),
-    date_of_birth: zod.string({message:"Date of Birth is required"})
-                    .date({message:"Date is not valid"}),
+    date_of_birth: zod.coerce.date({message:"Date is not valid"}),
     // status: zod.enum(statusEnum,{message:"Status is not valid"}),
     gender: zod.enum(genderEnum,{message:"Gender is not valid"})
 })
@@ -48,6 +47,35 @@ const metadataSchema=zod.object({
     additional: zod.boolean({message:"Additional Field is required and should be a boolean"}),
     type: zod.enum(["text","textarea","date","select"],{message:"type should be valid"}),
     options: zod.array({message:"options is required and should be an array"})
-})
+});
 
-module.exports={envSchema, loginSchema,userSchema,metadataSchema};
+const tileSchema = zod.object({
+    title: zod.string({message:"Title is required"}),
+    matcher_field: zod.string({message:"Matcher field is required"}),
+    matcher_value: zod.union([zod.string(),zod.object({
+        start_date: zod.coerce.date({message:"Date is not valid"}),
+        end_date: zod.coerce.date({message:"Date is not valid"})
+    })]),
+    func: zod.enum(["sum","count","avg"],{message:"Function should be valid"}),
+    target: zod.string({message:"Target is required"}).optional(),
+    icon: zod.string({message:"Icon is required"}),
+    color: zod.string({message:"Color is required"}),
+    _id: zod.string({message:"Id is required"}),
+});
+
+const elementSchema = zod.object({
+    title: zod.string({message:"Title is required"}),
+    type: zod.enum(["table","pie","bar","line"],{message:"Type should be valid"}),
+    fields: zod.array(zod.string(),{message:"Fields is required and should be an array"}),
+    _id: zod.string({message:"Id is required"}),
+});
+
+const configureDashboardSchema = zod.object({
+    id: zod.string({message:"Id is required"}),
+    label: zod.string({message:"label is required"}),
+    tiles: zod.array(tileSchema,{message:"Tiles is required and should be an array"}),
+    elements: zod.array(elementSchema),
+    _id: zod.string({message:"Id is required"}),
+});
+
+module.exports={envSchema, loginSchema,userSchema,metadataSchema,tileSchema,elementSchema,configureDashboardSchema};

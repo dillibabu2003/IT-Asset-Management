@@ -8,7 +8,10 @@ const app = express();
 const indexRouter = require('../routes/index');
 const bodyParser = require('body-parser');
 
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
 // app.use(bodyParser.urlencoded())
 app.use(express.urlencoded({
     extended: false,
