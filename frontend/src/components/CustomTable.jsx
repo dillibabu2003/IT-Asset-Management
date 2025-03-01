@@ -24,6 +24,7 @@ import * as XLSX from 'xlsx';
 import Icon from './Icon';
 import { PAGE_LIMIT } from '../utils/constants';
 import axiosInstance from '../utils/axios';
+import ProtectedComponent from '../protectors/ProtectedComponent';
 
 export default function CustomTable({ currentSection, data, page, setPage }) {
   const [columns, setColumns] = useState(data.fields);
@@ -166,7 +167,9 @@ export default function CustomTable({ currentSection, data, page, setPage }) {
                   </TableSortLabel>
                 </TableCell>
               ))}
+              <ProtectedComponent requiredPermission={`edit:${currentSection}`}>
               <TableCell>Actions</TableCell>
+              </ProtectedComponent>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -190,6 +193,7 @@ export default function CustomTable({ currentSection, data, page, setPage }) {
                     )}
                   </TableCell>
                 ))}
+                <ProtectedComponent requiredPermission={`edit:${currentSection}`}>
                 <TableCell>
                   <IconButton size="small" color="primary">
                     <Icon name="pencil" size={20} />
@@ -198,6 +202,7 @@ export default function CustomTable({ currentSection, data, page, setPage }) {
                     <Icon name="trash-2" size={20} />
                   </IconButton>
                 </TableCell>
+                </ProtectedComponent>
               </TableRow>
             ))}
           </TableBody>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Paper, Box, Typography } from '@mui/material';
 import Icon from './Icon';
 
-function StatCard({ name, value, icon, color }) {
+function StatCard({ title, value, icon, color }) {
   return (
     <Paper sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -21,7 +21,7 @@ function StatCard({ name, value, icon, color }) {
         </Box>
         <Box>
           <Typography color="text.secondary" variant="body2">
-            {name}
+            {title}
           </Typography>
           <Typography variant="h5" component="div">
             {value}
