@@ -39,7 +39,9 @@ const UserSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: statusEnum
+    enum: statusEnum,
+    default: "inactive",
+    required: true,
   },
   gender: {
     type: String,
