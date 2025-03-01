@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Box,
     Paper,
@@ -13,190 +13,188 @@ import {
     FormControlLabel,
     Switch,
     Avatar,
+    IconButton,
 } from '@mui/material';
-import { Upload } from 'lucide-react';
-
-const initialFormData = {
-    fullName: '',
-    email: '',
-    gender: '',
-    phoneNumber: '',
-    status: true,
-    password: '',
-    role: '',
-    department: '',
-    jobTitle: '',
-    location: '',
-    profilePhoto: '',
-};
+import Icon from './Icon';
+import axiosInstance from '../utils/axios';
+import { DatePicker } from '@mui/x-date-pickers';
+import toast from 'react-hot-toast';
 
 function CreateUser() {
-    const [formData, setFormData] = useState(initialFormData);
+    const [fields, setFields] = useState(null);
+    const [profilePhoto, setProfilePhoto] = useState({id: null,value: null});
+    const [error, setError] = useState(null);
+    const [formData,setFormData] = useState(null);
+    let metaDataResponse = null;
+    useEffect(() => {
+        async function fetchUserMetaData() {
+            try {
+                 metaDataResponse = await axiosInstance.get('/metadata/users');
+                if (metaDataResponse.data.success) {
+                    setFields(metaDataResponse.data.data);
+                    setError(null);
+                    const initialFormData = {};
+                    metaDataResponse.data.data.map((field)=>{
+                        if(field.create && field.type!="image" && field.type!="pdf"){
+                            initialFormData[field.id]="";
+                        }
+                    })
+                    setFormData(initialFormData);
+                }
+            } catch (error) {
+                console.error(error);
+                setError("An error occurred while fetching metadata");
+            }
+        }
+        fetchUserMetaData();
+    }, []);
 
-    const handleChange = (field) => (event) => {
-        const value = event.target.type === 'checkbox' 
-            ? event.target.checked 
-            : event.target.value;
-        setFormData(prev => ({
+    const handleChange = (id,value)=>{
+        console.log(value);
+        
+        setFormData(prev=>{ return {
             ...prev,
-            [field]: value,
-        }));
-    };
+            [id]: value
+        }})
+    }
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async(event) => {
         event.preventDefault();
-        console.log('Form submitted:', formData);
+        const formValues = new FormData();
+        Object.keys(formData).forEach(key => {
+            formValues.append(key, formData[key]);
+        });
+        if (profilePhoto) {
+            formValues.append("profile_pic", new FormData(event.target).get("profile_pic"));
+        }
+        console.log(formValues);
+        
+        try {
+            const response = await axiosInstance.post("/user/create", formValues);
+            if (response.data.success) {
+                toast.success(response.data.message);
+                event.target.reset();
+                const initialFormData = {};
+                metaDataResponse.data.data.map((field)=>{
+                    if(field.create && field.type!="image" && field.type!="pdf"){
+                        initialFormData[field.id]="";
+                    }
+                })
+                setFormData(initialFormData);
+                setProfilePhoto({id: null,value: null});
+            }
+        } catch (error) {
+            const errorObject = error?.response?.data?.errors;
+            console.log(errorObject);
+            if(errorObject){
+                toast.error(errorObject[Object.keys(errorObject)[0]]);
+            }
+            else{
+                toast.error("An error occurred while creating user");
+            }
+        }
+        
     };
 
-    return (
-        <Box sx={{ p: 3 }}>
+
+    {
+        return error ? (<Box sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom></Typography>
+            <Paper sx={{ p: 3 }}>
+                <Typography variant="body1">{error}</Typography>
+            </Paper>
+        </Box>) : fields && <Box sx={{ p: 3 }}>
             <Typography variant="h5" gutterBottom>Create User</Typography>
             <Paper component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
                 <Grid container spacing={3}>
-                    {/* Profile Photo */}
-                    <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
-                        <Box sx={{ textAlign: 'center' }}>
-                            <Avatar
-                                src={formData.profilePhoto || undefined}
-                                sx={{ width: 100, height: 100, mb: 2, mx: 'auto' }}
-                            />
-                            <Button
-                                variant="outlined"
-                                component="label"
-                                startIcon={<Upload size={18} />}
-                                sx={{ textTransform: 'none' }}
-                            >
-                                Upload Photo
-                                <input
-                                    type="file"
-                                    hidden
-                                    accept="image/*"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                            const reader = new FileReader();
-                                            reader.onload = () => {
-                                                setFormData(prev => ({
-                                                    ...prev,
-                                                    profilePhoto: reader.result,
-                                                }));
-                                            };
-                                            reader.readAsDataURL(file);
-                                        }
+                    {/* User Details */}
+                    {fields.map((field) => ( field.create &&
+                        <Grid item xs={12} md={6} key={field.id} sx={{ mb: 2, width: '50%' }}>
+                            {field.type === 'select' ? (
+                                <FormControl fullWidth>
+                                    <InputLabel>{field.label}</InputLabel>
+                                    <Select
+                                        label={field.label}
+                                        required={field.required}
+                                        onChange={(e)=>{handleChange(field.id,e.target.value)}}
+                                        value={formData[field.id]}
+                                        name={field.id}
+                                    >
+                                        {field.options?.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            ) : field.type === 'date' ? (
+                                <DatePicker
+                                    label={field.label}
+                                    name={field.id}
+                                    onChange={(newValue)=>{handleChange(field.id,newValue.$d)}}
+                                    slotProps={{
+                                        textField: {
+                                            fullWidth: true,
+                                            required: field.required,
+                                        },
                                     }}
                                 />
-                            </Button>
-                        </Box>
-                    </Grid>
-
-                    {/* Basic Information */}
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            fullWidth
-                            label="Full Name"
-                            value={formData.fullName}
-                            onChange={handleChange('fullName')}
-                            required
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            fullWidth
-                            label="Email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleChange('email')}
-                            required
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <FormControl fullWidth>
-                            <InputLabel>Gender</InputLabel>
-                            <Select
-                                value={formData.gender}
-                                label="Gender"
-                                onChange={handleChange('gender')}
-                                required
-                            >
-                                <MenuItem value="male">Male</MenuItem>
-                                <MenuItem value="female">Female</MenuItem>
-                                <MenuItem value="other">Other</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            fullWidth
-                            label="Phone Number"
-                            value={formData.phoneNumber}
-                            onChange={handleChange('phoneNumber')}
-                        />
-                    </Grid>
-
-                    {/* Role and Access */}
-                    <Grid item xs={12} md={6}>
-                        <FormControl fullWidth>
-                            <InputLabel>Role</InputLabel>
-                            <Select
-                                value={formData.role}
-                                label="Role"
-                                onChange={handleChange('role')}
-                                required
-                            >
-                                <MenuItem value="guest">Guest</MenuItem>
-                                <MenuItem value="member">Member</MenuItem>
-                                <MenuItem value="admin">Admin</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            fullWidth
-                            label="Password"
-                            type="password"
-                            value={formData.password}
-                            onChange={handleChange('password')}
-                            required
-                        />
-                    </Grid>
-
-                    {/* Additional Information */}
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            fullWidth
-                            label="Department"
-                            value={formData.department}
-                            onChange={handleChange('department')}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            fullWidth
-                            label="Job Title"
-                            value={formData.jobTitle}
-                            onChange={handleChange('jobTitle')}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            fullWidth
-                            label="Location"
-                            value={formData.location}
-                            onChange={handleChange('location')}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={formData.status}
-                                    onChange={handleChange('status')}
-                                    color="primary"
+                            ) : field.type === 'textarea' ? (
+                                <TextField
+                                    fullWidth
+                                    label={field.label}
+                                    name={field.id}
+                                    multiline
+                                    rows={4}
+                                    onChange={(e) => handleChange(field.id, e.target.value)}
+                                    required={field.required}
                                 />
-                            }
-                            label="Active Status"
-                        />
-                    </Grid>
+                            ) : field.type === 'image' ? (
+                                <Box sx={{ display: "flex", gap: 2 }}>
+                                <Avatar
+                                    src={profilePhoto || undefined}
+                                    sx={{ width: 50, height: 50 }}
+                                />
+                                <Button
+                                    variant="outlined"
+                                    component="label"
+                                    startIcon={<Icon name="upload" size={18} />}
+                                    sx={{ textTransform: 'none' }}
+                                >
+                                    Upload Photo
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept="image/*"
+                                        name={field.id}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onload = () => {
+                                                    setProfilePhoto(reader.result);
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                    />
+                                </Button>
+                            </Box>
+                                
+                            ) : (
+                                <TextField
+                                    fullWidth
+                                    label={field.label}
+                                    onChange={(e) => handleChange(field.id, e.target.value)}
+                                    required={field.required}
+                                />
+                            )}
+                        </Grid>
+                    ))}
+
+
+                    {/* </Grid>  */}
+
 
                     {/* Submit Button */}
                     <Grid item xs={12}>
@@ -208,7 +206,7 @@ function CreateUser() {
                 </Grid>
             </Paper>
         </Box>
-    );
+    }
 }
 
 export default CreateUser;
