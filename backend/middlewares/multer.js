@@ -6,7 +6,7 @@ const storage = multer.diskStorage({
       cb(null, 'uploads/profile-pics')
     },
     filename: function (req, file, cb) {
-        const fileName = path.basename(req.user.id+path.extname(file.originalname));
+      const fileName = path.basename(req.user.id+path.extname(file.originalname));                         
       if(!fileName){
         cb(new Error("Failed to Upload image! User Id is required"),null)
       }else{

@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const PermissionEnum = [
+  "view:dashboard","edit:dashboard",
   "view:invoices:dashboard","view:licenses:dashboard","view:assets:dashboard","view:users","view:assets","view:licenses","view:invoices","view:checkouts",
   "edit:invoices:dashboard","edit:licenses:dashboard","edit:assets:dashboard","edit:users","edit:assets","edit:licenses","edit:invoices","edit:checkouts",
   "create:invoices:dashboard","create:licenses:dashboard","create:assets:dashboard","create:users","create:assets","create:licenses","create:invoices","create:checkouts",
