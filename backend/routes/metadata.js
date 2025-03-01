@@ -1,6 +1,6 @@
 const {Router}=require('express');
-import { getMetaData,addMetaData } from '../controllers/metadata';
+const { getMetaData } = require('../controllers/metadata');
+const authorizeClient = require('../middlewares/authorizeClient');
 const metaDataRouter=Router();
-metaDataRouter.get("/:belong_to",getMetaData);
-metaDataRouter.post("/:belong_to",addMetaData);
+metaDataRouter.get("/:belongs_to",(req,res,next)=>{ authorizeClient([`view:${req.params.belongs_to}`])(req,res,next)},getMetaData);
 module.exports=metaDataRouter;

@@ -8,10 +8,7 @@ const MetadataSchema = new mongoose.Schema({
 	},
 	label: {
         type: String,
-        set() {
-            const id = this.id;
-            id.split("_").map((chunk)=>chunk.toUpperCase()).join(" ")
-        },
+        required: true
 	},
 	required:{
 		type: Boolean,
@@ -24,7 +21,7 @@ const MetadataSchema = new mongoose.Schema({
 	},
 	type: {
 		type: String,
-		enum: ["text","textarea","date","select","numeric"]
+		enum: ["text","textarea","date","select","numeric","image","pdf"]
 	},
 	options:[
         {
@@ -35,6 +32,12 @@ const MetadataSchema = new mongoose.Schema({
                 type: String,
             }
         }
-    ]
+    ],
+	create: {
+		type: Boolean
+	},
+	edit: {
+		type: Boolean
+	}
 });
 module.exports=mongoose.model("Metadata",MetadataSchema);
