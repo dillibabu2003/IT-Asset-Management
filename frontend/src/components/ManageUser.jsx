@@ -28,7 +28,7 @@ import {
     Select,
     FormControlLabel,
 } from '@mui/material';
-import { Search, MoreVertical, Edit2, Trash2, Filter, Upload } from 'lucide-react';
+import Icon from './Icon';
 
 const mockUsers = [
     {
@@ -72,7 +72,7 @@ const mockUsers = [
     },
 ];
 
-function ManageUsers() {
+function ManageUsers({behavior,...props}) {
     const [users, setUsers] = useState(mockUsers);
     const [searchTerm, setSearchTerm] = useState('');
     const [anchorEl, setAnchorEl] = useState(null);
@@ -144,7 +144,7 @@ function ManageUsers() {
 
     return (
         <Box sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>Manage Users</Typography>
+            <Typography variant="h5" gutterBottom>{behavior=="edit"?"Manage":"View"} Users</Typography>
             <Paper sx={{ p: 3 }}>
                 <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
                     <TextField
@@ -156,14 +156,14 @@ function ManageUsers() {
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <Search size={20} />
+                                    <Icon name="search" size={20} />
                                 </InputAdornment>
                             ),
                         }}
                     />
                     <Button
                         variant="outlined"
-                        startIcon={<Filter size={18} />}
+                        startIcon={<Icon name="filter" size={18} />}
                         sx={{ textTransform: 'none' }}
                     >
                         Filter
@@ -178,8 +178,9 @@ function ManageUsers() {
                                 <TableCell>Email</TableCell>
                                 <TableCell>Department</TableCell>
                                 <TableCell>Role</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell align="right">Actions</TableCell>
+                                { behavior=="edit" && <TableCell>Status</TableCell>}
+                                { behavior=="edit" && <TableCell align="right">Actions</TableCell>}
+                                   
                             </TableRow>
                         </TableHead>
 
@@ -201,6 +202,7 @@ function ManageUsers() {
                                             color={getRoleColor(user.role)}
                                         />
                                     </TableCell>
+                                    { behavior=="edit" &&
                                     <TableCell>
                                         <Switch
                                             checked={user.status}
@@ -208,14 +210,17 @@ function ManageUsers() {
                                             size="small"
                                         />
                                     </TableCell>
+}
+                                    { behavior=="edit" &&
                                     <TableCell align="right">
                                         <IconButton
                                             size="small"
                                             onClick={(e) => handleMenuOpen(e, user)}
                                         >
-                                            <MoreVertical size={18} />
+                                            <Icon name="more-vertical" size={18} />
                                         </IconButton>
                                     </TableCell>
+}
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -223,17 +228,19 @@ function ManageUsers() {
                 </TableContainer>
             </Paper>
 
+            { behavior=="edit" &&
+            <>
             <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
             >
                 <MenuItem onClick={handleEditClick}>
-                    <Edit2 size={18} style={{ marginRight: 8 }} />
+                    <Icon name="pencil" size={18} style={{ marginRight: 8 }} />
                     Edit
                 </MenuItem>
                 <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
-                    <Trash2 size={18} style={{ marginRight: 8 }} />
+                    <Icon name="trash-2" size={18} style={{ marginRight: 8 }} />
                     Delete
                 </MenuItem>
             </Menu>
@@ -272,7 +279,7 @@ function ManageUsers() {
                                         <Button
                                             variant="outlined"
                                             component="label"
-                                            startIcon={<Upload size={18} />}
+                                            startIcon={<Icon name="upload" size={18} />}
                                             sx={{ textTransform: 'none' }}
                                         >
                                             Change Photo
@@ -392,6 +399,7 @@ function ManageUsers() {
                     <Button onClick={handleEditSave} variant="contained">Save Changes</Button>
                 </DialogActions>
             </Dialog>
+        </>}
         </Box>
     );
 }
