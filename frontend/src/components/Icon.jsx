@@ -16,6 +16,8 @@ const Icon = ({ name, style, ...props }) => {
     );
   } catch (error) {
     console.log(error);
+    console.log(`Icon ${name} not found`);
+    
     return fallback; // Show fallback if the icon import fails
   }
 };
