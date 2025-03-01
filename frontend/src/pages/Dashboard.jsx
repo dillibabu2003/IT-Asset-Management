@@ -7,6 +7,7 @@ import CustomVisualRender from "../components/CustomVisualRender";
 import { Navigate, useParams } from 'react-router';
 import Loader from '../components/Loader';
 import ConfigureDashboard from '../components/ConfigureDashboard';
+import { PERMISSIONS } from '../utils/constants';
 import ProtectedComponent from '../protectors/ProtectedComponent';
 
 function DashboardPage() {
@@ -33,7 +34,7 @@ function DashboardPage() {
     }, [currentDashboardId]);
 
     if(currentDashboardId == "configure"){
-        return <ProtectedComponent requiredPermission="edit:dashboard"><ConfigureDashboard /></ProtectedComponent>
+        return <ProtectedComponent requiredPermission={PERMISSIONS.EDIT_DASHBOARD}><ConfigureDashboard /></ProtectedComponent>
     }
 
     return (

@@ -17,6 +17,7 @@ import ManageUsers from './components/ManageUser';
 import ProtectedRoute from './protectors/ProtectedRoute';
 import NotFound from './pages/NotFound';
 import ProtectedComponent from './protectors/ProtectedComponent';
+import { PERMISSIONS } from './utils/constants';
 import VerifyEmail from './pages/VerifyEmail';
 import { Toaster } from 'react-hot-toast';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -47,15 +48,15 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />}>
             <Route path=":dashboardId" element={<DashboardPage />} />
           </Route>
-          <Route path="/assets" element={<ProtectedComponent requiredPermission="view:assets" redirect={true}><AssetsPage /></ProtectedComponent>} />
-          <Route path="/licenses" element={<ProtectedComponent requiredPermission="view:licenses" redirect={true}><LicensePage /></ProtectedComponent>} />
-          <Route path="/checkouts" element={<ProtectedComponent requiredPermission="view:checkouts" redirect={true}><CheckoutPage /></ProtectedComponent>} />
-          <Route path="/invoices" element={<ProtectedComponent requiredPermission="view:invoices" redirect={true}><InvoicesPage /></ProtectedComponent>} />
+          <Route path="/assets" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_ASSETS} redirect={true}><AssetsPage /></ProtectedComponent>} />
+          <Route path="/licenses" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_LICENSES} redirect={true}><LicensePage /></ProtectedComponent>} />
+          <Route path="/checkouts" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_CHECKOUTS} redirect={true}><CheckoutPage /></ProtectedComponent>} />
+          <Route path="/invoices" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_INVOICES} redirect={true}><InvoicesPage /></ProtectedComponent>} />
           <Route path="/users">
-            <Route path="create" element={<ProtectedComponent requiredPermission="create:users" redirect={true}><CreateUser /></ProtectedComponent>} />
-            <Route path="manage" element={<ProtectedComponent requiredPermission="edit:users" redirect={true}><ManageUsers behavior="edit" /></ProtectedComponent>} />
-            <Route path="view" element={<ProtectedComponent requiredPermission="view:users" redirect={true}><ManageUsers behavior="view" /> </ProtectedComponent>} />
-            <Route path="view/:userId" element={<ProtectedComponent requiredPermission="view:users" redirect={true}>some user with some id in params</ProtectedComponent>} />
+            <Route path="create" element={<ProtectedComponent requiredPermission={PERMISSIONS.CREATE_USERS} redirect={true}><CreateUser /></ProtectedComponent>} />
+            <Route path="manage" element={<ProtectedComponent requiredPermission={PERMISSIONS.EDIT_USERS} redirect={true}><ManageUsers behavior="edit" /></ProtectedComponent>} />
+            <Route path="view" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_USERS} redirect={true}><ManageUsers behavior="view" /> </ProtectedComponent>} />
+            <Route path="view/:userId" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_USERS} redirect={true}>some user with some id in params</ProtectedComponent>} />
           </Route>
 
         </Route>
