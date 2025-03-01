@@ -3,11 +3,13 @@ const jwt = require('jsonwebtoken');
 const asyncHandler = require('../utils/asyncHandler');
 const {loginSchema} = require('../utils/schemas');
 const User = require('../models/user');
+const Permission = require('../models/permission');
 const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
 const cleanedEnv = require('../utils/cleanedEnv');
 const redisClient = require('../config/redis');
 const { decryptJWT } = require('../utils/helperFunctions');
+const { decryptData } = require('../utils/encrypt');
 async function generateAccessTokenAndRefreshToken(user){
     const accessToken = await jwt.sign({id: user.user_id,email: user.email,role: user.role},cleanedEnv.ACCESS_TOKEN_SECRET,{expiresIn: '1h'});
     const refreshToken = await jwt.sign({id: user.user_id,email: user.email,role: user.role},cleanedEnv.REFRESH_TOKEN_SECRET,{expiresIn: '2h'});
@@ -25,25 +27,27 @@ const handleLogin = asyncHandler(async (req,res,next)=>{
     else if(user.status!="active"){
         throw new ApiError(400,{error: "Account is inactive or blocked."},"Account is inactive or blocked.",)
     }
-    delete user.password;
     const [accessToken,refreshToken] = await generateAccessTokenAndRefreshToken(user);
     const cookieOptions = {
         httpOnly: true,
-        secure: false, //When deployed and assigned a domain with valid ssl/tls certificate make it to true.
+        secure: process.env.NODE_ENV === 'production', // Set to true in production
         overwrite: true
     }
+    const filteredUserInfo = user.toJSON();
+    delete filteredUserInfo.password;
+    const permissionDocument = await Permission.findOne({role: user.role});
+    filteredUserInfo.permissions=permissionDocument.permissions;
     res
     .status(200)
     .cookie("access_token",accessToken,cookieOptions)
     .cookie("refresh_token",refreshToken,cookieOptions)
-    .json(new ApiResponse(200,user,"Logged in successfully."));
+    .json(new ApiResponse(200,filteredUserInfo,"Logged in successfully."));
 });
  
 const handleRefreshAccessToken = asyncHandler(async (req,res,next)=>{
     const refreshToken = req.cookies.refresh_token;
     const decodedInfo = await decryptJWT(refreshToken,cleanedEnv.REFRESH_TOKEN_SECRET);
-    const storedRedisRefreshToken = await redisClient.get(decodedInfo?.id||"SOME_INVALID_KEY");
-    if(!refreshToken || !storedRedisRefreshToken || refreshToken!=storedRedisRefreshToken){
+    if(!refreshToken || !decodedInfo){
         throw new ApiError(401,{error: "Invalid refresh token"},"Invalid refresh token",null);
     }
     const [newAccessToken,newRefreshToken] = await generateAccessTokenAndRefreshToken({user_id: decodedInfo.id, email: decodedInfo.email, role: decodedInfo.role});
@@ -69,7 +73,7 @@ const handleLogout = asyncHandler(async (req,res,next)=>{
     res.clearCookie("access_token").clearCookie("refresh_token").json(new ApiResponse(200, null, "Logged out successfully."));
 });
 
-const handleResetPassword=asyncHandler(async(req,res)=>{
+const handleForgotPassword=asyncHandler(async(req,res)=>{
     const {email}=req.body.email;
     if(!email){
           return res.status(422).json({ message: "Email is required." });
@@ -82,13 +86,52 @@ const handleResetPassword=asyncHandler(async(req,res)=>{
           body: JSON.stringify({
                 "type": "forgot-password",
                 "email": email,
+                "code": Math.floor(100000 + Math.random() * 900000)
           })
     });
+    redisClient.set(email, code, {'EX': 60 * 15}); // 15 minutes in seconds
     if(emailResponse.success){
           res.status(200).json(new ApiResponse(200,null,emailResponse.message))
     }else{
-          res.status(500).json(new ApiError(500,emailResponse.error,emailResponse.message))
+        redisClient.del(email);
+        res.status(500).json(new ApiError(500,emailResponse.error,emailResponse.message))
     }    
+});
+const handleResetPassword=asyncHandler(async(req,res)=>{
+    const {id,code,newPassword}=req.body;
+    if(!id || !code || !newPassword){
+          return res.status(422).json(new ApiError(422,null,"Email, code and password are required."));
+    }
+    const email = decryptData(id);
+    const orginalCode = await redisClient.get(code);
+    const storedCode = await redisClient.get(email);
+    if(storedCode!=orginalCode){
+          return res.status(400).json(new ApiError(400,null,"Invalid code."));
+    }
+    const user = await User.findOne({email});
+    if(!user){
+          return res.status(400).json(new ApiError(400,null,"Invalid email."));
+    }
+    user.password = password;
+    await user.save();
+    redisClient.del(email);
+    res.status(200).json(new ApiResponse(200,null,"Password reset successfully."))
+});
+
+const handleVerifyEmail=asyncHandler(async(req,res)=>{
+    const id=req.params.id;
+    if(!id){
+          return res.status(422).json(new ApiError(422,null,"Invalid verification link."));
+    }
+    const email = decryptData(id);
+    const user = await User.findOne({email});
+    if(!user){
+          return res.status(400).json(new ApiError(400,null,"Invalid email."));
+    }
+    user.status = "active";
+    await user.save();
+    res.status(200).json(new ApiResponse(200,null,"Email verified successfully."));
 })
 
-module.exports={handleLogin,handleLogout,handleRefreshAccessToken,handleResetPassword}
+
+module.exports={handleLogin,handleLogout,handleRefreshAccessToken,handleForgotPassword,handleResetPassword,handleVerifyEmail}

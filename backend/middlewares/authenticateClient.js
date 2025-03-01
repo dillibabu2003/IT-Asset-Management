@@ -5,8 +5,7 @@ const {fullAccess}=require("../utils/constants")
 
 const authMiddleware=async(req,res,next)=>{
     try{
-       const token=req?.cookies?.access_token;
-       console.log(req.body);
+       const token=req.cookies?.access_token;
        if(!token){
           res.status(422).json(new ApiError(422,null,"Invalid token"));
           return;
