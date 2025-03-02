@@ -226,11 +226,11 @@ const handleGetDashboardData = asyncHandler(async (req,res,next)=>{
     const dashboardId = req.params.dashboardId;
     const isDashboardIdValid = validateDashboardId(dashboardId);
     if(!isDashboardIdValid){
-        return res.status(422).json(new ApiError(422,null,"Invalid Dashboard Id."));
+        throw new ApiError(422,null,"Invalid Dashboard Id.");
     }
     const rawDashboardData = await Dashboard.findOne({id: dashboardId});
     if(!rawDashboardData){
-        return res.status(404).json(new ApiError(404,null,"Dashboard not configured."));
+        throw new ApiError(404,null,"Dashboard not configured.");
     }
     
     const model = getMongooseDataModelById(dashboardId);
@@ -241,7 +241,7 @@ const handleGetDashboardMetadata = asyncHandler(async (req,res,next)=>{
     const dashboardId = req.params.dashboardId;
     const isDashboardIdValid = validateDashboardId(dashboardId);
     if(!isDashboardIdValid){
-        return res.status(422).json(new ApiError(422,null,"Invalid Dashboard Id."));
+        throw new ApiError(422,null,"Invalid Dashboard Id.");
     }
     const dashboardMetaData = await Dashboard.findOne({id: dashboardId});
     res.status(200).json(new ApiResponse(200, dashboardMetaData, "Dashboard metadata fetched successfully"));
@@ -251,12 +251,12 @@ const handleConfigureDashboard = asyncHandler(async (req,res,next)=>{
     const data = configureDashboardSchema.parse(req.body);
     const isDashboardIdValid = validateDashboardId(data.id);
     if(!isDashboardIdValid){
-        return res.status(422).json(new ApiError(422,null,"Invalid Dashboard Id."));
+        throw new ApiError(422,null,"Invalid Dashboard Id.");
     }
     const areTilesValid = validateConfigureDashboardTiles(data.id,data.tiles);
     const areElementsValid = validateConfigureDashboardElements(data.id,data.elements);
     if(!areTilesValid || !areElementsValid){
-        return res.status(422).json(new ApiError(422,null,!areTilesValid ? "Some tiles info are incorrect." : "Some elements info are incorrect."));
+        throw new ApiError(422,null,!areTilesValid ? "Some tiles info are incorrect." : "Some elements info are incorrect.");
     }
 
     const tilesWithQueries = getTilesWithQueriesAttached(data.tiles);

@@ -8,7 +8,7 @@ const getMetaData=asyncHandler(async(req,res)=>{
     const metaDataType=req.params.belongs_to;
     const data=await Metadata.find({belongs_to:metaDataType}).select("-_id -__v -belongs_to");
     if(!data){
-        return res.status(404).json(new ApiError(404,null,"MetaData is doen't exist"));
+        throw new ApiError(404,null,"MetaData is doen't exist");
     }
     res.status(200).json(new ApiResponse(200,data,"MetaData fetched successfully"));
 });
