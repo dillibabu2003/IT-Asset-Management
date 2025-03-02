@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router';
 import axiosInstance from '../utils/axios';
 
-const VerifyEmail = () => {
+const ActivateAccount = () => {
     const [isLoading,setIsLoading] = useState(true);
     const [result,setResult] = useState(null);
     const id = useParams().id;
@@ -39,4 +39,4 @@ const VerifyEmail = () => {
   )
 }
 
-export default VerifyEmail;
+export default ActivateAccount;

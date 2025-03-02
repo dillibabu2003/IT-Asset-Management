@@ -1,5 +1,4 @@
 import React from 'react';
-// import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material';
 import "./App.css";
 import { MainLayout } from './layouts/MainLayout';
 import { Routes, Route } from 'react-router';
@@ -18,11 +17,10 @@ import ProtectedRoute from './protectors/ProtectedRoute';
 import NotFound from './pages/NotFound';
 import ProtectedComponent from './protectors/ProtectedComponent';
 import { PERMISSIONS } from './utils/constants';
-import VerifyEmail from './pages/VerifyEmail';
 import { Toaster } from 'react-hot-toast';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-
+import ActivateAccount from './pages/ActivateAccount';
 
 export const LinkBehavior = React.forwardRef((props, ref) => {
   const { href, ...other } = props;
@@ -41,7 +39,7 @@ function App() {
         <Route index element={<LandingPage />} />
         //Login Page Here
         <Route path="/login" element={<SignInPage />} />
-        <Route path="/verify-email/:id" element={<VerifyEmail />} />
+        <Route path="/verify-email/:id" element={<ActivateAccount/>} />
 
         //Protected Routes
         <Route element={<ProtectedRoute ><MainLayout /></ProtectedRoute>}>
@@ -65,5 +63,4 @@ function App() {
     </LocalizationProvider>
   );
 }
-
 export default App;

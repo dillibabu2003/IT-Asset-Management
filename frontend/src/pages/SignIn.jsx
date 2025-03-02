@@ -26,7 +26,6 @@ function SignIn() {
     const onBack=()=>{
         navigate('/');
     }
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -99,18 +98,13 @@ function SignIn() {
                             label="Email Address"
                             name="email"
                             type="email"
-                            // value={email}
-                            // onChange={(e) => setEmail(e.target.value)}
                             required
                             fullWidth
                         />
-
                         <TextField
                             label="Password"
                             type={showPassword ? 'text' : 'password'}
                             name="password"
-                            // value={password}
-                            // onChange={(e) => setPassword(e.target.value)}
                             required
                             fullWidth
                             InputProps={{
@@ -149,8 +143,6 @@ function SignIn() {
                 </Paper>
             </Box>
         </Container>
-
     );
 }
-
 export default SignIn;
