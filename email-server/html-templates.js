@@ -31,6 +31,7 @@ const forgotPasswordTemplate = (resetLink) => `
         <h2>Reset Your Password</h2>
         <p>We received a request to reset your password. Click the button below to reset it:</p>
         <a href="${resetLink}" class="button">Reset Password</a>
+        <p>This link is valid for the next 15 minutes.</p>
         <p>If you did not request a password reset, please ignore this email.</p>
     </div>
 </body>
