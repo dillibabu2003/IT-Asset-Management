@@ -11,11 +11,11 @@ function asyncHandler(requestHandler) {
 			console.log(error);
 			if (error instanceof ZodError) {
 				const errorMessages = extractZodErrorMessages(error);
-				res.status(422).json(new ApiError(422, errorMessages, "Invalid params.", error.stack));
+				res.status(422).json({statusCode: 422, errors: errorMessages, message: "Invalid params.", stack: error.stack});
 			} else if (error instanceof ApiError) {
 				res.status(error.statusCode).json(error);
 			}else if(error instanceof JsonWebTokenError){
-				res.status(401).json(new ApiError(401,{error: "Invalid token"},"Invalid token",error.stack));
+				res.status(401).json({statusCode: 401,error,message: "Invalid token",stack: error.stack});
 			}
 			 else {
 				

@@ -41,7 +41,7 @@ app.post('/api/v1/send-email', async (req, res) => {
                     return res.status(422).json({ success: false, message: "Code is missing." });
                 }
                 subject = "Reset Your Password";
-                link = FRONTEND_BASE_URI+"/forgot-password?id="+encryptData(email)+"&code="+encryptData(code);
+                link = FRONTEND_BASE_URI+"/forgot-password/"+encryptData(email)+"/"+encryptData(""+code);
                 html = forgotPasswordTemplate(link);
                 break;
             case 'verify-email':
