@@ -21,6 +21,8 @@ import { Toaster } from 'react-hot-toast';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ActivateAccount from './pages/ActivateAccount';
+import ForgotPassword from './pages/ForgotPasswod';
+import AuthProvider from './providers/AuthProvider';
 
 export const LinkBehavior = React.forwardRef((props, ref) => {
   const { href, ...other } = props;
@@ -38,11 +40,12 @@ function App() {
         //Home Page Here
         <Route index element={<LandingPage />} />
         //Login Page Here
-        <Route path="/login" element={<SignInPage />} />
+        <Route path="/login" element={<AuthProvider><SignInPage /></AuthProvider>} />
         <Route path="/verify-email/:id" element={<ActivateAccount/>} />
+        <Route path="/forgot-password/:email/:code" element={<ForgotPassword/>} />
 
         //Protected Routes
-        <Route element={<ProtectedRoute ><MainLayout /></ProtectedRoute>}>
+        <Route element={<AuthProvider><ProtectedRoute ><MainLayout /></ProtectedRoute></AuthProvider>}>
           <Route path="/dashboard" element={<DashboardPage />}>
             <Route path=":dashboardId" element={<DashboardPage />} />
           </Route>
