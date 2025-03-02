@@ -147,4 +147,19 @@ export const PERMISSIONS = {
             description: 'Comprehensive maintenance tracking and scheduling system.',
         },
     ];
+
+export const availableDashboards = [
+    {
+      id: "assets",
+      label: "Assets Dashboard"
+    },
+    {
+      id: "licenses",
+      label: "Licenses Dashboard"
+    },
+    {
+      id: "invoices",
+      label: "Invoices Dashboard"
+    }
+  ]
     

@@ -18,20 +18,7 @@ import Icon from './Icon';
 import { ICONS } from '../utils/constants';
 import axiosInstance from '../utils/axios';
 import { DatePicker } from '@mui/x-date-pickers';
-const availableDashboards = [
-  {
-    id: "assets",
-    label: "Assets Dashboard"
-  },
-  {
-    id: "licenses",
-    label: "Licenses Dashboard"
-  },
-  {
-    id: "invoices",
-    label: "Invoices Dashboard"
-  }
-]
+import {availableDashboards} from '../utils/constants'
 
 function ConfigureDashboard() {
   const [selectedDashboard, setSelectedDashboard] = useState('');

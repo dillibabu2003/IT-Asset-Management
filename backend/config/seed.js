@@ -141,7 +141,7 @@ const seedDB = async () => {
         start: new Date(),
         end: new Date(),
         warranty: '1 year',
-        status: 'available',
+        status: 'activated',
     });
 
     await license1.save();
@@ -209,7 +209,7 @@ const seedDB = async () => {
                     matcher_value: "available",
                     icon: "check-circle",
                     color: "#4CAF50", 
-                    query: 'some query' 
+                    query: '[{"$match":{"status":"available"}},{"$count":"value"}]' 
                 },
             ],
             elements: [
@@ -219,7 +219,7 @@ const seedDB = async () => {
                     fields: ["status"],
                     color: "#2196F3", // Changed to a hex value
                     icon: "package",
-                    query: 'some query'
+                    query: '[{"$group":{"_id":"$status","count":{"$sum":1}}}]'
                 },
             ],
         },
@@ -231,10 +231,10 @@ const seedDB = async () => {
             title: "Active Licenses",
             func: "count",
             matcher_field: "status",
-            matcher_value: "active",
+            matcher_value: "activated",
             icon: "key",
             color: "#FFC107", 
-            query: 'some query'
+            query: '[{"$match":{"status":"available"}},{"$count":"value"}]'
         },
         ],
         elements: [
@@ -242,7 +242,7 @@ const seedDB = async () => {
             title: "Licenses by status",
             type: "pie",
             fields: ["status"],
-            query: 'some query'
+            query: '[{"$group":{"_id":"$status","count":{"$sum":1}}}]'
         },
         ],
     },
@@ -255,17 +255,17 @@ const seedDB = async () => {
             func: "count",
             matcher_field: "status",
             matcher_value: "processed",
-            icon: "file-invoice",
+            icon: "key",
             color: "#F44336", // Changed to a hex value
-            query: 'some query'
+            query: '[{"$match":{"status":"processed"}},{"$count":"value"}]'
         },
         ],
         elements: [
         {
             title: "Invoices by status",
-            type: "line",
+            type: "bar",
             fields: ["status"],
-            query: 'some query'
+            query: '[{"$group":{"_id":"$status","count":{"$sum":1}}}]'
         },
         ],
     }
@@ -346,8 +346,10 @@ const seedDB = async () => {
         { belongs_to: "licenses", id: 'warranty', label: 'Warranty', type: 'text', required: true, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'status', label: 'Status', type: 'select', required: true, additional: false, create: true, edit: true, options: [
             { label: 'Available', value: 'available' },
+            { label: 'Activated', value: 'activated'},
             { label: 'Expired', value: 'expired' },
-            { label: 'Renewed', value: 'renewed' }
+            { label: 'Renewed', value: 'renewed' },
+            { label: 'About to Expire',value:"about_to_expire"}
         ] },
     ]);
     await MetaData.insertMany([

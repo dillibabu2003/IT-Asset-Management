@@ -68,7 +68,7 @@ function InvoiceSection() {
         </ProtectedComponent>
       </Box>
 
-      <ProtectedComponent requiredPermission="create:invoice">
+      <ProtectedComponent requiredPermission="create:invoices">
       <Paper 
         sx={{ 
           p: 3, 
@@ -136,7 +136,7 @@ function InvoiceSection() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Invoice ID</TableCell>
+              <TableCell>Invoice ID</TableCell>
                 <TableCell>Vendor Name</TableCell>
                 <TableCell>Date of Upload</TableCell>
                 <TableCell>Amount</TableCell>
