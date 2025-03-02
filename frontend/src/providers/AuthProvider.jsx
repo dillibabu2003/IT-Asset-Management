@@ -57,7 +57,7 @@ const AuthProvider = (props) => {
             console.log(error);
             setIsAuthenticated(false);
             setUser(null);
-            if(error.status==422 || error.status==400){
+            if(error.status==401){
                 navigate("/login",{replace:true});
             }
         }finally{
