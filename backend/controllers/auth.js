@@ -74,11 +74,20 @@ const handleLogout = asyncHandler(async (req,res,next)=>{
 });
 
 const handleForgotPassword=asyncHandler(async(req,res)=>{
-    const {email}=req.body.email;
+    const email=req.body.email;
     if(!email){
-          return res.status(422).json({ message: "Email is required." });
+          throw new ApiError(422,null, "Email is required." );
     }
-    const emailResponse = await fetch(cleanedEnv.EMAIL_API,{
+    const currentUserData=await User.findOne({email:email});
+    console.log("curr :"+currentUserData)
+    if(!currentUserData){
+        throw new ApiError(422,null, "Email is Not valid" );
+    }
+   if(currentUserData.status!='active'){
+       throw new ApiError(422,null, "Your account is inactive or blocked" );
+   }
+   const code = Math.floor(100000 + Math.random() * 900000);
+    const fetchPromise = await fetch(cleanedEnv.EMAIL_API,{
           method: "POST",
           headers: {
                 "Content-Type": "application/json"
@@ -86,47 +95,51 @@ const handleForgotPassword=asyncHandler(async(req,res)=>{
           body: JSON.stringify({
                 "type": "forgot-password",
                 "email": email,
-                "code": Math.floor(100000 + Math.random() * 900000)
+                "code": code
           })
     });
+    const emailResponse = await fetchPromise.json(); 
+    console.log(email+" "+code);
+    
     redisClient.set(email, code, {'EX': 60 * 15}); // 15 minutes in seconds
     if(emailResponse.success){
           res.status(200).json(new ApiResponse(200,null,emailResponse.message))
     }else{
-        redisClient.del(email);
-        res.status(500).json(new ApiError(500,emailResponse.error,emailResponse.message))
+        redisClient.del(email);        
+        throw new ApiError(500,emailResponse.error,emailResponse.message);
     }    
 });
 const handleResetPassword=asyncHandler(async(req,res)=>{
-    const {id,code,newPassword}=req.body;
-    if(!id || !code || !newPassword){
-          return res.status(422).json(new ApiError(422,null,"Email, code and password are required."));
+    const {encrypted_email,encrypted_code,new_password}=req.body;
+    if(!encrypted_email || !encrypted_code || !new_password){
+          throw new ApiError(422,null,"Email, code and password are required.");
     }
-    const email = decryptData(id);
-    const orginalCode = await redisClient.get(code);
-    const storedCode = await redisClient.get(email);
-    if(storedCode!=orginalCode){
-          return res.status(400).json(new ApiError(400,null,"Invalid code."));
+    const decryptedEmail = decryptData(encrypted_email);
+    const decryptedCode = decryptData(encrypted_code);
+    
+    const storedCode = await redisClient.get(decryptedEmail);
+    if(!storedCode || (storedCode!=decryptedCode)){
+          throw new ApiError(400,null,"Link is invalid or expired.");
     }
-    const user = await User.findOne({email});
+    const user = await User.findOne({email:decryptedEmail});
     if(!user){
-          return res.status(400).json(new ApiError(400,null,"Invalid email."));
+          throw new ApiError(400,null,"Link is invalid or expired.");
     }
-    user.password = password;
+    user.password = new_password;
     await user.save();
-    redisClient.del(email);
+    redisClient.del(decryptedEmail);
     res.status(200).json(new ApiResponse(200,null,"Password reset successfully."))
 });
 
 const handleVerifyEmail=asyncHandler(async(req,res)=>{
     const id=req.params.id;
     if(!id){
-          return res.status(422).json(new ApiError(422,null,"Invalid verification link."));
+          throw new ApiError(422,null,"Invalid verification link.");
     }
     const email = decryptData(id);
     const user = await User.findOne({email});
     if(!user){
-          return res.status(400).json(new ApiError(400,null,"Invalid email."));
+          throw new ApiError(400,null,"Invalid email.");
     }
     user.status = "active";
     await user.save();

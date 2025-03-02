@@ -34,11 +34,11 @@ const authorizeClient = (requiredPermissions) => {
             if (permissionsEnabled) {
                 return next();
             } else {
-                return res.status(403).json(new ApiError(403,null,"Forbidden Access"));
+                throw new ApiError(403,null,"Forbidden Access");
             }
         } catch (error) {
             console.error('Authorization error:', error);
-            return res.status(500).json(new ApiError(500,error,"Internal server error",error?.stack));
+            throw error;
         }
     };
 };

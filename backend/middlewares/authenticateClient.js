@@ -1,25 +1,16 @@
 const ApiError = require("../utils/ApiError");
 const jwt=require("jsonwebtoken");
 const cleanedEnv=require("../utils/cleanedEnv");
-const {fullAccess}=require("../utils/constants")
+const {fullAccess}=require("../utils/constants");
+const asyncHandler = require("../utils/asyncHandler");
 
-const authMiddleware=async(req,res,next)=>{
-    try{
+const authMiddleware=asyncHandler(async(req,res,next)=>{
        const token=req.cookies?.access_token;
        if(!token){
-          res.status(422).json(new ApiError(422,null,"Invalid token"));
-          return;
+          throw new ApiError(401,null,"Invalid token");
        }
        const decodedToken=await jwt.verify(token,cleanedEnv.ACCESS_TOKEN_SECRET);
        req.user=decodedToken;
        next();
-    }catch(err){
-        console.error(err);
-        if(err instanceof jwt.JsonWebTokenError){
-            res.status(401).json(new ApiError(401,err,"Invalid token")); 
-            return ;
-        }
-        res.status(400).json(new ApiError(400,err,"Unknown error"));
-    }
-}
+})
 module.exports=authMiddleware;

@@ -36,12 +36,11 @@ const uploadFileToS3 = async (filePath, bucketName, key) => {
 const createUser = asyncHandler(async (req, res) => {
       const data = userSchema.parse(req.body);
       if (!fullAccess.includes(req.user.role) || !data.user_id == req.user.id) {
-            res.status(401).json(new ApiError(401, null, "Unauthorized Access"));
-            return;
+            throw new ApiError(401, null, "Unauthorized Access");
       }
       const existingUser = await User.findOne({ $or: [{ email: data.email }, { user_id: data.user_id }] });
       if (existingUser) {
-            return res.status(400).json(new ApiError(400, null, "User with email or user_id  exists"));
+            throw new ApiError(400, null, "User with email or user_id  exists");
       }
       const user = new User(data);
       const fileName = req.user.id;
@@ -113,7 +112,7 @@ const getOtherUserData = asyncHandler(async (req, res) => {
       const userId = req.body.user_id;
       const userData = await User.findOne({ user_id: userId });
       if (!userData) {
-            return res.status(400).json(new ApiError(400, null, "Invalid user id"));
+            throw new ApiError(400, null, "Invalid user id");
       }
       res.status(200).json(new ApiResponse(200, userData, "User data fetched Successfully"));
 });
@@ -122,7 +121,7 @@ const updateUserDetails = asyncHandler(async (req, res) => {
       const userId = req.body.user_id;
       const userData = await User.findOneAndUpdate({ user_id: userId }, req.body);
       if (!userData) {
-            return res.status(400).json(new ApiError(400, null, "Invalid user id"));
+            throw new ApiError(400, null, "Invalid user id");
       }
       res.status(200).json(new ApiResponse(200, userData, "User updated successfully"));
 })
@@ -138,7 +137,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
       const userId = req.user.id;
       const user = await User.findOne({ user_id: userId });
       if (!user) {
-            return res.status(400).json(new ApiError(400, null, "Invalid user id"));
+            throw new ApiError(401, null, "Invalid user id");
       }
       const filteredUserInfo = user.toJSON();
       delete filteredUserInfo.password;
