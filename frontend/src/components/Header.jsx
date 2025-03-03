@@ -53,6 +53,7 @@ function Header() {
 
               >
                 <Box sx={{ p: 1, width: "fit-content", display: 'flex', flexDirection: "column" }}>
+                  <Link to="users/profile">
                   <Button
                     fullWidth
                     startIcon={<Icon name="user" size={20} />}
@@ -60,6 +61,7 @@ function Header() {
                   >
                     Profile
                   </Button>
+                  </Link>
                   <Button
                     fullWidth
                     startIcon={<Icon name="file-text" size={20} />}

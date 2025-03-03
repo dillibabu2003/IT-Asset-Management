@@ -23,6 +23,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ActivateAccount from './pages/ActivateAccount';
 import ForgotPassword from './pages/ForgotPasswod';
 import AuthProvider from './providers/AuthProvider';
+import UserProfile from './pages/UserProfile';
 
 export const LinkBehavior = React.forwardRef((props, ref) => {
   const { href, ...other } = props;
@@ -43,7 +44,7 @@ function App() {
         <Route path="/login" element={<AuthProvider><SignInPage /></AuthProvider>} />
         <Route path="/verify-email/:id" element={<ActivateAccount/>} />
         <Route path="/forgot-password/:email/:code" element={<ForgotPassword/>} />
-
+        
         //Protected Routes
         <Route element={<AuthProvider><ProtectedRoute ><MainLayout /></ProtectedRoute></AuthProvider>}>
           <Route path="/dashboard" element={<DashboardPage />}>
@@ -57,6 +58,7 @@ function App() {
             <Route path="create" element={<ProtectedComponent requiredPermission={PERMISSIONS.CREATE_USERS} redirect={true}><CreateUser /></ProtectedComponent>} />
             <Route path="manage" element={<ProtectedComponent requiredPermission={PERMISSIONS.EDIT_USERS} redirect={true}><ManageUsers behavior="edit" /></ProtectedComponent>} />
             <Route path="view" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_USERS} redirect={true}><ManageUsers behavior="view" /> </ProtectedComponent>} />
+            <Route path="profile" element={<UserProfile/>} />
             <Route path="view/:userId" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_USERS} redirect={true}>some user with some id in params</ProtectedComponent>} />
           </Route>
 
