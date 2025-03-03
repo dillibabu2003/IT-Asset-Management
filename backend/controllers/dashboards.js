@@ -121,10 +121,18 @@ function constructSumQuery(matcher_field,matcher_value,target){
             [matcher_field]: matcher_value
         }},
         {$group: {
-            _id: target,
-            value: { $sum: `$${target}`}
+            _id: null,
+            value: { $sum: { $toDecimal: `$${target}` } }
+        }},
+        {
+            $project: {
+                _id: 0,
+                value: { $toString: "$value" }
+            }
         }
-    }];
+    ];
+    console.log(query);
+     
     return query;
 }
 function constructAverageQuery(matcher_field,matcher_value,target){
@@ -201,13 +209,15 @@ function getElementsWithQueriesAttached(elements){
 }
 async function executeQueryWithGivenModel(query,model){
     const result = await model.aggregate(JSON.parse(query));
+    console.log(result);
+    
     return result;
 }
 async function parseRawDashboardData(dashboardData,model){
     const tilePromises =  dashboardData.tiles.map(async (tile)=>{
         const queryResult = await executeQueryWithGivenModel(tile.query,model);
         const value = queryResult[0]?.value || 0;
-        const resultValue = tile.func == "avg" ? value.toFixed(2) : value;        
+        const resultValue = tile.func === "avg" ? parseFloat(value).toFixed(2) : value;
         const parsedTile = {title: tile.title, value: resultValue, icon: tile.icon, color: tile.color};
         return parsedTile;
     });

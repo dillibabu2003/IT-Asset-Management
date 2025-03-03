@@ -30,11 +30,11 @@ function DashboardTable({columns,documents}) {
       <TableBody>
         {documents.map((document,rowIndex) => {
           const color= getStatusColor(document?.status);
-          return (<TableRow key={document.id}>
+          return (<TableRow key={document._id}>
             {
               columns.map((column,colIndex)=>{
                 return column=="status"?
-                <TableCell key={""+document.id+rowIndex+colIndex}>
+                <TableCell key={""+document._id+rowIndex+colIndex}>
                 {
                   document[column]&&
                   <Chip 
@@ -44,7 +44,7 @@ function DashboardTable({columns,documents}) {
                 />
               }
               </TableCell>:
-              <TableCell key={""+document.id+rowIndex+colIndex}>{document[column]}</TableCell>
+              <TableCell key={""+document._id+rowIndex+colIndex}>{document[column]}</TableCell>
               })
             }
           </TableRow>)

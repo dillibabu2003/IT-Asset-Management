@@ -54,18 +54,14 @@ function Sidebar(component) {
     licenses: location.pathname.startsWith("/licenses"),
     invoices: location.pathname.startsWith("/invoices"),
     checkouts: location.pathname.startsWith("/checkouts"),
-  });
-  console.log(openItems);
-  
+  });  
 
   //listen to location change and update the links
   useEffect(()=>{
   },[location.pathname]);
 
 
-  const handleClick = (id,hasSubItems) => {
-    console.log(id);
-    
+  const handleClick = (id,hasSubItems) => {    
       //close all opened subitem categories
       setOpenItems((prev) => {
         const closedItems={};
@@ -137,8 +133,7 @@ function Sidebar(component) {
     >
       <List>
         {menuItems.map((item) => (
-          <ProtectedComponent requiredPermission={item.requiredPermission}>
-          <React.Fragment key={item.id}>
+          <ProtectedComponent requiredPermission={item.requiredPermission} key={item.id}>
             {item.subItems ? (
               <ListItem
                 button
@@ -153,6 +148,7 @@ function Sidebar(component) {
                   },
                 }}
                 selected={openItems[item.id]}
+
               >
                 <ListItemIcon sx={{ minWidth: 40 }}>
                   {item.icon}
@@ -186,7 +182,6 @@ function Sidebar(component) {
             {item.subItems && (
               <SubItem key={item.id} item={item} openItems={openItems} />
             )}
-          </React.Fragment>
           </ProtectedComponent>
         ))}
       </List>

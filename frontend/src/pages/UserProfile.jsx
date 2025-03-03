@@ -182,7 +182,7 @@ function UserProfile() {
                         {!editMode ? (
                             <Button
                                 variant="outlined"
-                                startIcon={<Icon name="edit-2" size={18} />}
+                                startIcon={<Icon name="pencil" size={18} />}
                                 onClick={() => setEditMode(true)}
                                 sx={{ textTransform: 'none' }}
                             >
