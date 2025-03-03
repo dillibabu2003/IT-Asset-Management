@@ -22,21 +22,7 @@ import {
     Snackbar,
     CircularProgress,
 } from '@mui/material';
-import {
-    Upload,
-    Mail,
-    Bell,
-    Shield,
-    Key,
-    LogOut,
-    Edit2,
-    Save,
-    X,
-    Clock,
-    Monitor,
-    Smartphone,
-    Calendar,
-} from 'lucide-react';
+import Icon from '../components/Icon';
 
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -173,7 +159,7 @@ function UserProfile() {
                             <Button
                                 variant="outlined"
                                 component="label"
-                                startIcon={<Upload size={18} />}
+                                startIcon={<Icon name="upload" size={18} />}
                                 sx={{ textTransform: 'none', mb: 2 }}
                             >
                                 Change Photo
@@ -196,7 +182,7 @@ function UserProfile() {
                         {!editMode ? (
                             <Button
                                 variant="outlined"
-                                startIcon={<Edit2 size={18} />}
+                                startIcon={<Icon name="edit-2" size={18} />}
                                 onClick={() => setEditMode(true)}
                                 sx={{ textTransform: 'none' }}
                             >
@@ -207,7 +193,7 @@ function UserProfile() {
                                 <Button
                                     variant="outlined"
                                     color="error"
-                                    startIcon={<X size={18} />}
+                                    startIcon={<Icon name="x" size={18} />}
                                     onClick={() => setEditMode(false)}
                                     sx={{ textTransform: 'none' }}
                                 >
@@ -215,7 +201,7 @@ function UserProfile() {
                                 </Button>
                                 <Button
                                     variant="contained"
-                                    startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <Save size={18} />}
+                                    startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <Icon name="save" size={18} />}
                                     onClick={handleSaveProfile}
                                     disabled={loading}
                                     sx={{ textTransform: 'none' }}
@@ -320,7 +306,7 @@ function UserProfile() {
                             <List>
                                 <ListItem>
                                     <ListItemIcon>
-                                        <Mail size={20} />
+                                        <Icon name="mail" size={20} />
                                     </ListItemIcon>
                                     <ListItemText
                                         primary="Email Notifications"
@@ -334,7 +320,7 @@ function UserProfile() {
                                 </ListItem>
                                 <ListItem>
                                     <ListItemIcon>
-                                        <Bell size={20} />
+                                        <Icon name="bell" size={20} />
                                     </ListItemIcon>
                                     <ListItemText
                                         primary="Push Notifications"
@@ -348,7 +334,7 @@ function UserProfile() {
                                 </ListItem>
                                 <ListItem>
                                     <ListItemIcon>
-                                        <Smartphone size={20} />
+                                        <Icon name="phone" size={20} />
                                     </ListItemIcon>
                                     <ListItemText
                                         primary="SMS Notifications"
@@ -362,7 +348,7 @@ function UserProfile() {
                                 </ListItem>
                                 <ListItem>
                                     <ListItemIcon>
-                                        <Calendar size={20} />
+                                        <Icon name="calendar" size={20} />
                                     </ListItemIcon>
                                     <ListItemText
                                         primary="Weekly Activity Summary"
@@ -381,7 +367,7 @@ function UserProfile() {
                             <List>
                                 <ListItem>
                                     <ListItemIcon>
-                                        <Shield size={20} />
+                                        <Icon name="shield" size={20} />
                                     </ListItemIcon>
                                     <ListItemText
                                         primary="Two-Factor Authentication"
@@ -395,7 +381,7 @@ function UserProfile() {
                                 </ListItem>
                                 <ListItem button>
                                     <ListItemIcon>
-                                        <Key size={20} />
+                                        <Icon name="key" size={20} />
                                     </ListItemIcon>
                                     <ListItemText
                                         primary="Change Password"
@@ -404,7 +390,7 @@ function UserProfile() {
                                 </ListItem>
                                 <ListItem button sx={{ color: 'error.main' }}>
                                     <ListItemIcon>
-                                        <LogOut size={20} color="#d32f2f" />
+                                        <Icon name="log-out" size={20} color="#d32f2f" />
                                     </ListItemIcon>
                                     <ListItemText
                                         primary="Sign Out from All Devices"
@@ -421,7 +407,7 @@ function UserProfile() {
                                 {activityHistory.map((activity) => (
                                     <ListItem key={activity.id} divider>
                                         <ListItemIcon>
-                                            <Clock size={20} />
+                                            <Icon name="clock" size={20} />
                                         </ListItemIcon>
                                         <ListItemText
                                             primary={activity.action}
@@ -461,7 +447,7 @@ function UserProfile() {
                                             }}
                                         >
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                <Monitor size={24} />
+                                                <Icon name="monitor" size={24} />
                                                 <Box>
                                                     <Typography variant="subtitle1">{asset.name}</Typography>
                                                     <Typography variant="body2">
