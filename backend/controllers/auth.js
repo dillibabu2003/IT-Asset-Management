@@ -141,9 +141,13 @@ const handleVerifyEmail=asyncHandler(async(req,res)=>{
     if(!user){
           throw new ApiError(400,null,"Invalid email.");
     }
-    user.status = "active";
-    await user.save();
-    res.status(200).json(new ApiResponse(200,null,"Email verified successfully."));
+    if(user.status=="inactive"){
+        user.status = "active";
+        await user.save();
+        return res.status(200).json(new ApiResponse(200,null,"Email verified successfully."));
+    }
+    throw new ApiError(400,null,"Email is already verified.");
+
 })
 
 

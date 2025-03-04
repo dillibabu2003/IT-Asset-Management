@@ -53,7 +53,7 @@ function Header() {
 
               >
                 <Box sx={{ p: 1, width: "fit-content", display: 'flex', flexDirection: "column" }}>
-                  <Link to="users/profile">
+                  <Link to="user/profile" state={{ userDetails: user } }>
                   <Button
                     fullWidth
                     startIcon={<Icon name="user" size={20} />}

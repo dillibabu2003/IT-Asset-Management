@@ -58,8 +58,10 @@ function App() {
             <Route path="create" element={<ProtectedComponent requiredPermission={PERMISSIONS.CREATE_USERS} redirect={true}><CreateUser /></ProtectedComponent>} />
             <Route path="manage" element={<ProtectedComponent requiredPermission={PERMISSIONS.EDIT_USERS} redirect={true}><ManageUsers behavior="edit" /></ProtectedComponent>} />
             <Route path="view" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_USERS} redirect={true}><ManageUsers behavior="view" /> </ProtectedComponent>} />
-            <Route path="profile" element={<UserProfile/>} />
             <Route path="view/:userId" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_USERS} redirect={true}>some user with some id in params</ProtectedComponent>} />
+          </Route>
+          <Route path='/user'>
+            <Route path="profile" element={<UserProfile />} />
           </Route>
 
         </Route>
