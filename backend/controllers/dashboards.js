@@ -217,7 +217,7 @@ async function parseRawDashboardData(dashboardData,model){
     const tilePromises =  dashboardData.tiles.map(async (tile)=>{
         const queryResult = await executeQueryWithGivenModel(tile.query,model);
         const value = queryResult[0]?.value || 0;
-        const resultValue = tile.func === "avg" ? parseFloat(value).toFixed(2) : value;
+        const resultValue = tile.func === "avg" || tile.func === "sum" ? parseFloat(value).toFixed(2) : value;
         const parsedTile = {title: tile.title, value: resultValue, icon: tile.icon, color: tile.color};
         return parsedTile;
     });
