@@ -1,4 +1,4 @@
-import React, { use, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -11,9 +11,9 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import axiosInstance from '../utils/axios';
 import { Link, useParams } from 'react-router';
+import Icon from '../components/Icon';
 
 function ForgotPassword({ onBack, onSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -134,7 +134,7 @@ function ForgotPassword({ onBack, onSuccess }) {
       >
         <Link to="/login">
         <Button
-          startIcon={<ArrowLeft size={18} />}
+          startIcon={<Icon name="arrow-left" size={18} />}
           onClick={onBack}
           sx={{ position: 'absolute', top: 24, left: 24 }}
         >
@@ -178,7 +178,7 @@ function ForgotPassword({ onBack, onSuccess }) {
                     edge="end"
                     size="small"
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <Icon name="eye-off" size={18} /> : <Icon name="eye" size={18} />}
                   </IconButton>
                 ),
               }}
@@ -200,7 +200,7 @@ function ForgotPassword({ onBack, onSuccess }) {
                     edge="end"
                     size="small"
                   >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showConfirmPassword ? <Icon name="eye-off" size={18} /> : <Icon name="eye" size={18} />}
                   </IconButton>
                 ),
               }}

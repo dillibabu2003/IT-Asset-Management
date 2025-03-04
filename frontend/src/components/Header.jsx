@@ -4,14 +4,21 @@ import Icon from './Icon';
 import { useAuth } from '../providers/AuthProvider';
 import { Link } from 'react-router';
 
-function Header() {
+function Header({toggleSidebar,...props}) {
   const { user, logout } = useAuth();
-
   const [toggleProfileMenu, setToggleProfileMenu] = useState();
   return (
     <AppBar position="fixed" color="inherit" elevation={1} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+            <IconButton
+              color="inherit"
+              onClick={() => toggleSidebar((prev) => !prev)}
+              edge="start"
+              sx={{ mr: 2 }}
+            >
+              <Icon name="menu" size={20} />
+            </IconButton>
           <Link to="/" style={{ textDecoration: 'none' }}>
           <Typography variant="h6" fontWeight="500" sx={{
             color: "#1976d2",

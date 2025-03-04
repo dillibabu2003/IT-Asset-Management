@@ -40,6 +40,7 @@ function DashboardPage() {
     return (
         !data ? <Loader /> :
             <Box>
+                <Typography variant="h5" gutterBottom>{currentDashboardId.substring(0,1).toUpperCase()+currentDashboardId.substring(1)} Dashboard</Typography>
                 <Grid container spacing={3}>
                     {data?.tiles.map((stat, index) => (
                         <Grid item xs={12} sm={6} md={3} key={stat.title}>

@@ -8,11 +8,24 @@ const CustomVisualRender = ({element}) => {
     
     function formattedDataForGraphs(data) {
         let formattedData = [];
+        let distinctColors = [];
+        for (let index = 0; index < data.length;) {
+            const currentColor = BACKGROUND_COLORS[Math.floor(Math.random() * BACKGROUND_COLORS.length)];
+            if (distinctColors.includes(currentColor)) {
+                continue;
+            }
+            else{
+                distinctColors.push(currentColor);
+                index++;
+            }
+           
+        }
+        let colorIndex=0;
         data.forEach((element) => {
             formattedData.push({
                 name: convertSnakeCaseToPascaleCase(element._id),
                 y: element.count,
-                color: BACKGROUND_COLORS[Math.floor(Math.random() * BACKGROUND_COLORS.length)]
+                color: distinctColors[colorIndex++]
             })
         });
         console.log(formattedData);

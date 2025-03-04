@@ -16,6 +16,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 
 export default function CustomForm({ isOpen, closeDialog, currentSection,fields }) {
+  if(!fields) return null;
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   

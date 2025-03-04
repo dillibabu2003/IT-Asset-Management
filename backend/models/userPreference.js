@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 
 const UserVisibilitySchema = new mongoose.Schema({
   user_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    type: String,
+    unique: true,
     required: true,
   },
   visible_fields: {
     type: Map,
-    of: [String],
+    of: Object,
     default: {},
   },
 });

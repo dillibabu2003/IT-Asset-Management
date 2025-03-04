@@ -9,6 +9,7 @@ import {
   Chip,
 } from '@mui/material';
 
+
 function UserProfile() {
   const location = useLocation();
   const [userData,setUserData] = useState(location.state.userDetails);

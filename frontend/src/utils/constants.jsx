@@ -37,6 +37,7 @@ export const ICONS = [
     "rocket",
     "activity",
     "check-circle",
+    "circle-dollar-sign",
     "laptop",
     "hard-drive",
     "server",

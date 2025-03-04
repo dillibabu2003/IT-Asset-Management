@@ -6,17 +6,19 @@ import ProtectedComponent from '../protectors/ProtectedComponent';
 
 const drawerWidth = 250;
 
-function SubItem({item,openItems}) {
+function SubItem({item,openItems,toggleSideBar}) {
   const location = useLocation().pathname;  
   return (
     <Collapse in={openItems[item.id]} timeout="auto" unmountOnExit>
-      <List component="div"               
+      <List component="div"   
+      key={item.id}            
       >
         {item.subItems.map((subItem) => (
           <ProtectedComponent requiredPermission={subItem.requiredPermission}>
           <Link
             to={'/'+item.id+"/"+subItem.id}
             key={item.id+subItem.id}
+            onClick={()=>{toggleSideBar(false)}}
           >
           <ListItem
             key={subItem.text}
@@ -45,7 +47,7 @@ function SubItem({item,openItems}) {
     </Collapse>
   )
 }
-function Sidebar(component) {
+function Sidebar({isSideBarOpen,toggleSideBar,...props}) {
   const location = useLocation();
   const [openItems, setOpenItems] = React.useState({
     dashboard: location.pathname.startsWith("/dashboard"),
@@ -54,18 +56,14 @@ function Sidebar(component) {
     licenses: location.pathname.startsWith("/licenses"),
     invoices: location.pathname.startsWith("/invoices"),
     checkouts: location.pathname.startsWith("/checkouts"),
-  });
-  console.log(openItems);
-  
+  });  
 
   //listen to location change and update the links
   useEffect(()=>{
   },[location.pathname]);
 
 
-  const handleClick = (id,hasSubItems) => {
-    console.log(id);
-    
+  const handleClick = (id,hasSubItems) => {    
       //close all opened subitem categories
       setOpenItems((prev) => {
         const closedItems={};
@@ -96,7 +94,7 @@ function Sidebar(component) {
         { text: 'Assets Dashboard', id:"assets", icon: <Icon name="box" />, requiredPermission:"view:assets:dashboard"},
         { text: 'Licenses Dashboard', id:"licenses", icon: <Icon name="key" />, requiredPermission:"view:licenses:dashboard"},
         { text: 'Invoices Dashboard', id:"invoices", icon: <Icon name="receipt" />, requiredPermission:"view:invoices:dashboard"},
-        { text: 'Configure Dashboard', id:"configure", icon: <Icon name="receipt" />, requiredPermission:"edit:dashboard"}
+        { text: 'Configure Dashboard', id:"configure", icon: <Icon name="settings" />, requiredPermission:"edit:dashboard"}
       ]
     },
     {
@@ -123,7 +121,9 @@ function Sidebar(component) {
 
   return (
     <Drawer
-      variant="permanent"
+      // variant="permanent"
+      open={isSideBarOpen}
+      // onClose={toggleSideBar(false)}
       sx={{
         width: drawerWidth,
         flexShrink: 0,
@@ -137,8 +137,7 @@ function Sidebar(component) {
     >
       <List>
         {menuItems.map((item) => (
-          <ProtectedComponent requiredPermission={item.requiredPermission}>
-          <React.Fragment key={item.id}>
+          <ProtectedComponent requiredPermission={item.requiredPermission} key={item.id}>
             {item.subItems ? (
               <ListItem
                 button
@@ -153,6 +152,7 @@ function Sidebar(component) {
                   },
                 }}
                 selected={openItems[item.id]}
+
               >
                 <ListItemIcon sx={{ minWidth: 40 }}>
                   {item.icon}
@@ -161,7 +161,7 @@ function Sidebar(component) {
                 {openItems[item.id] ? <Icon name="chevron-down" size={18} /> : <Icon name="chevron-right" size={18} />}
               </ListItem>
             ) : (
-              <Link to={"/" + item.id}>
+              <Link to={"/" + item.id} onClick={()=>{toggleSideBar(false)}}>
                 <ListItem
                   button
                   onClick={() => handleClick(item.id, false)}
@@ -184,9 +184,8 @@ function Sidebar(component) {
               </Link>
             )}
             {item.subItems && (
-              <SubItem key={item.id} item={item} openItems={openItems} />
+              <SubItem key={item.id} item={item} openItems={openItems} toggleSideBar={toggleSideBar}/>
             )}
-          </React.Fragment>
           </ProtectedComponent>
         ))}
       </List>
