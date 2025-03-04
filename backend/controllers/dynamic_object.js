@@ -20,36 +20,75 @@ function getModelByObjectId(objectId) {
     }
 }
 
-const getPaginatedDataByObjectId = asyncHandler(async (req, res) => {
-    console.log("getPaginatedDataByObjectId");
+async function fetchPaginatedDocumentsByObjectId(objectId, page, limit,skip) {
+    const aggregateQuery = [
+        {
+            $skip: skip
+        },
+        {
+            $limit: limit
+        },
+        {
+            $lookup: {
+                from: "invoices",
+                localField: "invoice_id",
+                foreignField: "_id",
+                as: "invoice"
+            }
+        },
+        {
+            $addFields: {
+                invoice_id: {$first: "$invoice.invoice_id"}
+            }
+        },
+        {
+            $project: {
+                invoice: 0
+            }
+        }
+    ]
+    switch (objectId) {
+        case "assets":
+            return Asset.aggregate(aggregateQuery).exec();
+        case "invoices":
+            return Invoice.find().skip((page - 1) * limit).limit(limit).exec();
+        case "licenses":
+            return License.aggregate(aggregateQuery).exec();
+        default:
+            return null;
+    }
+}
 
+const getPaginatedDataByObjectId = asyncHandler(async (req, res) => {
     const objectId = req.params.objectId;
     const model = getModelByObjectId(objectId);
     if (!model) {
         throw new ApiError(400, "Invalid object id");
     }
     const { page, limit } = req.query;
-    const objectData = await model.find()
-        .skip((page - 1) * limit)
-        .limit(limit);
-    console.log(objectData);
-
-    res.status(200).json(new ApiResponse(200, { documents: [...objectData], total: objectData.length }, `${objectId} fetched successfully`));
+    if(!page || !limit){
+        throw new ApiError(400, "Invalid query parameters");
+    }
+    const parsedPageNumber = parseInt(page);
+    const parsedDocumentsLimit = parseInt(limit);
+    const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
+    if (isNaN(parsedPageNumber) || isNaN(parsedDocumentsLimit)) {
+        throw new ApiError(400, "Invalid query parameters");
+    }
+    const totalDocuments = await model.countDocuments();
+    const objectData = await fetchPaginatedDocumentsByObjectId(objectId, parsedPageNumber, parsedDocumentsLimit,skip);
+    res.status(200).json(new ApiResponse(200, { documents: [...objectData], total: totalDocuments }, `${objectId} fetched successfully`));
 });
+
+
 const getUserColumnVisibilitiesByObjectId = asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    const objectId = req.params.objectId;
-    console.log(objectId);
-    
+    const objectId = req.params.objectId;    
     if (!objectId) {
         throw new ApiError(400, null, "Invalid object id");
     }
-    const allColumnVisibilites = await UserColumnVisibilities.findOne({ user_id: userId });
-    console.log(allColumnVisibilites);
-    
-    const currentObjectIdPreferences = allColumnVisibilites.visible_fields.get(objectId);
-    // console.log(currentObjectIdPreferences);
-    
+    const allColumnVisibilites = await UserColumnVisibilities.findOne({ user_id: userId });    
+    const currentObjectIdPreferences = allColumnVisibilites.visible_fields.get(objectId);    
     if (!currentObjectIdPreferences) {
         throw new ApiError(400, null, "Invalid object id");
     }

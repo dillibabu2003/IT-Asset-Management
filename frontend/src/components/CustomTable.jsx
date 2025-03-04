@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -38,6 +38,10 @@ export default function CustomTable({ currentSection, data, page, setPage, userV
   const currentDocumentStartIndex = (page - 1) * PAGE_LIMIT + 1
   const currentDocumentEndIndex = Math.min((page - 1) * PAGE_LIMIT + PAGE_LIMIT, data.data.total);
   const [filteredDocuments, setFilteredDocuments] = useState(data.data.documents);
+
+  useEffect(() => {
+    setFilteredDocuments(data.data.documents);
+  }, [data]);
 
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';

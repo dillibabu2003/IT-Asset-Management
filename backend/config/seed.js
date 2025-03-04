@@ -443,7 +443,7 @@ const seedDB = async () => {
         },
     ]);
 
-    const userPreferences = new UserVisibility({
+    const userPreferences1 = new UserVisibility({
         user_id: user1.user_id,
         visible_fields: {
             assets: {
@@ -487,7 +487,52 @@ const seedDB = async () => {
         },
     });
 
-    await userPreferences.save();
+    await userPreferences1.save();
+    const userPreferences2 = new UserVisibility({
+        user_id: user2.user_id,
+        visible_fields: {
+            assets: {
+                "invoice_id": true,
+                "checkout_id": true,
+                "ram": true,
+                "storage": true,
+                "processor": true,
+                "os_type": true,
+                "start": true,
+                "end": true,
+                "warranty": true,
+                "make": true,
+                "model": true,
+                "status": true,
+                "serial_no": true,
+                "asset_id": true,
+                "date_of_received": true,
+                "name_of_the_vendor": true,
+            },
+            licenses: {
+                "license_id": true,
+                "date_of_received": true,
+                "name_of_the_vendor": true,
+                "invoice_id": true,
+                "make": true,
+                "model": true,
+                "start": true,
+                "end": true,
+                "warranty": true,
+                "status": true,
+            },
+            invoices: {
+                "invoice_id": true,
+                "date_of_upload": true,
+                "date_of_received": true,
+                "name_of_the_vendor": true,
+                "amount": true,
+                "status": true,
+            },
+        },
+    });
+
+    await userPreferences2.save();
     console.log('Database seeded!');
     mongoose.connection.close();
 };

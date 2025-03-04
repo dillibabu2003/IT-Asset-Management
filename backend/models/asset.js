@@ -21,12 +21,12 @@ const AssetSchema = new mongoose.Schema({
   },
   invoice_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Invoices",
+    ref: "Invoice",
     required: true,
   },
   checkout_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Checkouts",
+    ref: "Checkout",
   },
   make: {
     type: String,
@@ -68,6 +68,6 @@ const AssetSchema = new mongoose.Schema({
     enum: ["available", "deployed", "archived", "reissue"],
     required: true,
   },
-});
+},{timestamps: true});
 
 module.exports = mongoose.model("Asset", AssetSchema);
