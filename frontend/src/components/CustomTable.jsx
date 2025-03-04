@@ -25,13 +25,19 @@ import Icon from './Icon';
 import { PAGE_LIMIT } from '../utils/constants';
 import axiosInstance from '../utils/axios';
 import ProtectedComponent from '../protectors/ProtectedComponent';
+import { convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 
-export default function CustomTable({ currentSection, data, page, setPage }) {
+export default function CustomTable({ currentSection, data, page, setPage, userVisibleColumns }) {
   const [columns, setColumns] = useState(data.fields);
   const [orderBy, setOrderBy] = useState("");
   const [order, setOrder] = useState('asc');
   const [columnsMenuAnchor, setColumnsMenuAnchor] = useState(null);
-  const [filteredDocuments, setFilteredDocuments] = useState(data.documents);
+  const [visibleColumns, setVisibleColumns] = useState(userVisibleColumns);
+
+  const totalPages = Math.ceil(data.data.total / PAGE_LIMIT);
+  const currentDocumentStartIndex = (page - 1) * PAGE_LIMIT + 1
+  const currentDocumentEndIndex = Math.min((page - 1) * PAGE_LIMIT + PAGE_LIMIT, data.data.total);
+  const [filteredDocuments, setFilteredDocuments] = useState(data.data.documents);
 
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -48,21 +54,22 @@ export default function CustomTable({ currentSection, data, page, setPage }) {
   });
 
   const handleColumnToggle = (columnId) => {
-    setColumns(columns.map(col =>
-      col.id === columnId ? { ...col, visible: !col.visible } : col
-    ));
+    console.log(columnId);
+    setVisibleColumns({ ...visibleColumns, [columnId]: !visibleColumns[columnId] });
   };
 
   const exportToExcel = () => {
-    const visibleColumns = columns.filter(col => col.visible);
     const data = sortedDocuments.map(document => {
       const row = {};
-      visibleColumns.forEach(col => {
-        row[col.label] = document[col.id];
+      Object.keys(visibleColumns).forEach(col => {
+        if(visibleColumns[col]){
+          const label = convertSnakeCaseToPascaleCase(col);
+          row[label] = document[col];
+        }
       });
       return row;
     });
-
+    
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, `${currentSection}`);
@@ -71,29 +78,28 @@ export default function CustomTable({ currentSection, data, page, setPage }) {
 
   const searchText = (e) => {
     const searchValue = e.target.value.toLowerCase();
-       const abortController = new AbortController();
-      async function fetchData() {
-        try {
-            const response = await axiosInstance.get(`/assets/search?val=${searchValue}`, { signal: abortController.signal });
-            console.log(response);
-        } catch (error) {
-            console.error(error);
+    const abortController = new AbortController();
+    async function fetchData() {
+      try {
+        const response = await axiosInstance.get(`/assets/search?val=${searchValue}`, { signal: abortController.signal });
+        console.log(response);
+      } catch (error) {
+        console.error(error);
 
-            console.log("Error occurred while fetching data");
+        console.log("Error occurred while fetching data");
 
-        }
       }
+    }
     fetchData();
-    
+
     const regex = new RegExp(searchValue, 'i');
     const filtered = data.documents.filter(document =>
       Object.values(document).some(value => regex.test(value))
     );
     setFilteredDocuments(filtered);
   };
-
   return (
-    <Paper sx={{ p: 3 }}>
+    <Paper sx={{ p: 3, width: 'calc(100vw - 48px)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2, flexWrap: "wrap", gap: "10px" }}>
         <TextField
           placeholder={`Search ${currentSection}...`}
@@ -129,12 +135,12 @@ export default function CustomTable({ currentSection, data, page, setPage }) {
       >
         <React.Fragment>
           {columns.map((column) => (
-            <MenuItem key={column.id} onClick={() => handleColumnToggle(column.id)}>
+            <MenuItem key={column._id} onClick={() => handleColumnToggle(column.id)}>
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={column.visible}
-                    onChange={() => handleColumnToggle(column.id)}
+                    checked={visibleColumns[column.id]}
+                    // onChange={() => handleColumnToggle(column.id)}
                   />
                 }
                 label={column.label}
@@ -152,11 +158,11 @@ export default function CustomTable({ currentSection, data, page, setPage }) {
         </React.Fragment>
       </Menu>
 
-      <TableContainer>
+      <TableContainer sx={{ maxHeight: 600, overflow: 'auto', maxWidth: "100%" }}>
         <Table>
           <TableHead>
             <TableRow>
-              {columns.filter(col => col.visible).map((column) => (
+              {columns.filter(col => visibleColumns[col.id]).map((column) => (
                 <TableCell key={column.id}>
                   <TableSortLabel
                     active={orderBy === column.id}
@@ -168,24 +174,19 @@ export default function CustomTable({ currentSection, data, page, setPage }) {
                 </TableCell>
               ))}
               <ProtectedComponent requiredPermission={`edit:${currentSection}`}>
-              <TableCell>Actions</TableCell>
+                <TableCell>Actions</TableCell>
               </ProtectedComponent>
             </TableRow>
           </TableHead>
           <TableBody>
             {sortedDocuments.map((document) => (
               <TableRow key={document.id}>
-                {columns.filter(col => col.visible).map((column) => (
+                {columns.filter(col => visibleColumns[col.id]).map((column) => (
                   <TableCell key={column.id}>
-                    {column.id === 'name' ? (
-                      <div>
-                        <div>{document.name}</div>
-                        <div style={{ color: 'gray', fontSize: '0.875rem' }}>{document.description}</div>
-                      </div>
-                    ) : column.id === 'status' ? (
+                    {column.id === 'status' ? (
                       <Chip
                         label={document.status}
-                        color={document.status === 'Available' ? 'success' : 'warning'}
+                        color={document.status === 'available' ? 'success' : 'warning'}
                         size="small"
                       />
                     ) : (
@@ -194,14 +195,14 @@ export default function CustomTable({ currentSection, data, page, setPage }) {
                   </TableCell>
                 ))}
                 <ProtectedComponent requiredPermission={`edit:${currentSection}`}>
-                <TableCell>
-                  <IconButton size="small" color="primary">
-                    <Icon name="pencil" size={20} />
-                  </IconButton>
-                  <IconButton size="small" color="error">
-                    <Icon name="trash-2" size={20} />
-                  </IconButton>
-                </TableCell>
+                  <TableCell>
+                    <IconButton size="small" color="primary">
+                      <Icon name="pencil" size={20} />
+                    </IconButton>
+                    <IconButton size="small" color="error">
+                      <Icon name="trash-2" size={20} />
+                    </IconButton>
+                  </TableCell>
                 </ProtectedComponent>
               </TableRow>
             ))}
@@ -210,8 +211,8 @@ export default function CustomTable({ currentSection, data, page, setPage }) {
       </TableContainer>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-        <div>Showing {(page - 1) * PAGE_LIMIT + 1} to {(page - 1) * PAGE_LIMIT + PAGE_LIMIT} of {data.total}</div>
-        <Pagination count={Math.ceil(data.total / PAGE_LIMIT)} color="primary" onChange={(event, page) => { console.log(page); setPage(page) }} />
+        <div>Showing {currentDocumentStartIndex} to {currentDocumentEndIndex} of {data.data.total}</div>
+        <Pagination count={totalPages} color="primary" onChange={(event, page) => { console.log(page); setPage(page) }} />
       </Box>
     </Paper>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableRow, Chip } from '@mui/material';
-import { convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
+import { convertSnakeCaseToPascaleCase, getColorAndBackgroundColorByStatus } from '../utils/helperFunctions';
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -32,14 +32,16 @@ function DashboardTable({columns,documents}) {
           const color= getStatusColor(document?.status);
           return (<TableRow key={document._id}>
             {
-              columns.map((column,colIndex)=>{
+              columns.map((column,colIndex)=>{                
+                const [color, backgroundColor]=getColorAndBackgroundColorByStatus(document[column])
                 return column=="status"?
                 <TableCell key={""+document._id+rowIndex+colIndex}>
                 {
-                  document[column]&&
+                  // document[column]&&
                   <Chip 
-                  label={document[column]} 
-                  style={{ background:`${color[0]}`, color:`${color[1]}`} }
+                  label={convertSnakeCaseToPascaleCase(document[column])} 
+                  style={{ background:backgroundColor, color:color }}
+                  // color={document.status === 'available' ? 'success' : 'warning'}
                   size="small"
                 />
               }

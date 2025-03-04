@@ -86,6 +86,8 @@ function ConfigureDashboard() {
   };
 
   const handleDeleteTile = (tileId) => {
+    console.log(tileId);
+    
     if (!dashboard) return;
     const updatedTiles = dashboard.tiles
       .filter(t => t._id !== tileId)
@@ -380,7 +382,7 @@ function ConfigureDashboard() {
                                   <IconButton
                                     size="small"
                                     color="error"
-                                    onClick={() => handleDeleteTile(tile.id)}
+                                    onClick={() => handleDeleteTile(tile._id)}
                                   >
                                     <Icon name="trash-2" size={18} />
                                   </IconButton>
