@@ -110,6 +110,7 @@ const createUser = asyncHandler(async (req, res) => {
 
 const getOtherUserData = asyncHandler(async (req, res) => {
       const userId = req.body.user_id;
+
       const userData = await User.findOne({ user_id: userId });
       if (!userData) {
             throw new ApiError(400, null, "Invalid user id");
@@ -119,6 +120,8 @@ const getOtherUserData = asyncHandler(async (req, res) => {
 
 const updateUserDetails = asyncHandler(async (req, res) => {
       const userId = req.body.user_id;
+      console.log(req.body);
+      console.log("User id:", userId);
       const userData = await User.findOneAndUpdate({ user_id: userId }, req.body);
       if (!userData) {
             throw new ApiError(400, null, "Invalid user id");

@@ -11,7 +11,7 @@ import InvoicesPage from './pages/Invoices';
 import CheckoutPage from './pages/Checkout';
 
 import CreateUser from './components/CreateUser';
-import ManageUsers from './components/ManageUser';
+import ManageUsers from './components/ManageUsers';
 
 import ProtectedRoute from './protectors/ProtectedRoute';
 import NotFound from './pages/NotFound';
