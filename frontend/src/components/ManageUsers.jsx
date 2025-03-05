@@ -30,6 +30,7 @@ import {
 } from '@mui/material';
 import Icon from './Icon';
 import axiosInstance from '../utils/axios';
+import toast from 'react-hot-toast';
 
 function ManageUsers({ behavior, ...props }) {
     const [users, setUsers] = useState([]);
@@ -64,7 +65,7 @@ function ManageUsers({ behavior, ...props }) {
 
     const handleMenuClose = () => {
         setAnchorEl(null);
-        setSelectedUser(null);
+        // setSelectedUser(null);
     };
 
     const handleEditClick = () => {
@@ -74,13 +75,20 @@ function ManageUsers({ behavior, ...props }) {
     };
 
     const handleDeleteClick = () => {
+        // console.log(selectedUser);
+        
         handleMenuClose();
-        setDeleteDialogOpen(true);
+        setDeleteDialogOpen(true);user_id
     };
 
-    const handleDeleteConfirm = () => {
+    const handleDeleteConfirm = async() => {
         if (selectedUser) {
-            setUsers(users.filter(user => user.id !== selectedUser.id));
+            console.log(selectedUser)
+           const response = await axiosInstance.delete(`/user/delete`, { data: { user_id: selectedUser.user_id } });
+           if(response.data.success){
+            toast.success(response.data.message);
+           }
+            setUpdateTable(!updateTable);
         }
         setDeleteDialogOpen(false);
         setSelectedUser(null);

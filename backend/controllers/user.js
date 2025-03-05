@@ -132,7 +132,6 @@ const deleteUser = asyncHandler(async (req, res) => {
       const userId = req.body.user_id;
       console.log("User id:", userId);
       await User.findOneAndDelete({ user_id: userId });
-      User.save();
       return res.status(200).json(new ApiResponse(200, null, "User Deleted Successfully"));
 });
 
