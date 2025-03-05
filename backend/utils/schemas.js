@@ -12,6 +12,8 @@ const envSchema=zod.object({
     REDIS_URI: zod.string({message: "REDIS_URI is required."}),
     S3_BUCKET_NAME:zod.string({message:"Image Url is required"}),
     S3_REGION: zod.string({message:"S3 region is required"}),
+    S3_PROFILE_PIC_FOLDER: zod.string({message:"S3 profile pic folder name is required"}),
+    S3_INVOICES_FOLDER: zod.string({message:"S3 invoices folder name is required"}),
     AWS_SECRET_KEY: zod.string({message:"AWS secret key is required"}),
     AWS_ACCESS_KEY: zod.string({message:"AWS access key is required"}),
     EMAIL_API: zod.string({message: "Email Api is required."})

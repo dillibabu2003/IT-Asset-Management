@@ -89,9 +89,6 @@ function CreateUser() {
             if(errorObject){
                 toast.error(errorObject[Object.keys(errorObject)[0]]);
             }
-            else{
-                toast.error("An error occurred while creating user");
-            }
         }
         
     };
