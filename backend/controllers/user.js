@@ -13,6 +13,7 @@ const UserVisibility = require("../models/userPreference");
 const { uploadFileToS3 } = require("../services/s3");
 const mongoose = require("mongoose");
 const { hitEmailServerApi } = require("../services/email");
+const { maxHeaderSize } = require("http");
 
 const initailizeAllObjectsFieldsAsVisibleWithUserid = async (userId,session) => {
       const userVisibility = new UserVisibility({
@@ -160,15 +161,16 @@ const getAllUsers = asyncHandler(async (req, res) => {
   const searchUsers=asyncHandler(async(req,res)=>{
       const {searchKey} = req.params
       console.log("Search Key:",searchKey);
-      const users=await User.aggregate([
+      const users = await User.aggregate([
             {
-                  $search:{
-                      index:"UserIndex",
-                      text:{
-                        query:searchKey,
-                        path:["firstname","lastname","fullname","email","user_id","role"],
-                        fuzzy:{
-                              prefixLength:3
+                  $search: {
+                      index: "UserIndex",
+                      text: {
+                        query: searchKey,
+                        path: ["firstname", "lastname", "fullname", "email", "user_id", "role"],
+                        fuzzy: {
+                              prefixLength: 2,
+                              maxEdits: 2,
                         }
                       }
                   }

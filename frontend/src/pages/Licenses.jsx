@@ -7,31 +7,61 @@ import { Box, Button, Popover, Typography } from '@mui/material';
 import CreateForm from '../components/CreateForm';
 import Icon from '../components/Icon';
 import ProtectedComponent from '../protectors/ProtectedComponent';
+import { Link } from 'react-router';
+import toast from 'react-hot-toast';
 
-const LicensePage = () => {
+const LicensesPage = () => {
 
 
-    const [data, setData] = useState();
+    const [data, setData] = useState(null);
     const [page, setPage] = useState(1);
     const [showCreateForm, setShowCreateForm] = useState(false);
-    const [importMenuAnchor, setImportMenuAnchor] = useState(null);
 
+    async function fetchLicensesByPageAndLimit(abortController,page,limit){
+            const response = await axiosInstance.get(`/objects/licenses?page=${page}&limit=${limit}`, { signal: abortController.signal });
+            return response.data;
+    }
+    async function fetchLicensesMetaData(abortController){
+            const response = await axiosInstance.get("/metadata/licenses", { signal: abortController.signal });
+            return response.data;
+    }
+    async function fetchUserColumnPreferences(abortController){
+        const response = await axiosInstance.get("/objects/licenses/column-visibilities", { signal: abortController.signal });
+        return response.data;
+    }
+    async function fetchData(abortController) {
+            const licensesPromise=fetchLicensesByPageAndLimit(abortController,page,PAGE_LIMIT);
+            const licensesMetadataPromise=fetchLicensesMetaData(abortController);
+            const userColumnPreferencesPromise=fetchUserColumnPreferences(abortController);
+            return Promise.all([licensesPromise,licensesMetadataPromise,userColumnPreferencesPromise]);
+    }
+    async function handleSave(formData){
+        console.log(formData);
+        try {
+            const response = await axiosInstance.post("/objects/licenses/create",formData);
+            if(response.data.success){
+                toast.success(response.data.message);
+                setShowCreateForm(false);
+            }
+        } catch (error) {
+            toast.error(error.response.data.message || "An error occurred");
+        }
+
+        
+    }
     useEffect(() => {
         const abortController = new AbortController();
-        async function fetchData() {
-            try {
-                const response = await axiosInstance.get(`/licenses?page=${page}&limit=${PAGE_LIMIT}`, { signal: abortController.signal });
-                console.log(response.data);
-                setData(response.data);
-            } catch (error) {
-                console.error(error);
-                console.log("Error occurred while fetching data");
-            }
-        }
-        fetchData();
+        fetchData(abortController).then((response) => {
+            const licenses=response[0].data;
+            const licensesMetaData=response[1].data;
+            const userColumnPreferences=response[2].data;
+            setData({data: licenses, fields: licensesMetaData, userColumnPreferences: userColumnPreferences});
+        }).catch((error) => {   
+            console.log(error);
+        });
         return () => {
             abortController.abort();
-        }
+        };
     }, [page]);
     return (
 
@@ -39,8 +69,9 @@ const LicensePage = () => {
             <React.Fragment>
 
                 <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h5" fontWeight="500">Licenses</Typography>
-                    <ProtectedComponent requiredPermission={"create:licenses"}>
+                    <Typography variant="h5" fontWeight="500">Licences</Typography>
+
+                        <ProtectedComponent requiredPermission={"create:licenses"}>
                     <Box sx={{ display: 'flex', gap: "8px", alignItems: "center" }}>
                         <Button
                             variant="contained"
@@ -48,63 +79,33 @@ const LicensePage = () => {
                             sx={{ textTransform: 'none' }}
                             onClick={() => setShowCreateForm(true)}
                         >
-                            Create License
+                            Create Asset
                         </Button>
                         <Box component="div" sx={{ width: "fit-content" }}>
+                            <Link to="/licenses/import" style={{ textDecoration: "none" }}>
                             <Button
-                                variant="contained"
+                                variant="outlined"
                                 color="primary"
                                 startIcon={<Icon name="upload" size={20} />}
-                                onClick={(e) => setImportMenuAnchor(e.currentTarget)}
                             >
-                                Bulk Import
+                                Import Excel
                             </Button>
-                            <Popover
-                                open={Boolean(importMenuAnchor)}
-                                anchorEl={importMenuAnchor}
-                                onClose={() => setImportMenuAnchor(null)}
-                                anchorOrigin={{
-                                    vertical: 'bottom',
-                                    horizontal: 'left',
-                                }}
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'left',
-                                }}
-                            >
-                                <Box sx={{ p: 1, width: "fit-content", display: 'flex', flexDirection: "column" }}>
-                                    <Button
-                                        fullWidth
-                                        startIcon={<Icon name="file-spreadsheet" size={20} />}
-                                        sx={{ mb: 1, justifyContent: 'flex-start', textWrap: 'nowrap' }}
-                                    >
-                                        From Excel
-                                    </Button>
-                                    <Button
-                                        fullWidth
-                                        startIcon={<Icon name="file-text" size={20} />}
-                                        sx={{ justifyContent: 'flex-start', textWrap: 'nowrap' }}
-                                    >
-                                        From Invoice
-                                    </Button>
-                                </Box>
-                            </Popover>
-
+                            </Link>
                         </Box>
 
                     </Box>
                     </ProtectedComponent>
+
                 </Box>
                 {!data ? <Loader /> :
                     <React.Fragment>
-                        <CreateForm currentSection="licenses" fields={data.fields} isOpen={showCreateForm} closeDialog={() => setShowCreateForm(false)} aria-describedby={`create-licenses-form`} />
-                        <CustomTable currentSection="licenses" page={page} data={data} setPage={setPage} />
+                        <CreateForm currentSection="licenses" fields={data.fields} isDialogOpen={showCreateForm} values={Object.fromEntries(data.fields.map(field => [field.id, '']))} closeDialog={() => setShowCreateForm(false)} saveData={handleSave}  aria-describedby={`create-assets-form`} />
+                        <CustomTable currentSection="licenses" page={page} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
                     </React.Fragment>
                 }
             </React.Fragment>
         )
-
     )
 }
 
-export default LicensePage;
+export default LicensesPage;

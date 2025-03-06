@@ -189,7 +189,7 @@ export default function CustomTable({ currentSection, data, page, setPage, userV
                   <TableCell key={column.id}>
                     {column.id === 'status' ? (
                       <Chip
-                        label={document.status}
+                        label={convertSnakeCaseToPascaleCase(document.status)}
                         color={document.status === 'available' ? 'success' : 'warning'}
                         size="small"
                       />

@@ -62,7 +62,6 @@ function ManageUsers({ behavior, ...props }) {
     useEffect(()=>{     
        fetchUserMatched().then((response)=>{
         setUsers(response.data);
-        // console.log("This is Data: ", response.data);
        });
        if(searchTerm===""){
               fetchUserData().then((response) => {
