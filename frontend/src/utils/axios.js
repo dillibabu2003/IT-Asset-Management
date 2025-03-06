@@ -2,7 +2,7 @@ import axios from "axios";
 
 const axiosInstance = axios.create({
     baseURL: "http://localhost:8000/api/v1",
-    timeout: 3000,
+    timeout: 10000,
     withCredentials: true
 });
 
@@ -13,7 +13,7 @@ axiosInstance.interceptors.response.use(
         console.log(error);
         console.log("from axios");
         
-        if (error.status === 401 && error.response?.data?.error?.name === "TokenExpiredError") {
+        if (error.status === 401 && error.response?.data?.errors?.name === "TokenExpiredError") {
             try {
                 await axiosInstance.post("/auth/refresh-access-token");
                 return axiosInstance(originalRequest);

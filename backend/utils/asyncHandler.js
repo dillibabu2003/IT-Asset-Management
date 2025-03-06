@@ -2,6 +2,7 @@ const { ZodError } =require('zod');
 const ApiError =require('./ApiError');
 const { extractZodErrorMessages } =require('./helperFunctions');
 const { JsonWebTokenError } = require('jsonwebtoken');
+const { MongooseError } = require('mongoose');
 
 function asyncHandler(requestHandler) {
 	return async (req, res, next) => {
@@ -15,9 +16,12 @@ function asyncHandler(requestHandler) {
 			} else if (error instanceof ApiError) {
 				res.status(error.statusCode).json(error);
 			}else if(error instanceof JsonWebTokenError){
-				res.status(401).json({statusCode: 401,error,message: "Invalid token",stack: error.stack});
+				res.status(401).json(new ApiError( 401,error, "Invalid token", error.stack));
 			}
-			 else {
+			else if(error instanceof MongooseError || error.name === 'MongoBulkWriteError'){
+				res.status(400).json(new ApiError(400,error,error.message,error.stack));
+			}
+			else {
 				
 				next(error);
 			}

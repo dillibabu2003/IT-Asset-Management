@@ -16,25 +16,37 @@ const { query } = require('express');
 
 mongoose.connect(cleanedEnv.MONGO_URI, {
     dbName: cleanedEnv.DB_NAME,
+    timeoutMS: 50000
 });
 
 const seedDB = async () => {
     await mongoose.connection.dropDatabase();
 
+    const users = [];
+    const roles = ['admin', 'member', 'guest'];
+    let statuses = ['active', 'inactive', 'blocked'];
+    const genders = ['male', 'female'];
+
+    for (let i = 1; i <= 100; i++) {
+        users.push(new User({
+            user_id: `U${i.toString().padStart(3, '0')}`,
+            role: roles[Math.floor(Math.random() * roles.length)],
+            firstname: `FirstName${i}`,
+            lastname: `LastName${i}`,
+            email: `user${i}@example.com`,
+            password: '1234',
+            status: statuses[Math.floor(Math.random() * statuses.length)],
+            date_of_birth: new Date(1960 + Math.floor(Math.random() * 40), 
+                                  Math.floor(Math.random() * 12), 
+                                  Math.floor(Math.random() * 28) + 1),
+            gender: genders[Math.floor(Math.random() * genders.length)]
+        }));
+    }
+
+    await User.insertMany(users);
     const user1 = new User({
-        user_id: 'U001',
+        user_id: 'MU001',
         role: 'admin',
-        firstname: 'John',
-        lastname: 'Doe',
-        email: 'john@example.com',
-        password: '1234',
-        status: 'active',
-        date_of_birth: new Date('1990-01-01'),
-        gender: 'male',
-    });
-    const user2 = new User({
-        user_id: 'U002',
-        role: 'guest',
         firstname: 'dilli',
         lastname: 'babu',
         email: 'dilli@example.com',
@@ -44,16 +56,16 @@ const seedDB = async () => {
         gender: 'male',
     });
 
-    // const user2 = new User({
-    //     user_id: 'U002',
-    //     role: 'member',
-    //     firstname: 'Jane',
-    //     lastname: 'Smith',
-    //     email: 'jane@example.com',
-    //     password: 'password456',
-    //     date_of_birth: new Date('1992-02-02'),
-    //     gender: 'female',
-    // });
+    const user2 = new User({
+        user_id: 'MU002',
+        role: 'member',
+        firstname: 'Jane',
+        lastname: 'Smith',
+        email: 'jane@example.com',
+        password: 'password456',
+        date_of_birth: new Date('1992-02-02'),
+        gender: 'female',
+    });
 
     await user1.save();
     await user2.save();
@@ -70,7 +82,7 @@ const seedDB = async () => {
     await invoice1.save();
 
     const assets = [];
-    const statuses = ["available", "deployed", "archived", "reissue"];
+    statuses = ["available", "deployed", "archived", "reissue"];
     for (let i = 1; i <= 20; i++) {
         assets.push(new Asset({
             serial_no: `SN${i.toString().padStart(3, '0')}`,
@@ -354,11 +366,12 @@ const seedDB = async () => {
     await MetaData.insertMany([
         { belongs_to: "assets", id: 'serial_no', label: 'Serial No', type: 'text', required: true, additional: false, create: true, edit: true },
         { belongs_to: "assets", id: 'asset_id', label: 'Asset Id', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "assets", id: 'date_of_received', label: 'Date Of Received', type: 'date', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "assets", id: 'name_of_the_vendor', label: 'Name Of The Vendor', type: 'text', required: true, additional: false, create: true, edit: true },
+        { belongs_to: "assets", id: 'date_of_received', label: 'Date Of Received', type: 'date', required: true, additional: false, create: false, edit: true },
+        { belongs_to: "assets", id: 'name_of_the_vendor', label: 'Name Of The Vendor', type: 'text', required: true, additional: false, create: false, edit: true },
         { belongs_to: "assets", id: 'invoice_id', label: 'Invoice Id', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "assets", id: 'make', label: 'Make', type: 'text', required: false, additional: false, create: true, edit: true },
-        { belongs_to: "assets", id: 'model', label: 'Model', type: 'text', required: true, additional: false, create: true, edit: true },
+        { belongs_to: "assets", id: 'checkout_id', label: 'Checkout Id', type: 'array', required: false, additional: false, create: false, edit: true },
+        { belongs_to: "assets", id: 'make', label: 'Make', type: 'text', required: true, additional: false, create: true, edit: true },
+        { belongs_to: "assets", id: 'model', label: 'Model', type: 'text', required: false, additional: false, create: true, edit: true },
         {
             belongs_to: "assets", id: 'ram', label: 'Ram', type: 'select', required: false, additional: false, create: true, edit: true, options: [
                 { label: '8GB', value: '8GB' },

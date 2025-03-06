@@ -1,6 +1,10 @@
 export function convertSnakeCaseToPascaleCase(str) {
     return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
+export function convertPascaleCaseToSnakeCase(str) {
+    str = str.replace(/\s+/g, '');
+    return str.split(/(?=[A-Z])/).join('_').toLowerCase();
+}
 export function getColorAndBackgroundColorByStatus(status){
     switch(status){
         case 'available':
