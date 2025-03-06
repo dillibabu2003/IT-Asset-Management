@@ -54,6 +54,23 @@ function ManageUsers({ behavior, ...props }) {
         });
     }, [updateTable]);
 
+    const fetchUserMatched = async () => {
+        console.log(searchTerm)
+        const response = await axiosInstance.get(`/user/search/${searchTerm}`);
+        return response.data;       
+    };
+    useEffect(()=>{     
+       fetchUserMatched().then((response)=>{
+        setUsers(response.data);
+        // console.log("This is Data: ", response.data);
+       });
+       if(searchTerm===""){
+              fetchUserData().then((response) => {
+                setUsers(response.data);
+            });
+       }
+    },[searchTerm]);
+
     const handleStatusChange = (userId) => {
         setUsers(users.map(user => user.id === userId ? { ...user, status: !user.status } : user));
     };
@@ -148,13 +165,13 @@ function ManageUsers({ behavior, ...props }) {
                             ),
                         }}
                     />
-                    <Button
+                    {/* <Button
                         variant="outlined"
                         startIcon={<Icon name="filter" size={18} />}
                         sx={{ textTransform: 'none' }}
                     >
                         Filter
-                    </Button>
+                    </Button> */}
                 </Box>
 
                 <TableContainer>

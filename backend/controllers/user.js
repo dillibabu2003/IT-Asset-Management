@@ -153,4 +153,24 @@ const getAllUsers = asyncHandler(async (req, res) => {
       res.status(200).json(new ApiResponse(200, users, "Users fetched successfully."));
   });
 
-module.exports = { createUser, getOtherUserData, deleteUser, updateUserDetails, getUserProfile,getAllUsers };
+  const searchUsers=asyncHandler(async(req,res)=>{
+      const {searchKey} = req.params
+      console.log("Search Key:",searchKey);
+      const users=await User.aggregate([
+            {
+                  $search:{
+                      index:"UserIndex",
+                      text:{
+                        query:searchKey,
+                        path:["firstname","lastname","fullname","email","user_id","role"],
+                        fuzzy:{
+                              prefixLength:3
+                        }
+                      }
+                  }
+           } 
+      ]);
+      res.status(200).json(new ApiResponse(200,users,"Users fetched successfully."));
+  });
+
+module.exports = { createUser, getOtherUserData, deleteUser, updateUserDetails, getUserProfile,getAllUsers,searchUsers};
