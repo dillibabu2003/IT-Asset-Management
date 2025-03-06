@@ -14,7 +14,7 @@ app.use(cors({
 }));
 // app.use(bodyParser.urlencoded())
 app.use(express.urlencoded({
-    extended: false,
+    extended: true,
 }));
 app.use(express.json());
 app.use(morgan('dev'));

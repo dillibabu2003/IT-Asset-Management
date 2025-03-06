@@ -213,7 +213,6 @@ export default function CustomTable({ currentSection, data, page, setPage, userV
           </TableBody>
         </Table>
       </TableContainer>
-
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
         <div>Showing {currentDocumentStartIndex} to {currentDocumentEndIndex} of {data.data.total}</div>
         <Pagination count={totalPages} color="primary" onChange={(event, page) => { console.log(page); setPage(page) }} />

@@ -111,6 +111,7 @@ const createUser = asyncHandler(async (req, res) => {
 
 const getOtherUserData = asyncHandler(async (req, res) => {
       const userId = req.body.user_id;
+
       const userData = await User.findOne({ user_id: userId });
       if (!userData) {
             throw new ApiError(400, null, "Invalid user id");
@@ -120,6 +121,8 @@ const getOtherUserData = asyncHandler(async (req, res) => {
 
 const updateUserDetails = asyncHandler(async (req, res) => {
       const userId = req.body.user_id;
+      console.log(req.body);
+      console.log("User id:", userId);
       const userData = await User.findOneAndUpdate({ user_id: userId }, req.body);
       if (!userData) {
             throw new ApiError(400, null, "Invalid user id");
@@ -154,4 +157,24 @@ const getAllUsers = asyncHandler(async (req, res) => {
       res.status(200).json(new ApiResponse(200, users, "Users fetched successfully."));
   });
 
-module.exports = { createUser, getOtherUserData, deleteUser, updateUserDetails, getUserProfile,getAllUsers };
+  const searchUsers=asyncHandler(async(req,res)=>{
+      const {searchKey} = req.params
+      console.log("Search Key:",searchKey);
+      const users=await User.aggregate([
+            {
+                  $search:{
+                      index:"UserIndex",
+                      text:{
+                        query:searchKey,
+                        path:["firstname","lastname","fullname","email","user_id","role"],
+                        fuzzy:{
+                              prefixLength:3
+                        }
+                      }
+                  }
+           } 
+      ]);
+      res.status(200).json(new ApiResponse(200,users,"Users fetched successfully."));
+  });
+
+module.exports = { createUser, getOtherUserData, deleteUser, updateUserDetails, getUserProfile,getAllUsers,searchUsers};
