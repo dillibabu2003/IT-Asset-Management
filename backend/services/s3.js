@@ -46,11 +46,12 @@ const createPutObjectPreSignedURL = async (bucketName, key,contentType) => {
         Bucket: bucketName,
         Key: key,
         ContentType: contentType,
+        "Access-Control-Allow-Origin": "*"
       });
       
       try {
         const presignedUrl = await getSignedUrl(s3Client, command, {
-          signableHeaders: new Set(["content-type"]),
+          signableHeaders: new Set(["content-type","access-control-allow-origin"]),
           expiresIn: 3600,
         });
         return {s3Response: presignedUrl,error: null};

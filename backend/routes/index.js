@@ -6,6 +6,7 @@ const authenticateClient=require('../middlewares/authenticateClient');
 const dashboardRouter = require('./dashboards');
 const metadataRouter = require('./metadata');
 const dynamicObjectRouter = require('./dynamic_object');
+const servicesRouter = require('./services');
 const indexRouter = Router();
 
 indexRouter.use("/auth",authRouter);
@@ -13,6 +14,38 @@ indexRouter.use("/user",authenticateClient,userRouter);
 indexRouter.use("/dashboards",authenticateClient,dashboardRouter);
 indexRouter.use("/objects",authenticateClient,dynamicObjectRouter);
 indexRouter.use("/metadata",authenticateClient,metadataRouter);
+indexRouter.use("/services",authenticateClient,servicesRouter);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 const data = {
