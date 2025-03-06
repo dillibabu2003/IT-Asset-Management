@@ -25,8 +25,11 @@ const AssetSchema = new mongoose.Schema({
     required: true,
   },
   checkout_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Checkout",
+    type: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Checkout",
+    }],
+    default: []
   },
   make: {
     type: String,
