@@ -44,6 +44,8 @@ const LicenseSchema = new mongoose.Schema({
     enum: ["available", "activated", "expired","renewed","about_to_expire"],
     required: true,
   },
+},{
+  timestamps: true,
 });
 
 LicenseSchema.virtual("checkout", {

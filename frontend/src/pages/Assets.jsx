@@ -7,6 +7,8 @@ import { Box, Button, Popover, Typography } from '@mui/material';
 import CreateForm from '../components/CreateForm';
 import Icon from '../components/Icon';
 import ProtectedComponent from '../protectors/ProtectedComponent';
+import { Link } from 'react-router';
+import toast from 'react-hot-toast';
 
 const AssetsPage = () => {
 
@@ -14,7 +16,6 @@ const AssetsPage = () => {
     const [data, setData] = useState(null);
     const [page, setPage] = useState(1);
     const [showCreateForm, setShowCreateForm] = useState(false);
-    const [importMenuAnchor, setImportMenuAnchor] = useState(null);
 
     async function fetchAssetsByPageAndLimit(abortController,page,limit){
             const response = await axiosInstance.get(`/objects/assets?page=${page}&limit=${limit}`, { signal: abortController.signal });
@@ -34,15 +35,26 @@ const AssetsPage = () => {
             const userColumnPreferencesPromise=fetchUserColumnPreferences(abortController);
             return Promise.all([assetsPromise,assetsMetadataPromise,userColumnPreferencesPromise]);
     }
+    async function handleSave(formData){
+        console.log(formData);
+        try {
+            const response = await axiosInstance.post("/objects/assets/create",formData);
+            if(response.data.success){
+                toast.success(response.data.message);
+                setShowCreateForm(false);
+            }
+        } catch (error) {
+            toast.error(error.response.data.message || "An error occurred");
+        }
+
+        
+    }
     useEffect(() => {
         const abortController = new AbortController();
         fetchData(abortController).then((response) => {
             const assets=response[0].data;
             const assetsMetaData=response[1].data;
             const userColumnPreferences=response[2].data;
-            console.log(userColumnPreferences);
-            console.log(assets,assetsMetaData);
-            
             setData({data: assets, fields: assetsMetaData, userColumnPreferences: userColumnPreferences});
         }).catch((error) => {   
             console.log(error);
@@ -70,45 +82,15 @@ const AssetsPage = () => {
                             Create Asset
                         </Button>
                         <Box component="div" sx={{ width: "fit-content" }}>
+                            <Link to="/assets/import" style={{ textDecoration: "none" }}>
                             <Button
-                                variant="contained"
+                                variant="outlined"
                                 color="primary"
                                 startIcon={<Icon name="upload" size={20} />}
-                                onClick={(e) => setImportMenuAnchor(e.currentTarget)}
                             >
-                                Bulk Import
+                                Import Excel
                             </Button>
-                            <Popover
-                                open={Boolean(importMenuAnchor)}
-                                anchorEl={importMenuAnchor}
-                                onClose={() => setImportMenuAnchor(null)}
-                                anchorOrigin={{
-                                    vertical: 'bottom',
-                                    horizontal: 'left',
-                                }}
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'left',
-                                }}
-                            >
-                                <Box sx={{ p: 1, width: "fit-content", display: 'flex', flexDirection: "column" }}>
-                                    <Button
-                                        fullWidth
-                                        startIcon={<Icon name="file-spreadsheet" size={20} />}
-                                        sx={{ mb: 1, justifyContent: 'flex-start', textWrap: 'nowrap' }}
-                                    >
-                                        From Excel
-                                    </Button>
-                                    <Button
-                                        fullWidth
-                                        startIcon={<Icon name="file-text" size={20} />}
-                                        sx={{ justifyContent: 'flex-start', textWrap: 'nowrap' }}
-                                    >
-                                        From Invoice
-                                    </Button>
-                                </Box>
-                            </Popover>
-
+                            </Link>
                         </Box>
 
                     </Box>
@@ -117,7 +99,7 @@ const AssetsPage = () => {
                 </Box>
                 {!data ? <Loader /> :
                     <React.Fragment>
-                        <CreateForm currentSection="assets" fields={data.fields} isOpen={showCreateForm} closeDialog={() => setShowCreateForm(false)} aria-describedby={`create-assets-form`} />
+                        <CreateForm currentSection="assets" fields={data.fields} isDialogOpen={showCreateForm} values={Object.fromEntries(data.fields.map(field => [field.id, '']))} closeDialog={() => setShowCreateForm(false)} saveData={handleSave}  aria-describedby={`create-assets-form`} />
                         <CustomTable currentSection="assets" page={page} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
                     </React.Fragment>
                 }

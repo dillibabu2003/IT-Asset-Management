@@ -24,6 +24,7 @@ import ActivateAccount from './pages/ActivateAccount';
 import ForgotPassword from './pages/ForgotPasswod';
 import AuthProvider from './providers/AuthProvider';
 import UserProfile from './pages/UserProfile';
+import ExcelImport from './pages/ExcelImport';
 
 export const LinkBehavior = React.forwardRef((props, ref) => {
   const { href, ...other } = props;
@@ -50,7 +51,10 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />}>
             <Route path=":dashboardId" element={<DashboardPage />} />
           </Route>
-          <Route path="/assets" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_ASSETS} redirect={true}><AssetsPage /></ProtectedComponent>} />
+          <Route path="/assets">
+              <Route index element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_ASSETS} redirect={true}><AssetsPage /></ProtectedComponent>}/>
+              <Route path="import" element={<ProtectedComponent requiredPermission={PERMISSIONS.CREATE_ASSETS} redirect={true}><ExcelImport objectId="assets"/></ProtectedComponent>}/>
+          </Route>
           <Route path="/licenses" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_LICENSES} redirect={true}><LicensePage /></ProtectedComponent>} />
           <Route path="/checkouts" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_CHECKOUTS} redirect={true}><CheckoutPage /></ProtectedComponent>} />
           <Route path="/invoices" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_INVOICES} redirect={true}><InvoicesPage /></ProtectedComponent>} />

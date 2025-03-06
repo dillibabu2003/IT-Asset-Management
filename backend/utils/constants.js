@@ -4,6 +4,11 @@ const statusEnum=["active","inactive","blocked"];
 const genderEnum=["male", "female", "other"];
 const roleEnum=["guest","member","admin"];
 const fullAccess=["admin"];
+const EMAIL_TYPES = {
+    RESET_PASSWORD: "reset-password",
+    VERIFY_EMAIL: "verify-email",
+    EXPIRY_ALERT: "expiry-alert",
+};
 const PERMISSIONS = {
     VIEW_DASHBOARD: "view:dashboard",
     EDIT_DASHBOARD: "edit:dashboard",
@@ -44,6 +49,7 @@ const PERMISSIONS = {
 
 module.exports={
     passwordRegex,
+    EMAIL_TYPES,
     PERMISSIONS,
     UrlRegex,
     statusEnum,
