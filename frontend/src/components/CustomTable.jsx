@@ -194,7 +194,7 @@ export default function CustomTable({ currentSection, data, page, setPage, userV
                         size="small"
                       />
                     ) : (
-                      document[column.id]
+                      typeof document[column.id] ==='array' ? document[column.id].join(', ') : document[column.id]
                     )}
                   </TableCell>
                 ))}

@@ -17,11 +17,8 @@ import dayjs from 'dayjs';
 
 
 
-export default function CreateForm({ isDialogOpen, closeDialog, currentSection, fields, values, saveData }) {
+export default function EditForm({ isDialogOpen, closeDialog, currentSection, fields, values, saveData }) {
   if (!fields || !values) return null;
-
-  console.log(values);
-  
 
   const [formData, setFormData] = useState(values);
 
@@ -39,7 +36,7 @@ export default function CreateForm({ isDialogOpen, closeDialog, currentSection, 
   const handleSubmit = async () => {
     console.log('Form data:', formData);
     saveData(formData);
-    
+    closeDialog();
   };
 
   return (
@@ -52,7 +49,7 @@ export default function CreateForm({ isDialogOpen, closeDialog, currentSection, 
         exit: true,
       }}
     >
-      {/* <DialogTitle>Create {`${currentSection}`}</DialogTitle> */}
+      <DialogTitle>Edit {`${currentSection}`}</DialogTitle>
       <DialogContent>
         <Box component="form" noValidate sx={{ mt: 2 }}>
           {fields.map((field) => (field.create &&
@@ -66,7 +63,7 @@ export default function CreateForm({ isDialogOpen, closeDialog, currentSection, 
                     onChange={(e) => handleChange(field.id, e.target.value)}
                     required={field.required}
                   >
-                    {field.options?.map((option) => ( option.value!="deployed" && option.value!="reissue" &&option.value!="archived" && option.value!="activated" && option.value!="expired" &&
+                    {field.options?.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
                       </MenuItem>
