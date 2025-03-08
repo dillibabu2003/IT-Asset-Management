@@ -2,7 +2,8 @@ const mongoose = require("mongoose");
 
 const UserVisibilitySchema = new mongoose.Schema({
   user_id: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     unique: true,
     required: true,
   },

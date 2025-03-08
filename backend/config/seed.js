@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Asset = require('../models/asset');
-const Checkout = require('../models/checkOut');
-const CheckOutItem = require('../models/checkOutItem');
+const Checkout = require('../models/checkout');
 const Invoice = require('../models/invoice');
 const License = require('../models/license');
 const MetaData = require('../models/metadata');
@@ -12,10 +11,10 @@ const cleanedEnv = require('../utils/cleanedEnv');
 const metadata = require('../models/metadata');
 const Dashboard = require('../models/dashboard');
 const { roleEnum, statusEnum, genderEnum } = require('../utils/constants');
-const { query } = require('express');
+const Employee = require('../models/employee');
 
-mongoose.connect(cleanedEnv.MONGO_URI, {
-    dbName: cleanedEnv.DB_NAME,
+mongoose.connect(cleanedEnv.MONGO_URI, { 
+    dbName: cleanedEnv.DB_NAME, 
     timeoutMS: 50000
 });
 
@@ -27,25 +26,8 @@ const seedDB = async () => {
     let statuses = ['active', 'inactive', 'blocked'];
     const genders = ['male', 'female'];
 
-    for (let i = 1; i <= 100; i++) {
-        users.push(new User({
-            user_id: `U${i.toString().padStart(3, '0')}`,
-            role: roles[Math.floor(Math.random() * roles.length)],
-            firstname: `FirstName${i}`,
-            lastname: `LastName${i}`,
-            email: `user${i}@example.com`,
-            password: '1234',
-            status: statuses[Math.floor(Math.random() * statuses.length)],
-            date_of_birth: new Date(1960 + Math.floor(Math.random() * 40), 
-                                  Math.floor(Math.random() * 12), 
-                                  Math.floor(Math.random() * 28) + 1),
-            gender: genders[Math.floor(Math.random() * genders.length)]
-        }));
-    }
-
-    await User.insertMany(users);
     const user1 = new User({
-        user_id: 'MU001',
+        user_id: 'DBOXADMIN01',
         role: 'admin',
         firstname: 'dilli',
         lastname: 'babu',
@@ -57,7 +39,7 @@ const seedDB = async () => {
     });
 
     const user2 = new User({
-        user_id: 'MU002',
+        user_id: 'DBOXMEMBER02',
         role: 'member',
         firstname: 'Jane',
         lastname: 'Smith',
@@ -66,133 +48,136 @@ const seedDB = async () => {
         date_of_birth: new Date('1992-02-02'),
         gender: 'female',
     });
-
+    
     await user1.save();
     await user2.save();
 
+    for (let i = 3; i <= 100; i++) {
+        const role = roles[Math.floor(Math.random() * roles.length)];
+        users.push(new User({
+            user_id: i<10?`DBOX${role}${i.toString().padStart(1, '0')}`:`DBOX${role}${i}`,
+            role: role,
+            firstname: `FirstName${i}`,
+            lastname: `LastName${i}`,
+            email: `user${i}@example.com`,
+            password: '1234',
+            status: statuses[Math.floor(Math.random() * statuses.length)],
+            date_of_birth: new Date(1960 + Math.floor(Math.random() * 40), 
+                                  Math.floor(Math.random() * 12), 
+                                  Math.floor(Math.random() * 28) + 1),
+            gender: genders[Math.floor(Math.random() * genders.length)],
+            profile_pic: "https://dbox-it-asset-management.s3.ap-south-1.amazonaws.com/profile-pics/default.png"
+        }));
+    }
+
+    await User.insertMany(users);
+    
+    const employees =[];
+    for (let i = 1; i <= 20; i++) {
+        employees.push(new Employee({
+            employee_id: `EMP${i.toString().padStart(3, '0')}`,
+            firstname: `Employee${i}`,
+            lastname: `LastName${i}`,
+            email: `employee${i}@email.com`,
+            department: 'IT',
+            position: 'Software Engineer',
+            joining_date: new Date(),
+            phone_number: '123456789',
+            status: 'active',
+        }));
+    }
+    
+    await Employee.insertMany(employees);
+
     const invoice1 = new Invoice({
         invoice_id: 'INV001',
+        invoice_name: 'Invoice 1',
         date_of_upload: new Date(),
         date_of_received: new Date(),
         name_of_the_vendor: 'Vendor A',
         amount: 1000.00,
         status: 'processed',
+        invoice_url: 'https://example.com/invoice1.pdf',
+        data:{
+
+        }
+    });
+
+    const invoice2 = new Invoice({
+        invoice_id: 'INV002',
+        invoice_name: 'Invoice 2',
+        date_of_upload: new Date(),
+        date_of_received: new Date(),
+        name_of_the_vendor: 'Vendor A',
+        amount: 1000.00,
+        invoice_url: 'https://example.com/invoice2.pdf',
+        status: 'processed',
+        data:{}
+    });
+
+    const invoice3 = new Invoice({
+        invoice_id: 'INV003',
+        invoice_name: 'Invoice 3',
+        date_of_upload: new Date(),
+        date_of_received: new Date(),
+        name_of_the_vendor: 'Vendor A',
+        amount: 1000.00,
+        invoice_url: 'https://example.com/invoice3.pdf',
+        status: 'processed',
+        data:{}
     });
 
     await invoice1.save();
+    await invoice2.save();
+    await invoice3.save();
 
     const assets = [];
-    statuses = ["available", "deployed", "archived", "reissue"];
+    statuses = ["available", "deployed", "archived", "reissue", "about_to_archive"];
     for (let i = 1; i <= 20; i++) {
+        const status = statuses[Math.floor(Math.random() * statuses.length)];
         assets.push(new Asset({
             serial_no: `SN${i.toString().padStart(3, '0')}`,
-            asset_id: `A${i.toString().padStart(3, '0')}`,
-            date_of_received: new Date(),
-            name_of_the_vendor: `Vendor ${String.fromCharCode(64 + (i % 3) + 1)}`,
-            invoice_id: invoice1._id,
+            asset_id: status!="available" ? `DBOX${i.toString().padStart(3, '0')}` : undefined,
+            invoice_id: i%2==0?invoice1._id:invoice2._id,
+            category: 'laptop',
             make: i % 2 === 0 ? 'Dell' : 'HP',
             model: i % 2 === 0 ? 'XPS 13' : 'Spectre x360',
-            ram: i % 2 === 0 ? '16GB' : '8GB',
-            storage: i % 2 === 0 ? '512GB' : '256GB',
+            ram: i % 2 === 0 ? '16gb' : '8gb',
+            storage: i % 2 === 0 ? '512gb' : '256gb',
             processor: i % 2 === 0 ? 'Intel i7' : 'Intel i5',
-            os_type: 'windows',
+            os_type:  i % 2 === 0 ?'windows':'ubuntu',
             start: new Date(),
-            end: new Date(),
+            end: new Date(Date.now()+1000*60*60*24*365),
             warranty: i % 2 === 0 ? '2 years' : '1 year',
-            status: statuses[Math.floor(Math.random() * statuses.length)],
+            assigned_to: status !== 'available' ? i%2==0? employees[0]._id:employees[1]._id : null,
+            status: status,
         }));
     }
 
     await Asset.insertMany(assets);
 
-    // await asset1.save();
-    // const asset2 = new Asset({
-    //     serial_no: 'SN002',
-    //     asset_id: 'A002',
-    //     date_of_received: new Date(),
-    //     name_of_the_vendor: 'Vendor B',
-    //     invoice_id: invoice1._id,
-    //     make: 'HP',
-    //     model: 'Spectre x360',
-    //     ram: '8GB',
-    //     storage: '256GB',
-    //     processor: 'Intel i5',
-    //     os_type: 'windows',
-    //     start: new Date(),
-    //     end: new Date(),
-    //     warranty: '1 year',
-    //     status: 'available',
-    // });
-
-    // await asset2.save();
-
-    // const checkout1 = new Checkout({
-    //     checkout_id: 'CO001',
-    //     checkedout_items: [
-    //         {
-    //             type: 'asset',
-    //             qty: 1,
-    //         },
-    //     ],
-    //     date_of_checkout: new Date(),
-    //     status: 'processed',
-    // });
-
-    // await checkout1.save();
-
-    // const checkoutItem1 = new CheckOutItem({
-    //     checkout_id: checkout1._id,
-    //     item_id: asset1._id,
-    //     item_type: 'Assets',
-    //     date_of_checkout: new Date(),
-    // });
-
-    // await checkoutItem1.save();
-
     const licenses = [];
-    const licenseStatuses = ["available", "activated", "expired", "renewed", "about_to_expire"];
+    const licenseStatuses = ["available", "activated", "expired", "about_to_expire"];
     for (let i = 1; i <= 20; i++) {
+        const status = licenseStatuses[Math.floor(Math.random() * licenseStatuses.length)];
         licenses.push(new License({
             license_id: `LIC${i.toString().padStart(3, '0')}`,
-            date_of_received: new Date(),
-            name_of_the_vendor: `Vendor ${String.fromCharCode(64 + (i % 3) + 1)}`,
-            invoice_id: invoice1._id,
-            make: i % 2 === 0 ? 'Microsoft' : 'Adobe',
+            invoice_id: i%2==0?invoice1._id:invoice2._id,
+            category: i%2==0?"sophos":"microsoft",
             model: i % 2 === 0 ? 'Office 365' : 'Photoshop',
             start: new Date(),
             end: new Date(),
             warranty: i % 2 === 0 ? '1 year' : '2 years',
-            status: licenseStatuses[Math.floor(Math.random() * licenseStatuses.length)],
+            status: status,
+            assigned_to: status !== 'available' ? i%2==0? employees[0]._id:employees[1]._id : null,
         }));
     }
 
     await License.insertMany(licenses);
 
-    // await license1.save();
-
-    const invoice2 = new Invoice({
-        invoice_id: 'INV002',
-        date_of_upload: new Date(),
-        date_of_received: new Date(),
-        name_of_the_vendor: 'Vendor B',
-        amount: 2000.00,
-        status: 'pending',
-    });
-
-    const invoice3 = new Invoice({
-        invoice_id: 'INV003',
-        date_of_upload: new Date(),
-        date_of_received: new Date(),
-        name_of_the_vendor: 'Vendor C',
-        amount: 1500.00,
-        status: 'processed',
-    });
-
-    await invoice2.save();
-    await invoice3.save();
-
     const PermissionEnum = [
         "view:dashboard", "edit:dashboard",
+        "view:employees", "edit:employees", "create:employees", "delete:employees",
         "view:invoices:dashboard", "view:licenses:dashboard", "view:assets:dashboard", "view:users", "view:assets", "view:licenses", "view:invoices", "view:checkouts",
         "edit:invoices:dashboard", "edit:licenses:dashboard", "edit:assets:dashboard", "edit:users", "edit:assets", "edit:licenses", "edit:invoices", "edit:checkouts",
         "create:invoices:dashboard", "create:licenses:dashboard", "create:assets:dashboard", "create:users", "create:assets", "create:licenses", "create:invoices", "create:checkouts",
@@ -207,7 +192,7 @@ const seedDB = async () => {
     const permission2 = new Permission({
         role: 'member',
         permissions: PermissionEnum.filter(permission => {
-            return !["edit:dashboard", "create:users", "edit:users", "delete:users"].includes(permission)
+            return !["edit:dashboard","edit:employees",'create:employees','delete:employees', "create:users", "edit:users", "delete:users"].includes(permission)
         })
     });
 
@@ -351,41 +336,38 @@ const seedDB = async () => {
 
     await Dashboard.insertMany(dashboards);
 
-
-
-    const userVisibility = new UserVisibility({
-        user_id: user1._id,
-        visible_fields: {
-            assets: ['make', 'model', 'status'],
-            licenses: ['license_id', 'name_of_the_vendor'],
-        },
-    });
-
-    await userVisibility.save();
-
     await MetaData.insertMany([
-        { belongs_to: "assets", id: 'serial_no', label: 'Serial No', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "assets", id: 'asset_id', label: 'Asset Id', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "assets", id: 'date_of_received', label: 'Date Of Received', type: 'date', required: true, additional: false, create: false, edit: true },
-        { belongs_to: "assets", id: 'name_of_the_vendor', label: 'Name Of The Vendor', type: 'text', required: true, additional: false, create: false, edit: true },
+        { belongs_to: "assets", id: 'serial_no', label: 'Serial No', type: 'text', required: true, additional: false, create: true, edit: false },
+        { belongs_to: "assets", id: 'asset_id', label: 'Asset Id', type: 'text', required: false, additional: false, create: false, edit: false },
         { belongs_to: "assets", id: 'invoice_id', label: 'Invoice Id', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "assets", id: 'checkout_id', label: 'Checkout Id', type: 'array', required: false, additional: false, create: false, edit: true },
+        { belongs_to: "assets", id: 'category', label: 'Category', type: 'select', 
+            options: [
+                {label: "Laptop", value: "laptop"},
+                {label: "Desktop", value: "desktop"},
+                {label: "Server", value: "server"},
+                {label: "Printer", value: "printer"},
+                {label: "Monitor", value: "monitor"},
+                {label: "Mouse", value: "mouse"},
+                {label: "Keyboard", value: "keyboard"}
+
+            ],
+            required: true, additional: false, create: true, edit: true },
         { belongs_to: "assets", id: 'make', label: 'Make', type: 'text', required: true, additional: false, create: true, edit: true },
         { belongs_to: "assets", id: 'model', label: 'Model', type: 'text', required: false, additional: false, create: true, edit: true },
         {
             belongs_to: "assets", id: 'ram', label: 'Ram', type: 'select', required: false, additional: false, create: true, edit: true, options: [
-                { label: '8GB', value: '8GB' },
-                { label: '16GB', value: '16GB' },
-                { label: '32GB', value: '32GB' },
-                { label: '64GB', value: '64GB' },
-                { label: '128GB', value: '128GB' }
+                { label: '8GB', value: '8gb' },
+                { label: '16GB', value: '16gb' },
+                { label: '32GB', value: '32gb' },
+                { label: '64GB', value: '64gb' },
+                { label: '128GB', value: '128gb' }
             ]
         },
         {
             belongs_to: "assets", id: 'storage', label: 'Storage', type: 'select', required: false, additional: false, create: true, edit: true, options: [
-                { label: '256GB', value: '256GB' },
-                { label: '512GB', value: '512GB' },
-                { label: '1TB', value: '1TB' }
+                { label: '256GB', value: '256gb' },
+                { label: '512GB', value: '512gb' },
+                { label: '1TB', value: '1tb' }
             ]
         },
         { belongs_to: "assets", id: 'processor', label: 'Processor', type: 'text', required: false, additional: false, create: true, edit: true },
@@ -399,12 +381,14 @@ const seedDB = async () => {
         { belongs_to: "assets", id: 'start', label: 'Start', type: 'date', required: true, additional: false, create: true, edit: true },
         { belongs_to: "assets", id: 'end', label: 'End', type: 'date', required: true, additional: false, create: true, edit: true },
         { belongs_to: "assets", id: 'warranty', label: 'Warranty', type: 'text', required: true, additional: false, create: true, edit: true },
+        { belongs_to: "assets", id: 'assigned_to', label: 'Assigned To', type: 'text', required: false, additional: false, create: false, edit: true },
         {
             belongs_to: "assets", id: 'status', label: 'Status', type: 'select', required: true, additional: false, create: true, edit: true, options: [
                 { label: 'Available', value: 'available' },
                 { label: 'Deployed', value: 'deployed' },
                 { label: 'Reissue', value: 'reissue' },
-                { label: 'Archived', value: 'archived' }
+                { label: 'Archived', value: 'archived' },
+                { label: 'About to Archive', value: 'about_to_archive' }
             ]
         },
     ]);
@@ -423,10 +407,18 @@ const seedDB = async () => {
 
     await MetaData.insertMany([
         { belongs_to: "licenses", id: 'license_id', label: 'License ID', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "licenses", id: 'date_of_received', label: 'Date Of Received', type: 'date', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "licenses", id: 'name_of_the_vendor', label: 'Name Of The Vendor', type: 'text', required: true, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'invoice_id', label: 'Invoice Id', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "licenses", id: 'make', label: 'Make', type: 'text', required: false, additional: false, create: true, edit: true },
+        { belongs_to: "licenses", id: 'category', label: 'Category', type: 'select',
+            options: [
+                { label: 'Sophos', value: 'sophos' },
+                { label: 'Microsoft', value: 'microsoft' },
+                {label: "Adobe", value: "adobe"},
+                {label: "AutoDesk", value: "autodesk"},
+                {label: "Grammarly", value: "grammarly"}
+
+            ],
+            required: true, additional: false, create: true, edit: true },
+        { belongs_to: "licenses", id: 'assigned_to', label: 'Assigned To', type: 'text', required: false, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'model', label: 'Model', type: 'text', required: true, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'start', label: 'Start', type: 'date', required: true, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'end', label: 'End', type: 'date', required: true, additional: false, create: true, edit: true },
@@ -443,25 +435,34 @@ const seedDB = async () => {
     ]);
     await MetaData.insertMany([
         { belongs_to: "invoices", id: 'invoice_id', label: 'Invoice ID', type: 'text', required: true, additional: false, create: true, edit: true },
+        { belongs_to: "invoices", id: 'invoice_name', label: 'Invoice Name', type: 'text', required: true, additional: false, create: true, edit: true },
         { belongs_to: "invoices", id: 'date_of_upload', label: 'Date Of Upload', type: 'date', required: true, additional: false, create: true, edit: true },
         { belongs_to: "invoices", id: 'date_of_received', label: 'Date Of Received', type: 'date', required: true, additional: false, create: true, edit: true },
         { belongs_to: "invoices", id: 'name_of_the_vendor', label: 'Name Of The Vendor', type: 'text', required: true, additional: false, create: true, edit: true },
         { belongs_to: "invoices", id: 'amount', label: 'Amount', type: 'numeric', required: true, additional: false, create: true, edit: true },
+        { belongs_to: "invoices", id: 'invoice_url', label: 'Invoice URL', type: 'text', required: true, additional: false, create: true, edit: true },
         {
             belongs_to: "invoices", id: 'status', label: 'Status', type: 'select', required: true, additional: false, create: true, edit: true, options: [
                 { label: 'Processed', value: 'processed' },
                 { label: 'Pending', value: 'pending' },
-                { label: 'Cancelled', value: 'cancelled' }
+                { label: 'Rejected', value: 'rejected' }
             ]
         },
+        {
+            belongs_to: "invoices", id: 'data', label: 'Data', type: 'object', required: true, additional: false, create: true, edit: true
+        }
     ]);
 
     const userPreferences1 = new UserVisibility({
-        user_id: user1.user_id,
+        user_id: user1._id,
         visible_fields: {
             assets: {
+                "serial_no": true,
+                "asset_id": true,
                 "invoice_id": true,
-                "checkout_id": true,
+                "category": true,
+                "make": true,
+                "model": true,
                 "ram": true,
                 "storage": true,
                 "processor": true,
@@ -469,28 +470,29 @@ const seedDB = async () => {
                 "start": true,
                 "end": true,
                 "warranty": true,
-                "make": true,
-                "model": true,
                 "status": true,
-                "serial_no": true,
-                "asset_id": true,
+                "assigned_to": true,
+                "expiry": true,
                 "date_of_received": true,
                 "name_of_the_vendor": true,
             },
             licenses: {
                 "license_id": true,
+                "category": true,
+                "invoice_id": true,
                 "date_of_received": true,
                 "name_of_the_vendor": true,
-                "invoice_id": true,
-                "make": true,
+                "assigned_to": true,
                 "model": true,
                 "start": true,
                 "end": true,
                 "warranty": true,
                 "status": true,
+                "expiry": true,
             },
             invoices: {
                 "invoice_id": true,
+                "invoice_name": true,
                 "date_of_upload": true,
                 "date_of_received": true,
                 "name_of_the_vendor": true,
@@ -502,7 +504,7 @@ const seedDB = async () => {
 
     await userPreferences1.save();
     const userPreferences2 = new UserVisibility({
-        user_id: user2.user_id,
+        user_id: user2._id,
         visible_fields: {
             assets: {
                 "invoice_id": true,

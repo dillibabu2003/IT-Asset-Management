@@ -6,6 +6,8 @@ const UserSchema = new mongoose.Schema({
   user_id: {
     type: String,
     required: true,
+    unique: true,
+    match: /^DBOX[a-zA-Z0-9]+$/
   },
   role: {
     type: String,
@@ -31,7 +33,7 @@ const UserSchema = new mongoose.Schema({
   },
   profile_pic: {
     type: String,
-    default: "someurl",
+    default: "https://dbox-it-asset-management.s3.ap-south-1.amazonaws.com/profile-pics/default.png",
   },
   date_of_birth: {
     type: Date,
@@ -55,15 +57,13 @@ const UserSchema = new mongoose.Schema({
         return `${this.firstname} ${this.lastname}`;
       },
     },
-  }
+  },
+  toJSON: { virtuals: true,getters: true, setters:true },
+  toObject: { virtuals: true,getters: true,setters: true },
+  timestamps: true,
+  runSettersOnQuery: true,
 });
 
-UserSchema.set("toJSON", { virtuals: true,transform: (doc, ret) => {
-  delete ret._id;
-  delete ret.__v;
-  delete ret.id;
-  return ret;
-}, });
 
 UserSchema.methods.validatePassword = async function(plainTextPassword){
   return new Promise((resolve, reject) => {
