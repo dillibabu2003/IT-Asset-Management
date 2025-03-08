@@ -7,6 +7,7 @@ const dashboardRouter = require('./dashboards');
 const metadataRouter = require('./metadata');
 const dynamicObjectRouter = require('./dynamic_object');
 const servicesRouter = require('./services');
+const employeeRouter = require('./employee');
 const indexRouter = Router();
 
 indexRouter.use("/auth",authRouter);
@@ -15,6 +16,7 @@ indexRouter.use("/dashboards",authenticateClient,dashboardRouter);
 indexRouter.use("/objects",authenticateClient,dynamicObjectRouter);
 indexRouter.use("/metadata",authenticateClient,metadataRouter);
 indexRouter.use("/services",authenticateClient,servicesRouter);
+indexRouter.use("/employees",authenticateClient,employeeRouter);
 
 
 
