@@ -1,38 +1,65 @@
-import React, { useEffect, useState } from 'react'
-import axiosInstance from '../utils/axios';
-import {PAGE_LIMIT} from "../utils/constants";
-import Checkout from '../components/Checkout';
-
-const CheckoutPage = () => {
-
-
-const [data,setData]=useState();
-const [page,setPage]=useState(1);
-console.log(data);
-
-useEffect(()=>{
-    const abortController = new AbortController();
-    async function fetchData(){
-        try {
-            const response = await axiosInstance.get(`/assets?page=${page}&limit=${PAGE_LIMIT}`,{signal: abortController.signal});
-            console.log(response.data);
-            
-            setData(response.data);
-        } catch (error) {
-            console.error(error);
-            
-            console.log("Error occurred while fetching data");
-            
-        }
+import React, { useState } from 'react';
+import { Box, Paper, Typography, Button, Grid } from '@mui/material';
+import BulkCheckout from '../components/BulkCheckout';
+import IndividualCheckout from '../components/IndividualCheckout';
+import Icon from '../components/Icon';
+// import RecentCheckouts from './checkout/RecentCheckouts';
+ 
+function CheckoutPage() {
+  const [checkoutMode, setCheckoutMode] = useState(null);
+ 
+  const renderCheckoutSection = () => {
+    if (!checkoutMode) {
+      return (
+        <Box display="flex" gap={2} mb={3}>
+        <Button
+          variant="contained"
+          startIcon={<Icon name="shopping-cart" />}
+          sx={{ mr: 1 }}
+          onClick={() => setCheckoutMode('individual')}
+        >
+          Individual Checkout
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          startIcon={<Icon name="package-2" />}
+          onClick={() => setCheckoutMode('bulk')}
+        >
+          Bulk Checkout
+        </Button>
+      </Box>
+       
+      );
     }
-    fetchData();
-    return ()=>{
-        abortController.abort();
-    }
-},[page]);
+ 
+    return (
+      <Box>
+        <Button
+          variant="outlined"
+          onClick={() => setCheckoutMode(null)}
+          sx={{ mb: 2 }}
+        >
+          Back to Selection
+        </Button>
+        {checkoutMode === 'bulk' ? <BulkCheckout /> : <IndividualCheckout />}
+      </Box>
+    );
+  };
+ 
   return (
-    <Checkout />
-  )
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" gutterBottom>Checkout Page</Typography>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        {renderCheckoutSection()}
+      </Paper>
+      {/* <Paper sx={{ p: 3 }}>
+        <RecentCheckouts />
+      </Paper> */}
+    </Box>
+  );
 }
-
+ 
 export default CheckoutPage;
+ 
+ 
