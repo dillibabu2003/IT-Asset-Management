@@ -161,7 +161,8 @@ const seedDB = async () => {
     for (let i = 1; i <= 20; i++) {
         const status = licenseStatuses[Math.floor(Math.random() * licenseStatuses.length)];
         licenses.push(new License({
-            license_id: `LIC${i.toString().padStart(3, '0')}`,
+            serial_no: `SN${i.toString().padStart(3, '0')}`,
+            license_id: status!="available" ? `DBOX${i.toString().padStart(3, '0')}` : undefined,
             invoice_id: i%2==0?invoice1._id:invoice2._id,
             category: i%2==0?"sophos":"microsoft",
             model: i % 2 === 0 ? 'Office 365' : 'Photoshop',
@@ -406,7 +407,8 @@ const seedDB = async () => {
     ]);
 
     await MetaData.insertMany([
-        { belongs_to: "licenses", id: 'license_id', label: 'License ID', type: 'text', required: true, additional: false, create: true, edit: true },
+        { belongs_to: "licenses", id: 'serial_no', label: 'Serial No', type: 'text', required: true, additional: false, create: true, edit: false },
+        { belongs_to: "licenses", id: 'license_id', label: 'License ID', type: 'text', required: true, additional: false, create: false, edit: false },
         { belongs_to: "licenses", id: 'invoice_id', label: 'Invoice Id', type: 'text', required: true, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'category', label: 'Category', type: 'select',
             options: [
@@ -428,7 +430,7 @@ const seedDB = async () => {
                 { label: 'Available', value: 'available' },
                 { label: 'Activated', value: 'activated' },
                 { label: 'Expired', value: 'expired' },
-                { label: 'Renewed', value: 'renewed' },
+                { label: 'Reissue', value: 'reissue' },
                 { label: 'About to Expire', value: "about_to_expire" }
             ]
         },
@@ -477,6 +479,7 @@ const seedDB = async () => {
                 "name_of_the_vendor": true,
             },
             licenses: {
+                "serial_no": true,
                 "license_id": true,
                 "category": true,
                 "invoice_id": true,

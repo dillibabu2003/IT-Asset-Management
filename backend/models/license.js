@@ -2,9 +2,14 @@ const mongoose = require("mongoose");
 const { convertSnakeCaseToPascaleCase, convertPascaleCaseToSnakeCase } = require("../utils/helperFunctions");
 
 const LicenseSchema = new mongoose.Schema({
-  license_id: {
+  serial_no: {
     type: String,
     required: true,
+    unique: true,
+  },
+  license_id: {
+    type: String,
+    sparse: true,
     unique: true,
   },
   category: {
@@ -45,7 +50,7 @@ const LicenseSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["available", "activated", "expired", "about_to_expire"],
+    enum: ["available", "activated", "expired","reissue", "about_to_expire"],
     get: (v) => convertSnakeCaseToPascaleCase(v),
     set: (v) => convertPascaleCaseToSnakeCase(v),
     required: true,
@@ -78,7 +83,21 @@ const LicenseSchema = new mongoose.Schema({
   },
   timestamps: true,toJSON: { virtuals: true,getters:true,setters:true },toObject: { virtuals: true,getters:true,setters:true },runSettersOnQuery: true,id: false
 });
-
+LicenseSchema.methods.generateId = function(employeeId,totalCheckoutsTillNowOfEmployee){
+  console.log(employeeId,totalCheckoutsTillNowOfEmployee);
+  
+  if(employeeId===undefined || totalCheckoutsTillNowOfEmployee===undefined){ 
+    throw new Error('Cannot generate license id without employee id');
+  }
+  const docStatus = convertPascaleCaseToSnakeCase(this.status);
+  if(docStatus!== 'available' && docStatus !== 'reissue') {
+    throw new Error('Cannot generate license id for non-available or non-reissue licenses');
+  }
+  employeeId=employeeId.replace('EMP','').toUpperCase();
+  const category = this.category.charAt(0).toUpperCase() + this.category.substring(1);
+  this.license_id = `DBOX${category}${employeeId}-${totalCheckoutsTillNowOfEmployee + 1}`;
+  return this.license_id;
+}
 // Updates License statuses based on the current date daily with help of cron job
 LicenseSchema.statics.updateLicenseStatuses = async function(daysBeforeExpiry = 7) {
   const now = new Date();

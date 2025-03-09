@@ -103,6 +103,8 @@ const AssetSchema = new mongoose.Schema({
 
 
 AssetSchema.methods.generateId = function(employeeId,totalCheckoutsTillNowOfEmployee){
+  console.log(employeeId,totalCheckoutsTillNowOfEmployee);
+  
   if(employeeId===undefined || totalCheckoutsTillNowOfEmployee===undefined){ 
     throw new Error('Cannot generate asset id without employee id');
   }
