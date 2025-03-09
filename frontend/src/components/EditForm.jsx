@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import { convertPascaleCaseToSnakeCase } from '../utils/helperFunctions';
 
 
 
@@ -52,13 +53,13 @@ export default function EditForm({ isDialogOpen, closeDialog, currentSection, fi
       <DialogTitle>Edit {`${currentSection}`}</DialogTitle>
       <DialogContent>
         <Box component="form" noValidate sx={{ mt: 2 }}>
-          {fields.map((field) => (field.create &&
+          {fields.map((field) => (field.edit &&
             <Box key={field.id} sx={{ mb: 2 }}>
               {field.type === 'select' ? (
                 <FormControl fullWidth>
                   <InputLabel>{field.label}</InputLabel>
                   <Select
-                    value={formData[field.id] || ''}
+                    value={convertPascaleCaseToSnakeCase(formData[field.id]) || ''}
                     label={field.label}
                     onChange={(e) => handleChange(field.id, e.target.value)}
                     required={field.required}
@@ -74,7 +75,7 @@ export default function EditForm({ isDialogOpen, closeDialog, currentSection, fi
                 <DatePicker
                   label={field.label}
                   value={dayjs(formData[field.id])}
-                  onChange={(value) => handleChange(field.id, value)}
+                  onChange={(value) => handleChange(field.id, dayjs(value).format('YYYY-MM-DD'))}
                   slotProps={{
                     textField: {
                       fullWidth: true,

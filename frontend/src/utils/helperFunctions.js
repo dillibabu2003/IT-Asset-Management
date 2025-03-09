@@ -1,9 +1,15 @@
 export function convertSnakeCaseToPascaleCase(str) {
+    if(!str){
+        return '';
+    }
     return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 export function convertPascaleCaseToSnakeCase(str) {
-    str = str.replace(/\s+/g, '');
-    return str.split(/(?=[A-Z])/).join('_').toLowerCase();
+    if(!str){
+        return '';
+    }
+    str = str.replace(/\s+/g, '_');
+    return str.toLowerCase();
 }
 export function convertExpiryToReadable(expiry){
      const now = new Date();

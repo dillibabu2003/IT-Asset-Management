@@ -418,7 +418,7 @@ const seedDB = async () => {
 
             ],
             required: true, additional: false, create: true, edit: true },
-        { belongs_to: "licenses", id: 'assigned_to', label: 'Assigned To', type: 'text', required: false, additional: false, create: true, edit: true },
+        { belongs_to: "licenses", id: 'assigned_to', label: 'Assigned To', type: 'text', required: false, additional: false, create: false, edit: true },
         { belongs_to: "licenses", id: 'model', label: 'Model', type: 'text', required: true, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'start', label: 'Start', type: 'date', required: true, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'end', label: 'End', type: 'date', required: true, additional: false, create: true, edit: true },

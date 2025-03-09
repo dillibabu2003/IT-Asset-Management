@@ -20,15 +20,7 @@ import Icon from '../components/Icon';
 import { convertPascaleCaseToSnakeCase, convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 import toast from 'react-hot-toast';
 import CreateForm from '../components/CreateForm';
-
-// Define the expected column metadata
-// const columnMetadata = {
-//   name: { required: true, type: 'string' },
-//   age: { required: true, type: 'number' },
-//   email: { required: true, type: 'string' },
-//   department: { required: false, type: 'string' },
-//   salary: { required: false, type: 'number' },
-// };
+import EditForm from '../components/EditForm';
 
 function ExcelImport({objectId,...props}) {
   const [columnMetadata, setColumnMetadata] = useState(null);
@@ -38,11 +30,6 @@ function ExcelImport({objectId,...props}) {
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const [editingCell, setEditingCell] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-
-  // console.log(objectId);
-  console.log(editingCell);
-  
-  
 
   async function fetchMetaDataByObjectId(objectId,abortController){
     const response = await axiosInstance.get(`/metadata/${objectId}`, { signal: abortController.signal });
@@ -61,61 +48,6 @@ function ExcelImport({objectId,...props}) {
       abortController.abort();
     };
   }, [objectId]);
-
-
-  const validateData = (excelData) => {
-    const validationErrors = [];
-    const excelColumns = Object.keys(excelData[0]);
-    columnMetadata.forEach((column) => {
-      if(column.required){
-        
-      }
-    });
-
-    excelData.forEach((row, index) => {
-      // Check if all required columns are present
-      
-      const missingRequiredColumns = columnMetadata
-      .filter((column) => column.required && !(row.hasOwnProperty(column.id) || row.hasOwnProperty(convertSnakeCaseToPascaleCase(column.id))))
-console.log(missingRequiredColumns);
-
-const missingColumnNames = missingRequiredColumns.map((col)=>convertSnakeCaseToPascaleCase(col.id)).join(', ');
-if (missingRequiredColumns.length > 0) {
-      validationErrors.push({
-        row: index + 1,
-        column: missingColumnNames,
-        message: `Missing required columns: ${missingColumnNames}`,
-      });
-      }
-      console.log(row);
-      
-      // Check if columns with create=true are present
-      columnMetadata.forEach((column) => {
-        const columnName = convertSnakeCaseToPascaleCase(column.id);
-      if (column.create && !(row.hasOwnProperty(column.id) || row.hasOwnProperty(columnName))) {
-        validationErrors.push({
-        row: index + 1,
-        column: missingColumnNames[index],
-        message: `${columnName} is required for creation`,
-        });
-      }
-
-      // Validate data types if value exists
-      if (row[column.id] || row[columnName]) {
-        if (column.type === 'number' && isNaN(Number(row[column.id] || row[columnName]))) {
-        validationErrors.push({
-          row: index + 1,
-          column: missingColumnNames[index],
-          message: `${columnName} must be a number`,
-        });
-        }
-      }
-      });
-    });
-    console.log(validationErrors);
-    
-    return validationErrors;
-  };
 
   const updateHeadersWithColumnIds = (worksheet) => {
     const range = XLSX.utils.decode_range(worksheet['!ref']);
@@ -152,21 +84,6 @@ if (missingRequiredColumns.length > 0) {
         const updatedWorkSheet = updateHeadersWithColumnIds(worksheet);
         const jsonData = XLSX.utils.sheet_to_json(updatedWorkSheet);
         setData(jsonData);
-
-        // if (validationErrors.length > 0) {
-        //   setNotification({
-        //     open: true,
-        //     message: 'There are validation errors in the imported data',
-        //     severity: 'error',
-        //   });
-        // } else {
-        //   setData(jsonData);
-        //   setNotification({
-        //     open: true,
-        //     message: 'File imported successfully',
-        //     severity: 'success',
-        //   });
-        // }
       } catch (error) {
         console.error(error)
         toast.error('Error importing file');
@@ -296,7 +213,7 @@ if (missingRequiredColumns.length > 0) {
         </TableContainer>
       )}
 
-     {editingCell && <CreateForm isDialogOpen={editDialogOpen} closeDialog={()=>{setEditDialogOpen(false)}} currentSection={objectId} fields={columnMetadata} values={editingCell.data} saveData={handleEditSave} />}
+     {editingCell && <EditForm isDialogOpen={editDialogOpen} closeDialog={()=>{setEditDialogOpen(false)}} currentSection={objectId} fields={columnMetadata} values={editingCell.data} saveData={handleEditSave} />}
 
       <Snackbar
         open={notification.open}

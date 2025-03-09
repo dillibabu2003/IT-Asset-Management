@@ -52,7 +52,7 @@ export default function CreateForm({ isDialogOpen, closeDialog, currentSection, 
         exit: true,
       }}
     >
-      {/* <DialogTitle>Create {`${currentSection}`}</DialogTitle> */}
+      <DialogTitle>Create {`${currentSection}`}</DialogTitle>
       <DialogContent>
         <Box component="form" noValidate sx={{ mt: 2 }}>
           {fields.map((field) => (field.create &&
@@ -66,18 +66,24 @@ export default function CreateForm({ isDialogOpen, closeDialog, currentSection, 
                     onChange={(e) => handleChange(field.id, e.target.value)}
                     required={field.required}
                   >
-                    {field.options?.map((option) => ( option.value!="deployed" && option.value!="reissue" &&option.value!="archived" && option.value!="activated" && option.value!="expired" &&
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
+                    {
+                      field.id == "status" ?
+                        field.options.map((option) => (
+                          option.value == "available" ?
+                            <MenuItem key={option.label} value={option.value}>{option.label}</MenuItem> : null
+                        ))
+                        :
+                        field.options.map((option) => (
+                          <MenuItem key={option.label} value={option.value}>{option.label}</MenuItem>
+                        ))
+                    }
                   </Select>
                 </FormControl>
               ) : field.type === 'date' ? (
                 <DatePicker
                   label={field.label}
-                  value={dayjs(formData[field.id])}
-                  onChange={(value) => handleChange(field.id, value)}
+                  value={formData[field.id] ? dayjs(formData[field.id]) : null}
+                  onChange={(value) => handleChange(field.id, dayjs(value).format('YYYY-MM-DD'))}
                   slotProps={{
                     textField: {
                       fullWidth: true,
