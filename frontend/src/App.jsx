@@ -25,14 +25,52 @@ import ForgotPassword from './pages/ForgotPasswod';
 import AuthProvider from './providers/AuthProvider';
 import UserProfile from './pages/UserProfile';
 import ExcelImport from './pages/ExcelImport';
+import { createTheme, ThemeProvider } from '@mui/material';
 
 export const LinkBehavior = React.forwardRef((props, ref) => {
   const { href, ...other } = props;
   return <RouterLink ref={ref} to={href} {...other} />;
 });
-
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+      light: '#42a5f5',
+      dark: '#1565c0',
+    },
+    secondary: {
+      main: '#9c27b0',
+      light: '#ba68c8',
+      dark: '#7b1fa2',
+    },
+    background: {
+      default: '#f8f9fa'
+    }
+  },
+  typography: {
+    fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontWeight: 700,
+    },
+    h2: {
+      fontWeight: 600,
+    },
+    h3: {
+      fontWeight: 600,
+    },
+  },
+  shape: {
+    borderRadius: 8,
+  },
+  table: {
+    head: {
+      backgroundColor: 'black',
+    },
+  }
+});
 function App() {
   return (
+    <ThemeProvider theme={theme}>
     <LocalizationProvider dateAdapter={AdapterDayjs}>
      <Toaster
       position="top-center"
@@ -55,7 +93,10 @@ function App() {
               <Route index element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_ASSETS} redirect={true}><AssetsPage /></ProtectedComponent>}/>
               <Route path="import" element={<ProtectedComponent requiredPermission={PERMISSIONS.CREATE_ASSETS} redirect={true}><ExcelImport objectId="assets"/></ProtectedComponent>}/>
           </Route>
-          <Route path="/licenses" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_LICENSES} redirect={true}><LicensePage /></ProtectedComponent>} />
+          <Route path="/licenses">
+              <Route index element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_LICENSES} redirect={true}><LicensePage /></ProtectedComponent>}/>
+              <Route path="import" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_LICENSES} redirect={true}><ExcelImport objectId="licenses"/></ProtectedComponent>}/>
+          </Route>
           <Route path="/checkouts" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_CHECKOUTS} redirect={true}><CheckoutPage /></ProtectedComponent>} />
           <Route path="/invoices" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_INVOICES} redirect={true}><InvoicesPage /></ProtectedComponent>} />
           <Route path="/users">
@@ -72,6 +113,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
     </LocalizationProvider>
+    </ThemeProvider>
   );
 }
 export default App;

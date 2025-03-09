@@ -20,7 +20,7 @@ import Icon from '../components/Icon';
 import { convertPascaleCaseToSnakeCase, convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 import toast from 'react-hot-toast';
 import CreateForm from '../components/CreateForm';
-import EditForm from '../components/EditForm';
+import { useNavigate } from 'react-router';
 
 function ExcelImport({objectId,...props}) {
   const [columnMetadata, setColumnMetadata] = useState(null);
@@ -30,6 +30,7 @@ function ExcelImport({objectId,...props}) {
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const [editingCell, setEditingCell] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   async function fetchMetaDataByObjectId(objectId,abortController){
     const response = await axiosInstance.get(`/metadata/${objectId}`, { signal: abortController.signal });
@@ -64,6 +65,13 @@ function ExcelImport({objectId,...props}) {
               w: snakeCaseHeader  // formatted text
               };
             }
+            else {
+              delete worksheet[XLSX.utils.encode_cell({ r: 0, c: C })];
+              for (let R = range.s.r + 1; R <= range.e.r; R++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                delete worksheet[cellAddress];
+              }
+            }
             }
         }
         return worksheet;
@@ -83,7 +91,12 @@ function ExcelImport({objectId,...props}) {
         // Replace sheet headers with column IDs
         const updatedWorkSheet = updateHeadersWithColumnIds(worksheet);
         const jsonData = XLSX.utils.sheet_to_json(updatedWorkSheet);
+        if(jsonData.length===0){
+          toast.error("No data found in the file");
+          return;
+        }
         setData(jsonData);
+        event.target.value = null;
       } catch (error) {
         console.error(error)
         toast.error('Error importing file');
@@ -95,6 +108,11 @@ function ExcelImport({objectId,...props}) {
   const handleCellEdit = (columnMetaData, rowIndex) => {
     setEditingCell(prev=>{return {index:rowIndex,data: {...data[rowIndex]}}})
     setEditDialogOpen(true);
+  };
+  const handleCellDelete = (columnMetaData, rowIndex) => {
+    const newData = [...data];
+    newData.splice(rowIndex, 1);
+    setData(newData);
   };
 
   const handleEditSave = (editedRow) => {
@@ -123,6 +141,14 @@ function ExcelImport({objectId,...props}) {
 
   return (
     <Box sx={{ p: 3 }}>
+      <Button
+          variant="text"
+          onClick={()=>{navigate(-1)}}
+          sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}
+        >
+          <Icon name="arrow-left" />
+          Back
+        </Button>
       <Typography variant="h5" gutterBottom>Import Excel</Typography>
 
       <Paper sx={{ p: 3, mb: 3 }}>
@@ -151,22 +177,6 @@ function ExcelImport({objectId,...props}) {
           )}
         </Box>
 
-        {errors.length > 0 && (
-          <Alert
-            severity="error"
-            sx={{ mt: 2 }}
-            icon={<Icon name="alert-circle" size={18} />}
-          >
-            <Typography variant="subtitle2">Validation Errors:</Typography>
-            <ul>
-              {errors.map((error, index) => (
-                <li key={index}>
-                  Row {error.row}: {error.message} (Column: {error.column})
-                </li>
-              ))}
-            </ul>
-          </Alert>
-        )}
       </Paper>
 
       {data.length > 0 && (
@@ -202,8 +212,16 @@ function ExcelImport({objectId,...props}) {
                     <IconButton
                       size="small"
                       onClick={() => handleCellEdit(columnMetadata,rowIndex)}
+                      color='primary'
                     >
                       <Icon name="pencil" size={18} />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleCellDelete(columnMetadata,rowIndex)}
+                      color='error'
+                    >
+                      <Icon name="trash-2" size={18} />
                     </IconButton>
                   </TableCell>
                 </TableRow>
@@ -213,7 +231,7 @@ function ExcelImport({objectId,...props}) {
         </TableContainer>
       )}
 
-     {editingCell && <EditForm isDialogOpen={editDialogOpen} closeDialog={()=>{setEditDialogOpen(false)}} currentSection={objectId} fields={columnMetadata} values={editingCell.data} saveData={handleEditSave} />}
+     {editingCell && <CreateForm isDialogOpen={editDialogOpen} closeDialog={()=>{setEditDialogOpen(false)}} currentSection={objectId} fields={columnMetadata} values={editingCell.data} saveData={handleEditSave} />}
 
       <Snackbar
         open={notification.open}

@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import { convertPascaleCaseToSnakeCase } from '../utils/helperFunctions';
 
 
 
@@ -61,7 +62,7 @@ export default function CreateForm({ isDialogOpen, closeDialog, currentSection, 
                 <FormControl fullWidth>
                   <InputLabel>{field.label}</InputLabel>
                   <Select
-                    value={formData[field.id] || ''}
+                    value={convertPascaleCaseToSnakeCase(formData[field.id]) || ''}
                     label={field.label}
                     onChange={(e) => handleChange(field.id, e.target.value)}
                     required={field.required}

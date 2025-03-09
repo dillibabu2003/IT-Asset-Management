@@ -183,7 +183,7 @@ export default function CustomTable({ currentSection, data, page, setPage,pageLi
           </TableHead>
           <TableBody>
             {sortedDocuments.map((document) => (
-              <TableRow key={document.id}>
+              <TableRow key={document.id} hover >
                 {Object.entries(visibleColumns).map(([columnId, isVisible]) =>  {
                   let colType = null;
                   for (let i = 0; i < columns.length; i++) {
