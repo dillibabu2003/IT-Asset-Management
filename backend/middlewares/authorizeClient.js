@@ -38,7 +38,8 @@ const authorizeClient = (requiredPermissions) => {
             }
         } catch (error) {
             console.error('Authorization error:', error);
-            throw error;
+            // throw error;
+            res.status(403).json({message: "Forbidden Access"});
         }
     };
 };

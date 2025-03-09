@@ -11,8 +11,8 @@ const redisClient = require('../config/redis');
 const { decryptJWT } = require('../utils/helperFunctions');
 const { decryptData } = require('../utils/encrypt');
 async function generateAccessTokenAndRefreshToken(user){
-    const accessToken = await jwt.sign({id: user.user_id,email: user.email,role: user.role},cleanedEnv.ACCESS_TOKEN_SECRET,{expiresIn: '1h'});
-    const refreshToken = await jwt.sign({id: user.user_id,email: user.email,role: user.role},cleanedEnv.REFRESH_TOKEN_SECRET,{expiresIn: '2h'});
+    const accessToken = await jwt.sign({_id: user._id,id: user.user_id,email: user.email,role: user.role},cleanedEnv.ACCESS_TOKEN_SECRET,{expiresIn: '1h'});
+    const refreshToken = await jwt.sign({_id: user._id,id: user.user_id,email: user.email,role: user.role},cleanedEnv.REFRESH_TOKEN_SECRET,{expiresIn: '2h'});
     //store refreshToken in redis and use it in refreshing the access token.
     await redisClient.set(user.user_id.toString(), refreshToken, {'EX': 2 * 60 * 60}); // 2 hours in seconds
     return [accessToken,refreshToken];

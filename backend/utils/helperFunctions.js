@@ -9,6 +9,13 @@ function extractZodErrorMessages(zodError){
 async function decryptJWT(token,secret){
     return await jwt.verify(token,secret);
 }
+function convertSnakeCaseToPascaleCase(str) {
+    return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+function convertPascaleCaseToSnakeCase(str) {
+    str = str.replace(/\s+/g, '');
+    return str.split(/(?=[A-Z])/).join('_').toLowerCase();
+}
 const getFileTypeFromContentType = (contentType) => {
     const mapping = {
         'application/pdf': 'pdf',
@@ -23,5 +30,7 @@ const getFileTypeFromContentType = (contentType) => {
 module.exports={
     extractZodErrorMessages,
     decryptJWT,
-    getFileTypeFromContentType
-}
+    getFileTypeFromContentType,
+    convertSnakeCaseToPascaleCase,
+    convertPascaleCaseToSnakeCase,
+ }
