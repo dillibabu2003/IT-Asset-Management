@@ -5,6 +5,26 @@ export function convertPascaleCaseToSnakeCase(str) {
     str = str.replace(/\s+/g, '');
     return str.split(/(?=[A-Z])/).join('_').toLowerCase();
 }
+export function convertExpiryToReadable(expiry){
+     const now = new Date();
+     if(!expiry){
+         return 'N/A';
+        }
+    const end = new Date(expiry);
+     if(end<=now){
+        return '0 days';
+     }
+    const diff = Math.abs(end - now);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const years = Math.floor(days / 365);
+    const months = Math.floor((days % 365) / 30);
+    const remainingDays = Math.floor(days % 30);
+    let result = [];
+    if (years > 0) result.push(`${years} years`);
+    if (months > 0) result.push(`${months} months`);
+    if (remainingDays > 0) result.push(`${remainingDays} days`);
+    return result.join(', ');
+}
 export function getColorAndBackgroundColorByStatus(status){
     switch(status){
         case 'available':

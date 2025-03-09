@@ -15,6 +15,7 @@ const LicensesPage = () => {
 
     const [data, setData] = useState(null);
     const [page, setPage] = useState(1);
+    const [pageLimit, setPageLimit] = useState(PAGE_LIMIT);
     const [showCreateForm, setShowCreateForm] = useState(false);
 
     async function fetchLicensesByPageAndLimit(abortController,page,limit){
@@ -30,7 +31,7 @@ const LicensesPage = () => {
         return response.data;
     }
     async function fetchData(abortController) {
-            const licensesPromise=fetchLicensesByPageAndLimit(abortController,page,PAGE_LIMIT);
+            const licensesPromise=fetchLicensesByPageAndLimit(abortController,page,pageLimit);
             const licensesMetadataPromise=fetchLicensesMetaData(abortController);
             const userColumnPreferencesPromise=fetchUserColumnPreferences(abortController);
             return Promise.all([licensesPromise,licensesMetadataPromise,userColumnPreferencesPromise]);
@@ -51,25 +52,37 @@ const LicensesPage = () => {
     }
     useEffect(() => {
         const abortController = new AbortController();
-        fetchData(abortController).then((response) => {
-            const licenses=response[0].data;
-            const licensesMetaData=response[1].data;
-            const userColumnPreferences=response[2].data;
-            setData({data: licenses, fields: licensesMetaData, userColumnPreferences: userColumnPreferences});
-        }).catch((error) => {   
-            console.log(error);
-        });
+        
+        if (!data) {
+            // Initial load - fetch everything
+            fetchData(abortController).then((response) => {
+                const licenses = response[0].data;
+                const licensesMetaData = response[1].data;
+                const userColumnPreferences = response[2].data;
+                setData({data: licenses, fields: licensesMetaData, userColumnPreferences: userColumnPreferences});
+            }).catch((error) => {   
+                console.log(error);
+            });
+        } else {
+            // On page/limit change - fetch only licenses
+            fetchLicensesByPageAndLimit(abortController, page, pageLimit).then((response) => {
+                setData(prev => ({...prev, data: response.data}));
+            }).catch((error) => {   
+                console.log(error);
+            });
+        }
+
         return () => {
             abortController.abort();
         };
-    }, [page]);
+    }, [page, pageLimit]);
     return (
 
         (
             <React.Fragment>
 
                 <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h5" fontWeight="500">Licences</Typography>
+                    <Typography variant="h5" fontWeight="500">Licenses</Typography>
 
                         <ProtectedComponent requiredPermission={"create:licenses"}>
                     <Box sx={{ display: 'flex', gap: "8px", alignItems: "center" }}>
@@ -79,7 +92,7 @@ const LicensesPage = () => {
                             sx={{ textTransform: 'none' }}
                             onClick={() => setShowCreateForm(true)}
                         >
-                            Create Asset
+                            Create License
                         </Button>
                         <Box component="div" sx={{ width: "fit-content" }}>
                             <Link to="/licenses/import" style={{ textDecoration: "none" }}>
@@ -99,8 +112,8 @@ const LicensesPage = () => {
                 </Box>
                 {!data ? <Loader /> :
                     <React.Fragment>
-                        <CreateForm currentSection="licenses" fields={data.fields} isDialogOpen={showCreateForm} values={Object.fromEntries(data.fields.map(field => [field.id, '']))} closeDialog={() => setShowCreateForm(false)} saveData={handleSave}  aria-describedby={`create-assets-form`} />
-                        <CustomTable currentSection="licenses" page={page} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
+                        <CreateForm currentSection="licenses" fields={data.fields} isDialogOpen={showCreateForm} values={Object.fromEntries(data.fields.map(field => [field.id, '']))} closeDialog={() => setShowCreateForm(false)} saveData={handleSave}  aria-describedby={`create-licenses-form`} />
+                        <CustomTable currentSection="licenses" page={page} pageLimit={pageLimit} setPageLimit={setPageLimit} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
                     </React.Fragment>
                 }
             </React.Fragment>

@@ -15,6 +15,7 @@ const AssetsPage = () => {
 
     const [data, setData] = useState(null);
     const [page, setPage] = useState(1);
+    const [pageLimit, setPageLimit] = useState(PAGE_LIMIT);
     const [showCreateForm, setShowCreateForm] = useState(false);
 
     async function fetchAssetsByPageAndLimit(abortController,page,limit){
@@ -30,7 +31,7 @@ const AssetsPage = () => {
         return response.data;
     }
     async function fetchData(abortController) {
-            const assetsPromise=fetchAssetsByPageAndLimit(abortController,page,PAGE_LIMIT);
+            const assetsPromise=fetchAssetsByPageAndLimit(abortController,page,pageLimit);
             const assetsMetadataPromise=fetchAssetsMetaData(abortController);
             const userColumnPreferencesPromise=fetchUserColumnPreferences(abortController);
             return Promise.all([assetsPromise,assetsMetadataPromise,userColumnPreferencesPromise]);
@@ -51,18 +52,30 @@ const AssetsPage = () => {
     }
     useEffect(() => {
         const abortController = new AbortController();
-        fetchData(abortController).then((response) => {
-            const assets=response[0].data;
-            const assetsMetaData=response[1].data;
-            const userColumnPreferences=response[2].data;
-            setData({data: assets, fields: assetsMetaData, userColumnPreferences: userColumnPreferences});
-        }).catch((error) => {   
-            console.log(error);
-        });
+        
+        if (!data) {
+            // Initial load - fetch everything
+            fetchData(abortController).then((response) => {
+                const assets = response[0].data;
+                const assetsMetaData = response[1].data;
+                const userColumnPreferences = response[2].data;
+                setData({data: assets, fields: assetsMetaData, userColumnPreferences: userColumnPreferences});
+            }).catch((error) => {   
+                console.log(error);
+            });
+        } else {
+            // On page/limit change - fetch only assets
+            fetchAssetsByPageAndLimit(abortController, page, pageLimit).then((response) => {
+                setData(prev => ({...prev, data: response.data}));
+            }).catch((error) => {   
+                console.log(error);
+            });
+        }
+
         return () => {
             abortController.abort();
         };
-    }, [page]);
+    }, [page, pageLimit]);
     return (
 
         (
@@ -100,7 +113,7 @@ const AssetsPage = () => {
                 {!data ? <Loader /> :
                     <React.Fragment>
                         <CreateForm currentSection="assets" fields={data.fields} isDialogOpen={showCreateForm} values={Object.fromEntries(data.fields.map(field => [field.id, '']))} closeDialog={() => setShowCreateForm(false)} saveData={handleSave}  aria-describedby={`create-assets-form`} />
-                        <CustomTable currentSection="assets" page={page} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
+                        <CustomTable currentSection="assets" page={page} pageLimit={pageLimit} setPageLimit={setPageLimit} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
                     </React.Fragment>
                 }
             </React.Fragment>

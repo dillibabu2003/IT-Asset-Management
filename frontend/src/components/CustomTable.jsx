@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -19,6 +19,7 @@ import {
   Box,
   TableSortLabel,
   Popover,
+  TablePagination,
 } from '@mui/material';
 import * as XLSX from 'xlsx';
 import Icon from './Icon';
@@ -26,17 +27,15 @@ import { PAGE_LIMIT } from '../utils/constants';
 import axiosInstance from '../utils/axios';
 import ProtectedComponent from '../protectors/ProtectedComponent';
 import { convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
+import { convertExpiryToReadable } from '../utils/helperFunctions';
 
-export default function CustomTable({ currentSection, data, page, setPage, userVisibleColumns }) {
+export default function CustomTable({ currentSection, data, page, setPage,pageLimit,setPageLimit, userVisibleColumns }) {
   const [columns, setColumns] = useState(data.fields);
   const [orderBy, setOrderBy] = useState("");
   const [order, setOrder] = useState('asc');
   const [columnsMenuAnchor, setColumnsMenuAnchor] = useState(null);
   const [visibleColumns, setVisibleColumns] = useState(userVisibleColumns);
 
-  const totalPages = Math.ceil(data.data.total / PAGE_LIMIT);
-  const currentDocumentStartIndex = (page - 1) * PAGE_LIMIT + 1
-  const currentDocumentEndIndex = Math.min((page - 1) * PAGE_LIMIT + PAGE_LIMIT, data.data.total);
   const [filteredDocuments, setFilteredDocuments] = useState(data.data.documents);
 
   useEffect(() => {
@@ -66,14 +65,14 @@ export default function CustomTable({ currentSection, data, page, setPage, userV
     const data = sortedDocuments.map(document => {
       const row = {};
       Object.keys(visibleColumns).forEach(col => {
-        if(visibleColumns[col]){
+        if (visibleColumns[col]) {
           const label = convertSnakeCaseToPascaleCase(col);
           row[label] = document[col];
         }
       });
       return row;
     });
-    
+
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, `${currentSection}`);
@@ -138,16 +137,16 @@ export default function CustomTable({ currentSection, data, page, setPage, userV
         onClose={() => setColumnsMenuAnchor(null)}
       >
         <React.Fragment>
-          {columns.map((column) => (
-            <MenuItem key={column._id} onClick={() => handleColumnToggle(column.id)}>
+          {Object.entries(visibleColumns).map(([columnId, isVisible]) => (
+            <MenuItem key={columnId} onClick={() => handleColumnToggle(columnId)}>
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={visibleColumns[column.id]}
-                    // onChange={() => handleColumnToggle(column.id)}
+                    checked={isVisible}
+                    onChange={() => handleColumnToggle(columnId)}
                   />
                 }
-                label={column.label}
+                label={convertSnakeCaseToPascaleCase(columnId)}
               />
             </MenuItem>
           ))}
@@ -162,18 +161,18 @@ export default function CustomTable({ currentSection, data, page, setPage, userV
         </React.Fragment>
       </Menu>
 
-      <TableContainer sx={{ maxHeight: 600, overflow: 'auto', maxWidth: "100%" }}>
-        <Table>
+      <TableContainer sx={{ maxHeight: 600, overflow: 'auto', maxWidth: "100%",whiteSpace: 'nowrap' }}>
+        <Table stickyHeader>
           <TableHead>
             <TableRow>
-              {columns.filter(col => visibleColumns[col.id]).map((column) => (
-                <TableCell key={column.id}>
+              {Object.entries(visibleColumns).map(([columnId, isVisible]) => (isVisible &&
+                <TableCell key={columnId}>
                   <TableSortLabel
-                    active={orderBy === column.id}
-                    direction={orderBy === column.id ? order : 'asc'}
-                    onClick={() => handleSort(column.id)}
+                    active={orderBy === columnId}
+                    direction={orderBy === columnId ? order : 'asc'}
+                    onClick={() => handleSort(columnId)}
                   >
-                    {column.label}
+                    {convertSnakeCaseToPascaleCase(columnId)}
                   </TableSortLabel>
                 </TableCell>
               ))}
@@ -185,27 +184,58 @@ export default function CustomTable({ currentSection, data, page, setPage, userV
           <TableBody>
             {sortedDocuments.map((document) => (
               <TableRow key={document.id}>
-                {columns.filter(col => visibleColumns[col.id]).map((column) => (
-                  <TableCell key={column.id}>
-                    {column.id === 'status' ? (
-                      <Chip
-                        label={convertSnakeCaseToPascaleCase(document.status)}
-                        color={document.status === 'available' ? 'success' : 'warning'}
-                        size="small"
-                      />
-                    ) : (
-                      typeof document[column.id] ==='array' ? document[column.id].join(', ') : document[column.id]
-                    )}
+                {Object.entries(visibleColumns).map(([columnId, isVisible]) =>  {
+                  let colType = null;
+                  for (let i = 0; i < columns.length; i++) {
+                    if (columns[i].id === columnId) {
+                      colType = columns[i].type;
+                      break;
+                    }
+                  }                  
+                  return (isVisible &&
+                  <TableCell key={columnId}>
+                    {
+                      columnId==='expiry' ? convertExpiryToReadable(document.end) :
+                      colType === 'date' ? (
+                           new Date(document[columnId]).toLocaleDateString()
+                      ) : columnId === 'assigned_to' ? (
+                        document.assigned_to ? document.assigned_to : 'N/A'
+                      ) :
+                      colType ==='select'?
+                          columnId === 'status' ? (
+                            <Chip
+                              label={convertSnakeCaseToPascaleCase(document.status)}
+                              color={document.status === 'available' ? 'success' : 'warning'}
+                              size="small"
+                            />
+                          ) : convertSnakeCaseToPascaleCase(document[columnId])
+                      : document[columnId]
+                        }
                   </TableCell>
-                ))}
+                )})}
                 <ProtectedComponent requiredPermission={`edit:${currentSection}`}>
-                  <TableCell>
+                  <TableCell key="actions">
+                    {
+                      document.assigned_to && 
+                      <React.Fragment>
+
+                      <IconButton size="small" color="primary">
+                        <Icon name="eye" size={20} />
+                      </IconButton>
+                      <IconButton size="small" color="warning">
+                        <Icon name="user-x" size={20} />
+                      </IconButton>
+                      </React.Fragment>
+                    }
                     <IconButton size="small" color="primary">
                       <Icon name="pencil" size={20} />
                     </IconButton>
+                    {
+                      !document.assigned_to && 
                     <IconButton size="small" color="error">
                       <Icon name="trash-2" size={20} />
                     </IconButton>
+                    }
                   </TableCell>
                 </ProtectedComponent>
               </TableRow>
@@ -213,9 +243,16 @@ export default function CustomTable({ currentSection, data, page, setPage, userV
           </TableBody>
         </Table>
       </TableContainer>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-        <div>Showing {currentDocumentStartIndex} to {currentDocumentEndIndex} of {data.data.total}</div>
-        <Pagination count={totalPages} color="primary" onChange={(event, page) => { console.log(page); setPage(page) }} />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mt: 2 }}>
+          <TablePagination
+          component="div"
+          count={data.data.total}
+          page={page-1} // Convert 1-based to 0-based index
+          onPageChange={(event,page)=>{setPage(page+1)}}
+          rowsPerPage={pageLimit}
+          onRowsPerPageChange={(event)=>{setPageLimit(parseInt(event.target.value));setPage(1)}}
+          rowsPerPageOptions={[10, 25, 50]}
+        />
       </Box>
     </Paper>
   );
