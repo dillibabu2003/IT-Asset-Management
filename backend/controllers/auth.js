@@ -13,8 +13,9 @@ const { decryptData } = require('../utils/encrypt');
 async function generateAccessTokenAndRefreshToken(user){
     const accessToken = await jwt.sign({_id: user._id,id: user.user_id,email: user.email,role: user.role},cleanedEnv.ACCESS_TOKEN_SECRET,{expiresIn: '1h'});
     const refreshToken = await jwt.sign({_id: user._id,id: user.user_id,email: user.email,role: user.role},cleanedEnv.REFRESH_TOKEN_SECRET,{expiresIn: '2h'});
-    //store refreshToken in redis and use it in refreshing the access token.
-    await redisClient.set(user.user_id.toString(), refreshToken, {'EX': 2 * 60 * 60}); // 2 hours in seconds
+    //store accessToken refreshToken in redis and use it in refreshing the access token.
+    await redisClient.set("ACCESS_TOKEN_"+user.user_id.toString(), accessToken, {'EX': 1 * 60 * 60}); // 1 hours in seconds
+    await redisClient.set("REFRESH_TOKEN_"+user.user_id.toString(), refreshToken, {'EX': 2 * 60 * 60}); // 2 hours in seconds
     return [accessToken,refreshToken];
 }
  
@@ -67,8 +68,15 @@ const handleLogout = asyncHandler(async (req,res,next)=>{
     //remove the refreshToken from redis for this id.
     const refreshToken = req.cookies.refresh_token;
     if(refreshToken){
-        const decodedInfo = await decryptJWT(refreshToken, cleanedEnv.REFRESH_TOKEN_SECRET);
-        await redisClient.del(decodedInfo?.id || "SOME_INVALID_KEY");
+        let decodedInfo=null;
+        jwt.verify(refreshToken,cleanedEnv.REFRESH_TOKEN_SECRET,async (err,decoded)=>{
+            if(err){
+                //do nothing simply sleep
+            }
+            decodedInfo=decoded;
+            await redisClient.del("ACCESS_TOKEN_"+decodedInfo?.id || "SOME_INVALID_KEY");
+            await redisClient.del("REFRESH_TOKEN_"+decodedInfo?.id || "SOME_INVALID_KEY");
+        });
     }
     res.clearCookie("access_token").clearCookie("refresh_token").json(new ApiResponse(200, null, "Logged out successfully."));
 });
