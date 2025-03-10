@@ -73,16 +73,16 @@ async function fetchPaginatedDocumentsByObjectName(objectName, page, limit, skip
                         format: "%d/%m/%Y"
                     }
                 },
-                name_of_the_vendor: { $first: "$invoice_info.name_of_the_vendor" },
+                name_of_the_vendor: {$first: "$invoice_info.name_of_the_vendor"},
                 employee_name: {
                     $concat: [
-                        { $first: "$employee_info.firstname" },
+                        {$first: "$employee_info.firstname"}, 
                         " ",
-                        { $first: "$employee_info.lastname" }
+                        {$first: "$employee_info.lastname"}
                     ]
                 },
-                employee_email: { $first: "$employee_info.email" },
-                assigned_to: { $first: "$employee_info.employee_id" },
+                employee_email: {$first: "$employee_info.email"},
+                assigned_to: {$first: "$employee_info.employee_id"},
             }
         },
         {
@@ -182,6 +182,7 @@ async function validateStatus(document, objectName) {
 
 // Validate a single document
 async function validateSingleDocument(document, schema, objectName, operationType, columnMetadataUnStructured) {
+
     // Validate each field in the document
     const columnMetadataStructured = {};
     // console.log(columnMetadataUnStructured);
@@ -217,9 +218,14 @@ async function validateDocuments(objectName, documents, operationType) {
     }
 
     const schema = model.schema.obj;
-    const columnMetadata = await MetaData.find({ belongs_to: objectName}).select("-_id -__v -belongs_to");
-    if (!columnMetadata) {
-        throw new ApiError(400, null, "Column metadata not found");
+
+    const columnMetadata = await Metadata.find({belongs_to:metaDataType}).select("-_id -__v -belongs_to");
+    if(!columnMetadata){
+        throw new ApiError(400,null, "Column metadata not found");
+    }
+    
+    for (const document of documents) {
+        await validateSingleDocument(document, schema, objectId,false,columnMetadata);
     }
     for (const index in documents) {
         documents[index]=await validateSingleDocument(documents[index], schema, objectName,operationType,columnMetadata);
@@ -480,6 +486,59 @@ const getAllDataByFilterOfObjectId = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, objectData, `${objectId} fetched successfully`));
 });
 
+const updateDocumentOfObjectId = asyncHandler(async (req, res) => {
+    const objectId = req.params.objectId;
+    const model = getModelByObjectId(objectId);
+    if (!model) {
+        throw new ApiError(400,null, "Invalid object id");
+    }
+    const documentId = req.body.document_id;
+    const document = req.body.document;
+    if (!documentId || !document) {
+        throw new ApiError(400,null, "Invalid request body");
+    }
+    const originalDocument = await model.findOne({serial_no: document.serial_no});
+    if (!originalDocument) {
+        throw new ApiError(404,null, "Document not found");
+    }
+    const updatedDocument = await model.findByIdAndUpdate(documentId, document, { new: true });
+    if (!updatedDocument) {
+        throw new ApiError(404,null, "Document not found");
+    }
+    res.status(200).json(new ApiResponse(200, updatedDocument, `${objectId} updated successfully`));
+});
+const deleteDocumentOfObjectId = asyncHandler(async (req, res) => {
+    const objectId = req.params.objectId;
+    const model = getModelByObjectId(objectId);
+    if (!model) {
+        throw new ApiError(400,null, "Invalid object id");
+    }
+    const documentId = req.body.document_id;
+    if (!documentId) {
+        throw new ApiError(400,null, "Invalid request body");
+    }
+    const deletedDocument = await model.findByIdAndDelete(documentId);
+    if (!deletedDocument) {
+        throw new ApiError(404,null, "Document not found");
+    }
+    res.status(200).json(new ApiResponse(200, deletedDocument, `${objectId} deleted successfully`));
+});
+const unassignDocumentOfObjectId = asyncHandler(async (req, res) => {
+    const objectId = req.params.objectId;
+    const model = getModelByObjectId(objectId);
+    if (!model) {
+        throw new ApiError(400,null, "Invalid object id");
+    }
+    const documentId = req.body.document_id;
+    if (!documentId) {
+        throw new ApiError(400,null, "Invalid request body");
+    }
+    const updatedDocument = await model.findByIdAndUpdate(documentId, { assigned_to: null }, { new: true });
+    if (!updatedDocument) {
+        throw new ApiError(404,null, "Document not found");
+    }
+    res.status(200).json(new ApiResponse(200, updatedDocument, `${objectId} unassigned successfully`));
+});
 module.exports = {
     getPaginatedDataByObjectName,
     getUserColumnVisibilitiesByObjectName,

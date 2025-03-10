@@ -41,7 +41,7 @@ function ExcelImport({objectId,...props}) {
     const abortController = new AbortController();
     fetchMetaDataByObjectId(objectId,abortController).then((response) => {      
       setColumnMetadata(response.data);
-      setColumnIds(response.data.map((column)=>column.id));
+      setColumnIds(Object.keys(response.data));
     }).catch((error) => {
       console.log(error);
     });
@@ -56,7 +56,9 @@ function ExcelImport({objectId,...props}) {
             const headerCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: C })];
             if (headerCell) {       
             const headerValue = headerCell.v;
-            const snakeCaseHeader = convertPascaleCaseToSnakeCase(headerValue);            
+            const snakeCaseHeader = convertPascaleCaseToSnakeCase(headerValue);
+            console.log(snakeCaseHeader);
+                        
             if (columnIds.includes(snakeCaseHeader)) {
               const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
               worksheet[cellAddress] = { 
@@ -90,7 +92,7 @@ function ExcelImport({objectId,...props}) {
         const worksheet = workbook.Sheets[sheetName];
         // Replace sheet headers with column IDs
         const updatedWorkSheet = updateHeadersWithColumnIds(worksheet);
-        const jsonData = XLSX.utils.sheet_to_json(updatedWorkSheet);
+        const jsonData = XLSX.utils.sheet_to_json(updatedWorkSheet);        
         if(jsonData.length===0){
           toast.error("No data found in the file");
           return;
@@ -184,19 +186,24 @@ function ExcelImport({objectId,...props}) {
           <Table >
             <TableHead>
               <TableRow>
-                {columnMetadata.map((column,columnIndex) => ( column.create &&
+                { 
+                Object.keys(columnMetadata).map((key) =>{
+                  const column = columnMetadata[key];
+                return (column.create &&
                   <TableCell key={column.id}>
                     {convertSnakeCaseToPascaleCase(column.id)}
                     {column.required && ' *'}
                   </TableCell>
-                ))}
+                )})}
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {data.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
-                  {columnMetadata.map((column) => (  column.create &&
+                  {Object.keys(columnMetadata).map((key) =>{
+                  const column = columnMetadata[key];
+                    return (  column.create &&
                     <TableCell
                       key={column.id}
                       sx={{
@@ -205,9 +212,10 @@ function ExcelImport({objectId,...props}) {
                         ) ? 'error.main' : 'inherit',
                       }}
                     >
+                      
                       {row[column.id] || row[convertSnakeCaseToPascaleCase(column.id)] || ""}
                     </TableCell>
-                  ))}
+                  )})}
                   <TableCell>
                     <IconButton
                       size="small"

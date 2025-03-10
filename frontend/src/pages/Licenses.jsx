@@ -5,6 +5,8 @@ import Loader from '../components/Loader';
 import { PAGE_LIMIT } from "../utils/constants";
 import { Box, Button, Popover, Typography } from '@mui/material';
 import CreateForm from '../components/CreateForm';
+
+import EditForm from '../components/EditForm';
 import Icon from '../components/Icon';
 import ProtectedComponent from '../protectors/ProtectedComponent';
 import { Link } from 'react-router';
@@ -17,7 +19,8 @@ const LicensesPage = () => {
     const [page, setPage] = useState(1);
     const [pageLimit, setPageLimit] = useState(PAGE_LIMIT);
     const [showCreateForm, setShowCreateForm] = useState(false);
-
+    const [editInfo, setEditInfo] = useState({showEditForm: false, selectedRow: null});
+    // const [edit]
     async function fetchLicensesByPageAndLimit(abortController,page,limit){
             const response = await axiosInstance.get(`/objects/licenses?page=${page}&limit=${limit}`, { signal: abortController.signal });
             return response.data;
@@ -36,7 +39,7 @@ const LicensesPage = () => {
             const userColumnPreferencesPromise=fetchUserColumnPreferences(abortController);
             return Promise.all([licensesPromise,licensesMetadataPromise,userColumnPreferencesPromise]);
     }
-    async function handleSave(formData){
+    async function createLicense(formData){
         console.log(formData);
         try {
             const response = await axiosInstance.post("/objects/licenses/create",formData);
@@ -47,9 +50,27 @@ const LicensesPage = () => {
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
         }
-
-        
     }
+    async function saveEditedData(formData){
+        console.log(formData);
+        try {
+            const response = await axiosInstance.put("/objects/licenses/update",formData);
+            if(response.data.success){
+                toast.success(response.data.message);
+                setEditInfo(prev=>{return {...prev,showEditForm: false}});
+            }
+        } catch (error) {
+            toast.error(error.response.data.message || "An error occurred");
+        }
+    }
+
+    const setEditingRowIndex=(rowIndex)=>{
+        console.log("Editing row index",rowIndex);
+        console.log(data.data);
+        
+        setEditInfo({showEditForm: true, selectedRow: rowIndex});
+    }
+
     useEffect(() => {
         const abortController = new AbortController();
         
@@ -76,11 +97,11 @@ const LicensesPage = () => {
             abortController.abort();
         };
     }, [page, pageLimit]);
-    return (
 
+    
+    return (
         (
             <React.Fragment>
-
                 <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h5" fontWeight="500">Licenses</Typography>
 
@@ -112,8 +133,23 @@ const LicensesPage = () => {
                 </Box>
                 {!data ? <Loader /> :
                     <React.Fragment>
-                        <CreateForm currentSection="licenses" fields={data.fields} isDialogOpen={showCreateForm} values={Object.fromEntries(data.fields.map(field => [field.id, '']))} closeDialog={() => setShowCreateForm(false)} saveData={handleSave}  aria-describedby={`create-licenses-form`} />
-                        <CustomTable currentSection="licenses" page={page} pageLimit={pageLimit} setPageLimit={setPageLimit} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
+                        <CreateForm currentSection="licenses" fields={data.fields} isDialogOpen={showCreateForm} values={Object.keys(data.fields).map(key => [key, ''])} closeDialog={() => setShowCreateForm(false)} saveData={createLicense}  aria-describedby={`create-licenses-form`} />
+                        <CustomTable currentSection="licenses" page={page} pageLimit={pageLimit} setPageLimit={setPageLimit} setEditingRowIndex={setEditingRowIndex} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
+                        {editInfo.showEditForm && data.fields && data.data && (
+                            <EditForm 
+                                currentSection="licenses" 
+                                fields={data.fields} 
+                                isDialogOpen={editInfo.showEditForm} 
+                                values={editInfo.selectedRow !== null && 
+                                    Object.keys(data.fields).reduce((acc, key) => {
+                                        acc[key] = data.data.documents[editInfo.selectedRow][key];
+                                        return acc;
+                                    }, {})} 
+                                closeDialog={() => {setEditInfo({selectedRow:null,showEditForm: false})}} 
+                                saveData={saveEditedData}  
+                                aria-describedby={`edit-licenses-form`} 
+                            />
+                        )}
                     </React.Fragment>
                 }
             </React.Fragment>

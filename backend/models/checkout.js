@@ -22,12 +22,18 @@ const CheckoutSchema = new mongoose.Schema({
     required: true,
   },
   employee_id: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Employee",
-    localField: "employee_id",
-    foreignField: "employee_id",
-    justOne: true,
     required: true,
+  },
+  start: {
+    type: Date,
+    required: true,
+  },
+  end: {
+    type: Date,
+    required: true,
+    default: null
   },
 });
 

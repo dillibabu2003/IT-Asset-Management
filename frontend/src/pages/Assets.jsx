@@ -47,8 +47,18 @@ const AssetsPage = () => {
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
         }
-
-        
+    }
+    async function handleUpdate(formData){
+        console.log(formData);
+        try {
+            const response = await axiosInstance.put("/objects/assets/update",formData);
+            if(response.data.success){
+                toast.success(response.data.message);
+                setShowCreateForm(false);
+            }
+        } catch (error) {
+            toast.error(error.response.data.message || "An error occurred");
+        }
     }
     useEffect(() => {
         const abortController = new AbortController();
@@ -112,7 +122,7 @@ const AssetsPage = () => {
                 </Box>
                 {!data ? <Loader /> :
                     <React.Fragment>
-                        <CreateForm currentSection="assets" fields={data.fields} isDialogOpen={showCreateForm} values={Object.fromEntries(data.fields.map(field => [field.id, '']))} closeDialog={() => setShowCreateForm(false)} saveData={handleSave}  aria-describedby={`create-assets-form`} />
+                        <CreateForm currentSection="assets" fields={data.fields} isDialogOpen={showCreateForm} values={Object.keys(data.fields).map(key => [key, ''])} closeDialog={() => setShowCreateForm(false)} saveData={handleSave}  aria-describedby={`create-assets-form`} />
                         <CustomTable currentSection="assets" page={page} pageLimit={pageLimit} setPageLimit={setPageLimit} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
                     </React.Fragment>
                 }

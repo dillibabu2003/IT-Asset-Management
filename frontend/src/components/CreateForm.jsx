@@ -21,7 +21,7 @@ import { convertPascaleCaseToSnakeCase } from '../utils/helperFunctions';
 export default function CreateForm({ isDialogOpen, closeDialog, currentSection, fields, values, saveData }) {
   if (!fields || !values) return null;
 
-  console.log(values);
+  console.log(isDialogOpen);
   
 
   const [formData, setFormData] = useState(values);
@@ -56,7 +56,7 @@ export default function CreateForm({ isDialogOpen, closeDialog, currentSection, 
       <DialogTitle>Create {`${currentSection}`}</DialogTitle>
       <DialogContent>
         <Box component="form" noValidate sx={{ mt: 2 }}>
-          {fields.map((field) => (field.create &&
+          {Object.keys(fields).map((key)=>{ const field=fields[key]; return (field.create &&
             <Box key={field.id} sx={{ mb: 2 }}>
               {field.type === 'select' ? (
                 <FormControl fullWidth>
@@ -112,7 +112,7 @@ export default function CreateForm({ isDialogOpen, closeDialog, currentSection, 
                 />
               )}
             </Box>
-          ))}
+          )})}
         </Box>
       </DialogContent>
       <DialogActions>
