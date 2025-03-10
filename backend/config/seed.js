@@ -382,9 +382,9 @@ const seedDB = async () => {
         { belongs_to: "assets", id: 'start', label: 'Start', type: 'date', required: true, additional: false, create: true, edit: true },
         { belongs_to: "assets", id: 'end', label: 'End', type: 'date', required: true, additional: false, create: true, edit: true },
         { belongs_to: "assets", id: 'warranty', label: 'Warranty', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "assets", id: 'assigned_to', label: 'Assigned To', type: 'text', required: false, additional: false, create: false, edit: true },
+        { belongs_to: "assets", id: 'assigned_to', label: 'Assigned To', type: 'text', required: false, additional: false, create: false, edit: false },
         {
-            belongs_to: "assets", id: 'status', label: 'Status', type: 'select', required: true, additional: false, create: true, edit: true, options: [
+            belongs_to: "assets", id: 'status', label: 'Status', type: 'select', required: true, additional: false, create: true, edit: false, options: [
                 { label: 'Available', value: 'available' },
                 { label: 'Deployed', value: 'deployed' },
                 { label: 'Reissue', value: 'reissue' },
@@ -420,13 +420,13 @@ const seedDB = async () => {
 
             ],
             required: true, additional: false, create: true, edit: true },
-        { belongs_to: "licenses", id: 'assigned_to', label: 'Assigned To', type: 'text', required: false, additional: false, create: false, edit: true },
+        { belongs_to: "licenses", id: 'assigned_to', label: 'Assigned To', type: 'text', required: false, additional: false, create: false, edit: false },
         { belongs_to: "licenses", id: 'model', label: 'Model', type: 'text', required: true, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'start', label: 'Start', type: 'date', required: true, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'end', label: 'End', type: 'date', required: true, additional: false, create: true, edit: true },
         { belongs_to: "licenses", id: 'warranty', label: 'Warranty', type: 'text', required: true, additional: false, create: true, edit: true },
         {
-            belongs_to: "licenses", id: 'status', label: 'Status', type: 'select', required: true, additional: false, create: true, edit: true, options: [
+            belongs_to: "licenses", id: 'status', label: 'Status', type: 'select', required: true, additional: false, create: true, edit: false, options: [
                 { label: 'Available', value: 'available' },
                 { label: 'Activated', value: 'activated' },
                 { label: 'Expired', value: 'expired' },

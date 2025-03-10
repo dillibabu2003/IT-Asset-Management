@@ -48,9 +48,9 @@ const handleRefreshAccessToken = asyncHandler(async (req,res,next)=>{
     const refreshToken = req.cookies.refresh_token;
     const decodedInfo = await decryptJWT(refreshToken,cleanedEnv.REFRESH_TOKEN_SECRET);
     if(!refreshToken || !decodedInfo){
-        throw new ApiError(401,{error: "Invalid refresh token"},"Invalid refresh token",null);
+        throw new ApiError(400,{error: "Invalid refresh token"},"Invalid refresh token",null);
     }
-    const [newAccessToken,newRefreshToken] = await generateAccessTokenAndRefreshToken({user_id: decodedInfo.id, email: decodedInfo.email, role: decodedInfo.role});
+    const [newAccessToken,newRefreshToken] = await generateAccessTokenAndRefreshToken({_id:decodedInfo._id, user_id: decodedInfo.id, email: decodedInfo.email, role: decodedInfo.role});
     const cookieOptions = {
         httpOnly: true,
         secure: false, //When deployed and assigned a domain with valid ssl/tls certificate make it to true.
