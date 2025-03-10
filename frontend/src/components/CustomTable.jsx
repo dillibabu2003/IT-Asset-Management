@@ -20,6 +20,7 @@ import {
   TableSortLabel,
   Popover,
   TablePagination,
+  Tooltip,
 } from '@mui/material';
 import * as XLSX from 'xlsx';
 import Icon from './Icon';
@@ -29,7 +30,7 @@ import ProtectedComponent from '../protectors/ProtectedComponent';
 import { convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 import { convertExpiryToReadable } from '../utils/helperFunctions';
 
-export default function CustomTable({ currentSection, data, page, setPage,pageLimit,setPageLimit, userVisibleColumns }) {
+export default function CustomTable({ currentSection, data, page, setPage,pageLimit,setEditingRowIndex,setPageLimit, userVisibleColumns }) {
   const [columns, setColumns] = useState(data.fields);
   const [orderBy, setOrderBy] = useState("");
   const [order, setOrder] = useState('asc');
@@ -182,16 +183,10 @@ export default function CustomTable({ currentSection, data, page, setPage,pageLi
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedDocuments.map((document) => (
+            {sortedDocuments.map((document,rowIndex) => (
               <TableRow key={document.id} hover >
                 {Object.entries(visibleColumns).map(([columnId, isVisible]) =>  {
-                  let colType = null;
-                  for (let i = 0; i < columns.length; i++) {
-                    if (columns[i].id === columnId) {
-                      colType = columns[i].type;
-                      break;
-                    }
-                  }                  
+                  let colType = columns[columnId]?.type;                
                   return (isVisible &&
                   <TableCell key={columnId}>
                     {
@@ -199,7 +194,14 @@ export default function CustomTable({ currentSection, data, page, setPage,pageLi
                       colType === 'date' ? (
                            new Date(document[columnId]).toLocaleDateString()
                       ) : columnId === 'assigned_to' ? (
-                        document.assigned_to ? document.assigned_to : 'N/A'
+                        document.assigned_to ? 
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Tooltip title={`${document.employee_name}(${document.employee_email})`} arrow>
+                        {document.assigned_to }
+                        </Tooltip>
+                        </Box>
+                        
+                        : 'N/A'
                       ) :
                       colType ==='select'?
                           columnId === 'status' ? (
@@ -217,17 +219,11 @@ export default function CustomTable({ currentSection, data, page, setPage,pageLi
                   <TableCell key="actions">
                     {
                       document.assigned_to && 
-                      <React.Fragment>
-
-                      <IconButton size="small" color="primary">
-                        <Icon name="eye" size={20} />
-                      </IconButton>
                       <IconButton size="small" color="warning">
                         <Icon name="user-x" size={20} />
                       </IconButton>
-                      </React.Fragment>
                     }
-                    <IconButton size="small" color="primary">
+                    <IconButton size="small" color="primary" onClick={(e) => {setEditingRowIndex(rowIndex)}}>
                       <Icon name="pencil" size={20} />
                     </IconButton>
                     {
