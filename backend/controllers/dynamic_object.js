@@ -73,7 +73,14 @@ async function fetchPaginatedDocumentsByObjectId(objectId, page, limit,skip) {
                     }
                 },
                 name_of_the_vendor: {$first: "$invoice_info.name_of_the_vendor"},
-                employee_name: {$first: "$employee_info.name"},
+                employee_name: {
+                    $concat: [
+                        {$first: "$employee_info.firstname"}, 
+                        " ",
+                        {$first: "$employee_info.lastname"}
+                    ]
+                },
+                employee_email: {$first: "$employee_info.email"},
                 assigned_to: {$first: "$employee_info.employee_id"},
             }
         },
@@ -157,35 +164,37 @@ function validateRequired(field, value, fieldSchema) {
 }
 
 // Validate checkout status for assets and licenses
-async function validateCheckoutForStatus(document, objectId) {
+async function validateStatus(document, objectId) {
     const isAsset = objectId === 'assets';
     const isLicense = objectId === 'licenses';
 
     if (!isAsset && !isLicense) return;
 
     const status = document.status;
-    const checkoutId = document.checkout_id;
 
     if (isAsset && status !== "available") {
         throw new ApiError(400,null, 'Asset status should be available.');
     }
     
     if (isLicense && status !== 'available') {
-        if (!checkoutId) {
             throw new ApiError(400,null, 'Status must be available.');
-        }
     }
 }
 
 // Validate a single document
-async function validateSingleDocument(document, schema, objectId) {
+async function validateSingleDocument(document, schema, objectId,operationType,columnMetadata) {
     // Validate each field in the document
     for (const [field, value] of Object.entries(document)) {
         const fieldSchema = schema[field];
         if (!fieldSchema) {
             throw new ApiError(400,null, `Invalid field: ${field}`);
         }
-
+        if(operationType=="create"){
+            
+        }
+        if(operationType=="update"){
+           
+        }
         validateRequired(field, value, fieldSchema);
         await validateFieldType(field, value, fieldSchema);
         validateEnum(field, value, fieldSchema);
@@ -212,9 +221,13 @@ async function validateDocuments(objectId, documents) {
     }
 
     const schema = model.schema.obj;
+    const columnMetadata = await Metadata.find({belongs_to:metaDataType}).select("-_id -__v -belongs_to");
+    if(!columnMetadata){
+        throw new ApiError(400,null, "Column metadata not found");
+    }
     
     for (const document of documents) {
-        await validateSingleDocument(document, schema, objectId);
+        await validateSingleDocument(document, schema, objectId,false,columnMetadata);
     }
 }
 
@@ -360,6 +373,59 @@ const getAllDataByFilterOfObjectId = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, objectData, `${objectId} fetched successfully`));
 });
 
+const updateDocumentOfObjectId = asyncHandler(async (req, res) => {
+    const objectId = req.params.objectId;
+    const model = getModelByObjectId(objectId);
+    if (!model) {
+        throw new ApiError(400,null, "Invalid object id");
+    }
+    const documentId = req.body.document_id;
+    const document = req.body.document;
+    if (!documentId || !document) {
+        throw new ApiError(400,null, "Invalid request body");
+    }
+    const originalDocument = await model.findOne({serial_no: document.serial_no});
+    if (!originalDocument) {
+        throw new ApiError(404,null, "Document not found");
+    }
+    const updatedDocument = await model.findByIdAndUpdate(documentId, document, { new: true });
+    if (!updatedDocument) {
+        throw new ApiError(404,null, "Document not found");
+    }
+    res.status(200).json(new ApiResponse(200, updatedDocument, `${objectId} updated successfully`));
+});
+const deleteDocumentOfObjectId = asyncHandler(async (req, res) => {
+    const objectId = req.params.objectId;
+    const model = getModelByObjectId(objectId);
+    if (!model) {
+        throw new ApiError(400,null, "Invalid object id");
+    }
+    const documentId = req.body.document_id;
+    if (!documentId) {
+        throw new ApiError(400,null, "Invalid request body");
+    }
+    const deletedDocument = await model.findByIdAndDelete(documentId);
+    if (!deletedDocument) {
+        throw new ApiError(404,null, "Document not found");
+    }
+    res.status(200).json(new ApiResponse(200, deletedDocument, `${objectId} deleted successfully`));
+});
+const unassignDocumentOfObjectId = asyncHandler(async (req, res) => {
+    const objectId = req.params.objectId;
+    const model = getModelByObjectId(objectId);
+    if (!model) {
+        throw new ApiError(400,null, "Invalid object id");
+    }
+    const documentId = req.body.document_id;
+    if (!documentId) {
+        throw new ApiError(400,null, "Invalid request body");
+    }
+    const updatedDocument = await model.findByIdAndUpdate(documentId, { assigned_to: null }, { new: true });
+    if (!updatedDocument) {
+        throw new ApiError(404,null, "Document not found");
+    }
+    res.status(200).json(new ApiResponse(200, updatedDocument, `${objectId} unassigned successfully`));
+});
 module.exports = {
     getPaginatedDataByObjectId,
     getUserColumnVisibilitiesByObjectId,
