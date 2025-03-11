@@ -198,9 +198,11 @@ async function validateSingleDocument(document, schema, objectName, operationTyp
         // console.log(field ," ",columnMetadataStructured[field].create);
         if (operationType == "create" && columnMetadataStructured[field].create == false) {
             delete document[field];
+            continue;
         }
         else if (operationType == "update" && columnMetadataStructured[field].edit == false) {
             delete document[field];
+            continue;
         }
         validateRequired(field, value, fieldSchema);
         await validateFieldType(field, value, fieldSchema);
