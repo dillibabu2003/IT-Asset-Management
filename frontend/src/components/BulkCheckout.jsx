@@ -127,7 +127,7 @@ function BulkCheckout() {
     const handleBulkCheckout = async () => {
         console.log('Excel data:', excelData);
         const data = {
-            object_id: filter.object_id,
+            object_name: filter.object_id,
             employees_info: excelData,
             filters: { ...filter },
         }

@@ -63,7 +63,7 @@ function IndividualCheckout() {
 
     const handleComplete = async() => {
         const data = {
-            object_id: filter.object_id,
+            object_name: filter.object_id,
             employee_info: filter.employee_id,
             filters:{...filter}
         };

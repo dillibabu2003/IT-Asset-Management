@@ -30,7 +30,7 @@ import ProtectedComponent from '../protectors/ProtectedComponent';
 import { convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 import { convertExpiryToReadable } from '../utils/helperFunctions';
 
-export default function CustomTable({ currentSection, data, page, setPage,pageLimit,setEditingRowIndex,setPageLimit, userVisibleColumns }) {
+export default function CustomTable({ currentSection, data, page, setPage,pageLimit,setEditingRowIndex,setUnAssignRowIndex,setDeleteRowIndex,setPageLimit, userVisibleColumns }) {
   const [columns, setColumns] = useState(data.fields);
   const [orderBy, setOrderBy] = useState("");
   const [order, setOrder] = useState('asc');
@@ -217,18 +217,18 @@ export default function CustomTable({ currentSection, data, page, setPage,pageLi
                 )})}
                 <ProtectedComponent requiredPermission={`edit:${currentSection}`}>
                   <TableCell key="actions">
-                    {
-                      document.assigned_to && 
-                      <IconButton size="small" color="warning">
-                        <Icon name="user-x" size={20} />
-                      </IconButton>
-                    }
                     <IconButton size="small" color="primary" onClick={(e) => {setEditingRowIndex(rowIndex)}}>
                       <Icon name="pencil" size={20} />
                     </IconButton>
                     {
+                      document.assigned_to && 
+                      <IconButton size="small" color="warning" onClick={(e) => {setUnAssignRowIndex(rowIndex)}}>
+                        <Icon name="user-x" size={20} />
+                      </IconButton>
+                    }
+                    {
                       !document.assigned_to && 
-                    <IconButton size="small" color="error">
+                    <IconButton size="small" color="error" onClick={(e) => {setDeleteRowIndex(rowIndex)}}>
                       <Icon name="trash-2" size={20} />
                     </IconButton>
                     }
