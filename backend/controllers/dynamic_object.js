@@ -396,15 +396,21 @@ const updateDocumentOfObjectName = asyncHandler(async (req, res) => {
 
 const deleteDocumentOfObjectName = asyncHandler(async (req, res) => {
     const objectName = req.params.objectName;
-    const model = getModelByObjectName(objectName);
+    const {serial_no,object_name}=req.body;
+    const model = getModelByObjectName(object_name);
+    console.log(req.body);
     if (!model) {
         throw new ApiError(400, null, "Invalid object name");
     }
-    const documentId = req.body.document_id;
-    if (!documentId) {
+    
+    if (!serial_no) {
         throw new ApiError(400, null, "Invalid request body");
     }
-    const deletedDocument = await model.findByIdAndDelete(documentId);
+    const document=await model.findOne({serial_no:serial_no});
+    if(document.assigned_to!==null){
+        throw new ApiError(400,null,`Cannot delete assigned ${object_name}`);
+    }
+    const deletedDocument = await model.findOneAndDelete({serial_no:serial_no});
     if (!deletedDocument) {
         throw new ApiError(404, null, "Document not found");
     }
