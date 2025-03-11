@@ -70,7 +70,7 @@ function IndividualCheckout() {
         delete data.filters.object_id;
         delete data.filters.employee_id;
         try {
-            const response = await axiosInstance.post('/checkout/individual', data);
+            const response = await axiosInstance.post('/checkout/assign/individual', data);
             if(response.data.success){
                 setFilter(filter=>({...filter,employee_id:''}));
                 setFilteredData(null);
@@ -108,7 +108,9 @@ function IndividualCheckout() {
 
                 {
                     columnMetadata&&
-                    columnMetadata.map((column) => ( column.type==='select' &&
+                    Object.keys(columnMetadata).map((key) =>{
+                        const column = columnMetadata[key];
+                      return (column.type==='select' &&
                         <Grid item xs={12} md={4} key={column.id}>
                             <FormControl fullWidth>
                                 <InputLabel>{column.label}</InputLabel>
@@ -125,11 +127,11 @@ function IndividualCheckout() {
                                 </Select>
                             </FormControl>
                         </Grid>
-                    ))
+                    )})
                 }
 
                 {
-                    columnMetadata && columnMetadata.length > 0 && (
+                    columnMetadata && Object.keys(columnMetadata).length > 0 && (
                         <Grid item xs={12}>
                             <Button
                                 variant="contained"

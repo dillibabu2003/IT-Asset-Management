@@ -134,7 +134,7 @@ function BulkCheckout() {
         delete data.filters.object_id;
         console.log(data);
         try {
-            const response = await axiosInstance.post(`/checkout/bulk`, data);
+            const response = await axiosInstance.post(`/checkout/assign/bulk`, data);
             console.log(response);
             toast.success(response.data.message);
             await getavailableItemsBasedOnFilter();
@@ -166,8 +166,11 @@ function BulkCheckout() {
                     </FormControl>
                 </Grid>
 
-                {
-                    columnMetadata.map((column) => (column.type === 'select' &&
+                
+                    { 
+                        Object.keys(columnMetadata).map((key) =>{
+                          const column = columnMetadata[key];
+                        return (column.type==='select' &&
                         <Grid item xs={12} md={4} key={column.id}>
                             <FormControl fullWidth>
                                 <InputLabel>{column.label}</InputLabel>
@@ -189,11 +192,11 @@ function BulkCheckout() {
                                 </Select>
                             </FormControl>
                         </Grid>
-                    ))
+                    )})
                 }
 
                 {
-                    columnMetadata.length > 0 && (
+                    Object.keys(columnMetadata).length > 0 && (
                         <Grid item xs={12}>
                             <Button
                                 variant="contained"
