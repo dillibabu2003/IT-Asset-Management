@@ -39,7 +39,10 @@ const Bar3D = ({data,...props}) => {
         data:data,
         colorByPoint:true,
         showInLegend:false
-    }]
+    }],
+    credits: {
+        enabled: false
+    }
   }
   return (
     <Box sx={{ width: '100%', height: 400 }}>

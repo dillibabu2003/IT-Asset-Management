@@ -25,6 +25,8 @@ function ConfigureDashboard() {
   const [dashboard, setDashboard] = useState(null);
   const [fields, setFields] = useState([]);
 
+  console.log(fields);
+  
   useEffect(() => {
     const abortController = new AbortController();
     async function fetchDashboardMetadataById(dashboard_id, abortController) {
@@ -257,16 +259,16 @@ function ConfigureDashboard() {
                                           onChange={(e) => handleUpdateTile(tile._id, 'matcher_field', e.target.value)}
                                         >
                                           {/* mock fields are here */}
-                                          {fields.map(field => (
-                                            <MenuItem key={field.id} value={field.id}>
-                                              {field.label}
+                                          {Object.keys(fields).map(key => (
+                                            <MenuItem key={fields[key].id} value={fields[key].id}>
+                                              {fields[key].label}
                                             </MenuItem>
                                           ))}
                                         </Select>
                                       </FormControl>
                                     </Box>
                                   )}
-                                  {fields.find(f => f.id === tile.matcher_field)?.type === 'select' && (
+                                  {fields[tile.matcher_field]?.type === 'select' && (
                                     <Box sx={{ flex: "1 1 0px" }}>
                                       <FormControl fullWidth size="small">
                                         <InputLabel>Matcher Value</InputLabel>
@@ -275,7 +277,7 @@ function ConfigureDashboard() {
                                           label="Matcher Value"
                                           onChange={(e) => handleUpdateTile(tile._id, 'matcher_value', e.target.value)}
                                         >
-                                          {fields.find(f => f.id === tile.matcher_field)?.options.map(option => (
+                                          {fields[tile.matcher_field]?.options.map(option => (
                                             <MenuItem key={option.value} value={option.value}>
                                               {option.label}
                                             </MenuItem>
@@ -285,7 +287,7 @@ function ConfigureDashboard() {
                                     </Box>
                                   )}
 
-                                  {fields.find(f => f.id === tile.matcher_field)?.type === 'date' && (
+                                  {fields[tile.matcher_field]?.type === 'date' && (
                                     <>
                                       <Box sx={{ flex: "1 1 0px" }}>
                                         <FormControl fullWidth size="small">
@@ -342,11 +344,17 @@ function ConfigureDashboard() {
                                           label="Target Field"
                                           onChange={(e) => handleUpdateTile(tile._id, 'target', e.target.value)}
                                         >
-                                          {fields.filter(field => field.type === 'numeric').map(field => (
-                                            <MenuItem key={field.id} value={field.id}>
-                                              {field.label}
-                                            </MenuItem>
-                                          ))}
+                                          {
+                                            Object.keys(fields).map(key => {
+                                              const field=fields[key];
+                                              return (
+                                                field.type === 'numeric' &&
+                                                <MenuItem key={field.id} value={field.id}>
+                                                {field.label}
+                                              </MenuItem>
+                                              )
+                                          }
+                                          )}
                                         </Select>
                                       </FormControl>
                                     </Box>
@@ -476,7 +484,7 @@ function ConfigureDashboard() {
                                             {(selected).map((value) => (
                                               <Chip
                                                 key={value}
-                                                label={fields.find(f => f.id === value)?.label}
+                                                label={fields[value]?.label}
                                                 size="small"
                                               />
                                             ))}
@@ -484,12 +492,15 @@ function ConfigureDashboard() {
                                         )}
                                       >
                                         {element.type === 'table' ?
-                                          fields.map(field => (
+                                          Object.keys(fields).map(key => {
+                                            const field=fields[key];
+                                            return (
                                             <MenuItem key={field.id} value={field.id}>
                                               {field.label}
                                             </MenuItem>
-                                          )) :
-                                          fields.map(field => {
+                                          )}) :
+                                          Object.keys(fields).map(key => {
+                                            const field=fields[key];
                                             if (field.type === "select") {
                                               return <MenuItem key={field.id} value={field.id}>
                                                 {field.label}

@@ -26,7 +26,7 @@ import EditForm from './EditForm';
 import toast from 'react-hot-toast';
 
 const initialState = {
-    object_id: '',
+    object_name: '',
 };
 
 function BulkCheckout() {
@@ -35,8 +35,8 @@ function BulkCheckout() {
     const [availableItemsBasedOnFilter, setAvailableItemsBasedOnFilter] = useState(null);
     const [excelData, setExcelData] = useState([]);
     const [editingInfo, setEditingInfo] = useState({ cell_id: null, rowIndex: null, isEditing: false });
-    async function fetchMetaData(object_id, abortController) {
-        const response = await axiosInstance.get(`/metadata/${object_id}`, { signal: abortController.signal });
+    async function fetchMetaData(object_name, abortController) {
+        const response = await axiosInstance.get(`/metadata/${object_name}`, { signal: abortController.signal });
         return response.data;
     }
 
@@ -44,7 +44,7 @@ function BulkCheckout() {
         //fetch column metadata
         console.log('Fetching column metadata...');
         const abortController = new AbortController();
-        fetchMetaData(filter.object_id, abortController).then((response) => {
+        fetchMetaData(filter.object_name, abortController).then((response) => {
             console.log('Column metadata:', response.data);
 
             setColumnMetadata(response.data);
@@ -54,7 +54,7 @@ function BulkCheckout() {
         return () => {
             abortController.abort();
         };
-    }, [filter.object_id]);
+    }, [filter.object_name]);
 
     const handleFilterChange = (field) => (event) => {
         setFilter(prev => ({
@@ -119,7 +119,7 @@ function BulkCheckout() {
         }
     };
     const getavailableItemsBasedOnFilter = async () => {
-        const response = await axiosInstance.post(`/objects/${filter.object_id}/filter-docs/all`, filter);
+        const response = await axiosInstance.post(`/objects/${filter.object_name}/filter-docs/all`, filter);
         console.log(response.data.data);
         setAvailableItemsBasedOnFilter(response.data.data);
     }
@@ -127,11 +127,11 @@ function BulkCheckout() {
     const handleBulkCheckout = async () => {
         console.log('Excel data:', excelData);
         const data = {
-            object_name: filter.object_id,
+            object_name: filter.object_name,
             employees_info: excelData,
             filters: { ...filter },
         }
-        delete data.filters.object_id;
+        delete data.filters.object_name;
         console.log(data);
         try {
             const response = await axiosInstance.post(`/checkout/assign/bulk`, data);
@@ -156,9 +156,9 @@ function BulkCheckout() {
                     <FormControl fullWidth>
                         <InputLabel>Type</InputLabel>
                         <Select
-                            value={filter.object_id}
+                            value={filter.object_name}
                             label="Type"
-                            onChange={handleFilterChange('object_id')}
+                            onChange={handleFilterChange('object_name')}
                         >
                             <MenuItem value="assets">Assets</MenuItem>
                             <MenuItem value="licenses">Licenses</MenuItem>

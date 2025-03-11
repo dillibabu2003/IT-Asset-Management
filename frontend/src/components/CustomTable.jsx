@@ -27,7 +27,7 @@ import Icon from './Icon';
 import { PAGE_LIMIT } from '../utils/constants';
 import axiosInstance from '../utils/axios';
 import ProtectedComponent from '../protectors/ProtectedComponent';
-import { convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
+import { convertSnakeCaseToPascaleCase, getColorAndBackgroundColorByStatus } from '../utils/helperFunctions';
 import { convertExpiryToReadable } from '../utils/helperFunctions';
 
 export default function CustomTable({ currentSection, data, page, setPage,pageLimit,setEditingRowIndex,setUnAssignRowIndex,setDeleteRowIndex,setPageLimit, userVisibleColumns }) {
@@ -204,13 +204,18 @@ export default function CustomTable({ currentSection, data, page, setPage,pageLi
                         : 'N/A'
                       ) :
                       colType ==='select'?
-                          columnId === 'status' ? (
-                            <Chip
-                              label={convertSnakeCaseToPascaleCase(document.status)}
-                              color={document.status === 'available' ? 'success' : 'warning'}
-                              size="small"
-                            />
-                          ) : convertSnakeCaseToPascaleCase(document[columnId])
+                          columnId === 'status' ? (() => {
+                            const [color, backgroundColor] = getColorAndBackgroundColorByStatus(document.status);
+                            return (
+                              <Chip
+                                label={convertSnakeCaseToPascaleCase(document.status)}
+                                // color={document.status === 'available' ? 'success' : 'warning'}
+                                style={{ background: backgroundColor, color: color }}
+                                size="small"
+                              />
+                            );
+                          })()
+                           : convertSnakeCaseToPascaleCase(document[columnId])
                       : document[columnId]
                         }
                   </TableCell>

@@ -49,7 +49,10 @@ const Pie3D = ({data,...props}) => {
             
             type: 'pie',
             data: data
-        }]
+        }],
+        credits: {
+            enabled: false
+        }
     };
     
   return (

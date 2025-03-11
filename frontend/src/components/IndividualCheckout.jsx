@@ -17,7 +17,7 @@ import AsynchronousAutoComplete from './AsynchronousAutoComplete';
 import toast from 'react-hot-toast';
 
 const initialState = {
-    object_id: '',
+    object_name: '',
 };
 
 function IndividualCheckout() {
@@ -25,8 +25,8 @@ function IndividualCheckout() {
     const [columnMetadata, setColumnMetadata] = useState([]);
     const [filteredData, setFilteredData] = useState(null);
 
-    async function fetchMetaData(object_id,abortController){
-        const response = await axiosInstance.get(`/metadata/${object_id}`, { signal: abortController.signal });
+    async function fetchMetaData(object_name,abortController){
+        const response = await axiosInstance.get(`/metadata/${object_name}`, { signal: abortController.signal });
         return response.data;
 }
 
@@ -34,7 +34,7 @@ function IndividualCheckout() {
         //fetch column metadata
         console.log('Fetching column metadata...');
         const abortController = new AbortController();
-        fetchMetaData(filter.object_id,abortController).then((response) => {
+        fetchMetaData(filter.object_name,abortController).then((response) => {
             console.log('Column metadata:', response.data);
             
             setColumnMetadata(response.data);
@@ -44,7 +44,7 @@ function IndividualCheckout() {
         return () => {
             abortController.abort();
         };
-    },[filter.object_id]);
+    },[filter.object_name]);
 
     const handleChange = (field) => (event) => {
         console.log('field:', field);
@@ -56,18 +56,18 @@ function IndividualCheckout() {
     };
 
     const getFilteredData = async() => {
-       const response =  await axiosInstance.post(`/objects/${filter.object_id}/filter-docs/all`,filter);
+       const response =  await axiosInstance.post(`/objects/${filter.object_name}/filter-docs/all`,filter);
        console.log(response.data.data);
        setFilteredData(response.data.data);
     }
 
     const handleComplete = async() => {
         const data = {
-            object_name: filter.object_id,
+            object_name: filter.object_name,
             employee_info: filter.employee_id,
             filters:{...filter}
         };
-        delete data.filters.object_id;
+        delete data.filters.object_name;
         delete data.filters.employee_id;
         try {
             const response = await axiosInstance.post('/checkout/assign/individual', data);
@@ -96,9 +96,9 @@ function IndividualCheckout() {
                     <FormControl fullWidth>
                         <InputLabel>Type</InputLabel>
                         <Select
-                            value={filter.object_id}
+                            value={filter.object_name}
                             label="Type"
-                            onChange={handleChange('object_id')}
+                            onChange={handleChange('object_name')}
                         >
                             <MenuItem value="assets">Assets</MenuItem>
                             <MenuItem value="licenses">Licenses</MenuItem>
@@ -148,7 +148,7 @@ function IndividualCheckout() {
                 {
                                     filteredData && (
                                         <Paper sx={{ p: 2, mb: 2 }}>
-                                            <Typography variant="h6" gutterBottom>Total Assets: {filteredData.length}</Typography>
+                                            <Typography variant="h6" gutterBottom>Total {filter.object_name} {filteredData.length}</Typography>
                                         </Paper>
                                     )
                                 }
