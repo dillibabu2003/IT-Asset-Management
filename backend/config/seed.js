@@ -167,7 +167,7 @@ const seedDB = async () => {
             category: i%2==0?"sophos":"microsoft",
             model: i % 2 === 0 ? 'Office 365' : 'Photoshop',
             start: new Date(),
-            end: new Date(),
+            end: new Date(Date.now()+1000*60*60*24*365),
             warranty: i % 2 === 0 ? '1 year' : '2 years',
             status: status,
             assigned_to: status !== 'available' ? i%2==0? employees[0]._id:employees[1]._id : null,
@@ -340,7 +340,7 @@ const seedDB = async () => {
     await MetaData.insertMany([
         { belongs_to: "assets", id: 'serial_no', label: 'Serial No', type: 'text', required: true, additional: false, create: true, edit: false },
         { belongs_to: "assets", id: 'asset_id', label: 'Asset Id', type: 'text', required: false, additional: false, create: false, edit: false },
-        { belongs_to: "assets", id: 'invoice_id', label: 'Invoice Id', type: 'text', required: true, additional: false, create: true, edit: true },
+        { belongs_to: "assets", id: 'invoice_id', label: 'Invoice Id', type: 'text', required: true, additional: false, create: true, edit: false },
         { belongs_to: "assets", id: 'category', label: 'Category', type: 'select', 
             options: [
                 {label: "Laptop", value: "laptop"},
@@ -409,7 +409,7 @@ const seedDB = async () => {
     await MetaData.insertMany([
         { belongs_to: "licenses", id: 'serial_no', label: 'Serial No', type: 'text', required: true, additional: false, create: true, edit: false },
         { belongs_to: "licenses", id: 'license_id', label: 'License ID', type: 'text', required: true, additional: false, create: false, edit: false },
-        { belongs_to: "licenses", id: 'invoice_id', label: 'Invoice Id', type: 'text', required: true, additional: false, create: true, edit: true },
+        { belongs_to: "licenses", id: 'invoice_id', label: 'Invoice Id', type: 'text', required: true, additional: false, create: true, edit: false },
         { belongs_to: "licenses", id: 'category', label: 'Category', type: 'select',
             options: [
                 { label: 'Sophos', value: 'sophos' },

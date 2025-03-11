@@ -5,6 +5,8 @@ import Loader from '../components/Loader';
 import { PAGE_LIMIT } from "../utils/constants";
 import { Box, Button, Popover, Typography } from '@mui/material';
 import CreateForm from '../components/CreateForm';
+
+import EditForm from '../components/EditForm';
 import Icon from '../components/Icon';
 import ProtectedComponent from '../protectors/ProtectedComponent';
 import { Link } from 'react-router';
@@ -12,11 +14,11 @@ import toast from 'react-hot-toast';
 
 const AssetsPage = () => {
 
-
     const [data, setData] = useState(null);
     const [page, setPage] = useState(1);
     const [pageLimit, setPageLimit] = useState(PAGE_LIMIT);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [editInfo, setEditInfo] = useState({showEditForm: false, selectedRow: null});
 
     async function fetchAssetsByPageAndLimit(abortController,page,limit){
             const response = await axiosInstance.get(`/objects/assets?page=${page}&limit=${limit}`, { signal: abortController.signal });
@@ -36,7 +38,7 @@ const AssetsPage = () => {
             const userColumnPreferencesPromise=fetchUserColumnPreferences(abortController);
             return Promise.all([assetsPromise,assetsMetadataPromise,userColumnPreferencesPromise]);
     }
-    async function handleSave(formData){
+    async function createAsset(formData){
         console.log(formData);
         try {
             const response = await axiosInstance.post("/objects/assets/create",formData);
@@ -48,18 +50,26 @@ const AssetsPage = () => {
             toast.error(error.response.data.message || "An error occurred");
         }
     }
-    async function handleUpdate(formData){
+    async function saveEditedData(formData){
         console.log(formData);
         try {
             const response = await axiosInstance.put("/objects/assets/update",formData);
             if(response.data.success){
                 toast.success(response.data.message);
-                setShowCreateForm(false);
+                setEditInfo(prev=>{return {...prev,showEditForm: false}});
             }
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
         }
     }
+
+    const setEditingRowIndex=(rowIndex)=>{
+        console.log("Editing row index",rowIndex);
+        console.log(data.data);
+        
+        setEditInfo({showEditForm: true, selectedRow: rowIndex});
+    }
+
     useEffect(() => {
         const abortController = new AbortController();
         
@@ -86,11 +96,11 @@ const AssetsPage = () => {
             abortController.abort();
         };
     }, [page, pageLimit]);
-    return (
 
+    
+    return (
         (
             <React.Fragment>
-
                 <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h5" fontWeight="500">Assets</Typography>
 
@@ -122,8 +132,26 @@ const AssetsPage = () => {
                 </Box>
                 {!data ? <Loader /> :
                     <React.Fragment>
-                        <CreateForm currentSection="assets" fields={data.fields} isDialogOpen={showCreateForm} values={Object.keys(data.fields).map(key => [key, ''])} closeDialog={() => setShowCreateForm(false)} saveData={handleSave}  aria-describedby={`create-assets-form`} />
-                        <CustomTable currentSection="assets" page={page} pageLimit={pageLimit} setPageLimit={setPageLimit} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
+                        <CreateForm currentSection="assets" fields={data.fields} isDialogOpen={showCreateForm} values={Object.keys(data.fields).reduce((acc, key) => {
+                                        acc[key] = '';
+                                        return acc;
+                                    }, {})} closeDialog={() => setShowCreateForm(false)} saveData={createAsset}  aria-describedby={`create-assets-form`} />
+                        <CustomTable currentSection="assets" page={page} pageLimit={pageLimit} setPageLimit={setPageLimit} setEditingRowIndex={setEditingRowIndex} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
+                        {editInfo.showEditForm && data.fields && data.data && (
+                            <EditForm 
+                                currentSection="assets" 
+                                fields={data.fields} 
+                                isDialogOpen={editInfo.showEditForm} 
+                                values={editInfo.selectedRow !== null && 
+                                    Object.keys(data.fields).reduce((acc, key) => {
+                                        acc[key] = data.data.documents[editInfo.selectedRow][key];
+                                        return acc;
+                                    }, {})} 
+                                closeDialog={() => {setEditInfo({selectedRow:null,showEditForm: false})}} 
+                                saveData={saveEditedData}  
+                                aria-describedby={`edit-assets-form`} 
+                            />
+                        )}
                     </React.Fragment>
                 }
             </React.Fragment>

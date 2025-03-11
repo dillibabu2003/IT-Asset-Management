@@ -133,7 +133,10 @@ const LicensesPage = () => {
                 </Box>
                 {!data ? <Loader /> :
                     <React.Fragment>
-                        <CreateForm currentSection="licenses" fields={data.fields} isDialogOpen={showCreateForm} values={Object.keys(data.fields).map(key => [key, ''])} closeDialog={() => setShowCreateForm(false)} saveData={createLicense}  aria-describedby={`create-licenses-form`} />
+                        <CreateForm currentSection="licenses" fields={data.fields} isDialogOpen={showCreateForm} values={Object.keys(data.fields).reduce((acc, key) => {
+                                        acc[key] = '';
+                                        return acc;
+                                    }, {})} closeDialog={() => setShowCreateForm(false)} saveData={createLicense}  aria-describedby={`create-licenses-form`} />
                         <CustomTable currentSection="licenses" page={page} pageLimit={pageLimit} setPageLimit={setPageLimit} setEditingRowIndex={setEditingRowIndex} data={data} setPage={setPage} userVisibleColumns={data.userColumnPreferences} />
                         {editInfo.showEditForm && data.fields && data.data && (
                             <EditForm 

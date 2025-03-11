@@ -1,9 +1,9 @@
 const {Router} = require('express');
-const {handleIndividualCheckout, handleBulkCheckout} = require('../controllers/checkout');
+const {assignItem , assignBulkItems } = require('../controllers/checkout');
 
 const checkoutRouter = Router();
 
-checkoutRouter.post('/individual', handleIndividualCheckout);
-checkoutRouter.post('/bulk', handleBulkCheckout);
+checkoutRouter.post('/individual', assignItem );
+checkoutRouter.post('/bulk', assignBulkItems );
 
 module.exports = checkoutRouter;
