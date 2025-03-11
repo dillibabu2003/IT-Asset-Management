@@ -157,7 +157,7 @@ const seedDB = async () => {
     await Asset.insertMany(assets);
 
     const licenses = [];
-    const licenseStatuses = ["available", "activated", "expired", "about_to_expire"];
+    const licenseStatuses = ["available", "activated", "archived", "about_to_archive"];
     for (let i = 1; i <= 20; i++) {
         const status = licenseStatuses[Math.floor(Math.random() * licenseStatuses.length)];
         licenses.push(new License({
@@ -408,7 +408,7 @@ const seedDB = async () => {
 
     await MetaData.insertMany([
         { belongs_to: "licenses", id: 'serial_no', label: 'Serial No', type: 'text', required: true, additional: false, create: true, edit: false },
-        { belongs_to: "licenses", id: 'license_id', label: 'License ID', type: 'text', required: true, additional: false, create: false, edit: false },
+        { belongs_to: "licenses", id: 'license_id', label: 'License ID', type: 'text', required: false, additional: false, create: false, edit: false },
         { belongs_to: "licenses", id: 'invoice_id', label: 'Invoice Id', type: 'text', required: true, additional: false, create: true, edit: false },
         { belongs_to: "licenses", id: 'category', label: 'Category', type: 'select',
             options: [
@@ -429,9 +429,9 @@ const seedDB = async () => {
             belongs_to: "licenses", id: 'status', label: 'Status', type: 'select', required: true, additional: false, create: true, edit: false, options: [
                 { label: 'Available', value: 'available' },
                 { label: 'Activated', value: 'activated' },
-                { label: 'Expired', value: 'expired' },
+                { label: 'Archived', value: 'archived' },
                 { label: 'Reissue', value: 'reissue' },
-                { label: 'About to Expire', value: "about_to_expire" }
+                { label: 'About to archive', value: "about_to_archive" }
             ]
         },
     ]);

@@ -9,8 +9,7 @@ const AssetSchema = new mongoose.Schema({
   },
   asset_id: {
     type: String,
-    sparse: true,
-    unique: true
+    default: null,
   },
   invoice_id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -101,10 +100,14 @@ const AssetSchema = new mongoose.Schema({
   timestamps: true, toJSON: { virtuals: true,getters: true, setters:true }, toObject: { virtuals: true,getters: true,setters: true },runSettersOnQuery: true,id: false
 });
 
-
+AssetSchema.index(
+  { asset_id: 1 },
+  {
+    sparse: true,
+    partialFilterExpression: { asset_id: { $ne: null } }
+  }
+);
 AssetSchema.methods.generateId = function(employeeId,totalCheckoutsTillNowOfEmployee){
-  console.log(employeeId,totalCheckoutsTillNowOfEmployee);
-  
   if(employeeId===undefined || totalCheckoutsTillNowOfEmployee===undefined){ 
     throw new Error('Cannot generate asset id without employee id');
   }

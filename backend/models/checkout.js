@@ -32,7 +32,6 @@ const CheckoutSchema = new mongoose.Schema({
   },
   end: {
     type: Date,
-    required: true,
     default: null
   },
 });

@@ -9,8 +9,7 @@ const LicenseSchema = new mongoose.Schema({
   },
   license_id: {
     type: String,
-    sparse: true,
-    unique: true,
+    default: null,
   },
   category: {
     type: String,
@@ -50,7 +49,7 @@ const LicenseSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["available", "activated", "expired","reissue", "about_to_expire"],
+    enum: ["available", "activated","reissue", "about_to_archive", "archived"],
     get: (v) => convertSnakeCaseToPascaleCase(v),
     set: (v) => convertPascaleCaseToSnakeCase(v),
     required: true,
@@ -83,6 +82,13 @@ const LicenseSchema = new mongoose.Schema({
   },
   timestamps: true,toJSON: { virtuals: true,getters:true,setters:true },toObject: { virtuals: true,getters:true,setters:true },runSettersOnQuery: true,id: false
 });
+LicenseSchema.index(
+  { license_id: 1 },
+  {
+    sparse: true,
+    partialFilterExpression: { license_id: { $ne: null } }
+  }
+);
 LicenseSchema.methods.generateId = function(employeeId,totalCheckoutsTillNowOfEmployee){
   console.log(employeeId,totalCheckoutsTillNowOfEmployee);
   
