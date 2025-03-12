@@ -151,6 +151,7 @@ const getDataFromGemini=(file,fileType)=>{
                   Maintain consistency in formatting and include all required fields, even if values are missing.
                    Double-check numerical and date values for accuracy. Don't Include Number of years of warranty unless it is specifically mentioned in the Invoice,
                     but the name of the warranty can be specified. If Apple Care Plus is there then consider it as a apple care warranty with 3 years of warranty_period and don't add this into the license section again even though it has any serial numbers. The warranty_start date will be the invoice_date.
+                    If item is a APPLE MAC BOOK give the os_type as 'mac'
                     `},
                 {
                 inlineData: {

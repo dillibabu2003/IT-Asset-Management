@@ -11,21 +11,21 @@ const s3Client = new S3Client({
     region: cleanedEnv.S3_REGION,
 });
 
-const uploadFileToS3 = async (filePath, bucketName, key) => {
-    try {
-          const fileStream = fs.createReadStream(filePath);
-          const input = {
-                Bucket: bucketName,
-                Key: key,
-                Body: fileStream,
-          };
-            const uploadResponse = await s3Client.send(new PutObjectCommand(input));
-            return {s3Response: uploadResponse,error: null};
-      } catch (err) {
-            console.error("Error uploading file to S3:", err);
-            return {s3Response: null,error: err};
-      }
-};
+// const uploadFileToS3 = async (filePath, bucketName, key) => {
+//     try {
+//           const fileStream = fs.createReadStream(filePath);
+//           const input = {
+//                 Bucket: bucketName,
+//                 Key: key,
+//                 Body: fileStream,
+//           };
+//             const uploadResponse = await s3Client.send(new PutObjectCommand(input));
+//             return {s3Response: uploadResponse,error: null};
+//       } catch (err) {
+//             console.error("Error uploading file to S3:", err);
+//             return {s3Response: null,error: err};
+//       }
+// };
 
 const createGetObjectPreSignedURL = async (bucketName, key) => {
     const command = new GetObjectCommand({
@@ -40,7 +40,7 @@ const createGetObjectPreSignedURL = async (bucketName, key) => {
         console.error("Error getting pre-signed URL:", err);
         return {s3Response: null,error: err};
     }
-}
+}//key -generated invoice name
 const createPutObjectPreSignedURL = async (bucketName, key,contentType) => {
     const command = new PutObjectCommand({
         Bucket: bucketName,
@@ -76,7 +76,7 @@ const deleteObjectFromS3 = async (bucketName, key) => {
     }
 }
 module.exports={
-    uploadFileToS3,
+    // uploadFileToS3,
     createGetObjectPreSignedURL,
     deleteObjectFromS3,
     createPutObjectPreSignedURL
