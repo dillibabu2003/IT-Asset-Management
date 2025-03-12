@@ -22,7 +22,7 @@ function SignIn() {
 
     useLayoutEffect(() => {
         if (user) {
-            navigate('/assets', { replace: true });
+            navigate('/dashboard/assets', { replace: true });
         }
     }, [user]);
 
