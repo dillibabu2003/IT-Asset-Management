@@ -4,6 +4,7 @@ import axiosInstance from '../utils/axios';
 import Loader from '../components/Loader';
 import {PAGE_LIMIT} from "../utils/constants";
 import InvoiceSection from '../components/InvoiceSection';
+import InvoiceSection1 from '../components/InvoiceSection1';
 const InvoicesPage = () => {
 
 
@@ -33,7 +34,8 @@ useEffect(()=>{
 },[page]);
   return (
     !data ? <Loader />:
-    <InvoiceSection />
+    // <InvoiceSection />
+    <InvoiceSection1 />
     // <CustomTable currentSection="invoices" data={data} setPage={setPage}/>
   )
 }
