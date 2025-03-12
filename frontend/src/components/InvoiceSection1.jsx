@@ -28,7 +28,7 @@ import {
     InputLabel,
     MenuItem
 } from '@mui/material';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import getDataFromGemini from '../utils/gemini';
 import { DatePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
 import Icon from "../components/Icon";
@@ -60,7 +60,7 @@ function InputField({ label, type, id, value, options, required, setInputValue }
                 <DatePicker
                     label={label}
                     value={value ? dayjs(value) : null}
-                    onChange={(value) => setInuputValue(id, dayjs(value).format('YYYY-MM-DD'))}
+                    onChange={(value) => setInputValue(id, dayjs(value).format('YYYY-MM-DD'))}
                     slotProps={{
                         textField: {
                             fullWidth: true,
@@ -75,14 +75,14 @@ function InputField({ label, type, id, value, options, required, setInputValue }
                         label={label}
                         type={type}
                         value={value}
-                        onChange={(e) => setInput(id, e.target.value)}
+                        onChange={(e) => setInputValue(id, e.target.value)}
                     />)
             : (
                 <TextField
                     fullWidth
                     label={label}
                     value={value}
-                    onChange={(e) => setInput(id, e.target.value)}
+                    onChange={(e) => setInputValue(id, e.target.value)}
                 />
             ));
 }
@@ -131,11 +131,11 @@ function TableFilter({ columns, onApplyFilters, open, onClose }) {
 function EditableItemTable({ items, columns, onEdit, onDelete }) {
     if (items.length == 0) return <>No items found.</>;
 
-    return <Box sx={{ mt: 3 }}>
+    return <Box>
         {
             items.map((item, index) => {
                 return (
-                    <Grid container spacing={3}>
+                    <Grid container spacing={3} sx={{mt: 0}}>
                         {Object.keys(columns).map((key) => {
                             const column = columns[key];
                             return (
@@ -165,12 +165,13 @@ function EditableItemTable({ items, columns, onEdit, onDelete }) {
     </Box>
 }
 
-const genAI = new GoogleGenerativeAI('YOUR_API_KEY');
+
 
 const columns = {
     invoice_id: { id: 'invoice_id', label: 'Invoice ID', type: 'text', required: true },
     vendor_name: { id: 'vendor_name', label: 'Vendor Name', type: 'text', required: true },
     invoice_date: { id: 'invoice_date', label: 'Invoice Date', type: 'datetime', required: true },
+    invoice_description: {id: 'invoice_description',label: 'Invoice Description', type: 'text',required: true},
     owner_name: { id: 'owner_name', label: 'Owner Name', type: 'text', required: true },
     assets: {
         serial_no: { id: 'serial_no', label: 'Serial No', type: 'text', required: true },
@@ -433,13 +434,47 @@ function InvoiceSection() {
         }
     };
 
-    const handleFileInput = async (e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            await processFile(file);
-            e.target.value = ''
+    const handleFileInput= async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+      
+        // Ensure correct file type (PDF, PNG, JPEG)
+        if (!["application/pdf", "image/png", "image/jpeg"].includes(file.type)) {
+          toast.error("Invalid file format. Please upload a PDF, PNG, or JPEG file.");
+          return;
         }
-    };
+      
+        if (file.size > 10 * 1024 * 1024) { // 10MB size limit
+          toast.error("File size exceeds the limit of 10MB.");
+          return;
+        }
+        e.target.value='';
+      
+        const document  = await processFile(file);
+        setCurrentInvoice(document);
+        // Convert file to base64 using FileReader
+        // const reader = new FileReader();
+        // reader.onloadend = async () => {
+        //   const base64String = reader.result.split(',')[1]; // Remove the data URL prefix
+        //   // console.log("Base64 Encoded File: ", base64String);
+      
+        //   // Call your function to process the base64 string with Gemini
+        //   try {
+        //     const JsonResponse = await getDataFromGemini(base64String, file.type);
+        //     const document=JSON.parse(JsonResponse.candidates[0].content.parts[0].text);
+        //     console.log(document);
+        //     setCurrentInvoice(document);
+        //   } catch (error) {
+        //     console.error("Error processing the file with Gemini:", error);
+        //   }
+        // };
+      
+        // reader.onerror = () => {
+        //   console.error("Error reading file");
+        // };
+      
+        // reader.readAsDataURL(file); // Reads the file as a Data URL (base64 encoded string)
+      };
 
     const processFile = async (file) => {
         try {
@@ -447,64 +482,47 @@ function InvoiceSection() {
             setProcessingStatus({ loading: true, message: 'Uploading file...' });
 
             // Simulate file upload
-            await new Promise(resolve => setTimeout(resolve, 1500));
             setProcessingStatus(prev => ({ ...prev, message: "Extracting text..." }));
 
             // Read file content
             const content = await readFileContent(file);
+            const base64String = content.split(',')[1]; // Remove the data URL prefix
+
             setProcessingStatus(prev => ({ ...prev, message: "Parsing invoice..." }));
 
             // Process with Gemini AI
-            const result = await processWithGemini(content);
-
-            setCurrentInvoice(result);
+            const result = await processWithGemini(base64String,file.type);
+            return result;
             // setPreviewOpen(true);
         } catch (err) {
+            console.log(err);
             setError('Error processing invoice. Please try again.');
         } finally {
             setProcessingStatus(prev => { return { loading: false, message: null } });
         }
     };
 
+
+
+
+
     const readFileContent = async (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (e) => resolve(e.target?.result);
             reader.onerror = (e) => reject(e);
-            reader.readAsText(file);
+            reader.readAsDataURL(file);
         });
     };
 
-    const processWithGemini = async (content) => {
-        // Simulate AI processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Mock response based on the provided structure
-        return {
-            invoice_id: "212315",
-            vendor_name: "CONQUER TECHNOLOGIES",
-            invoice_date: "3122-08-09T00:00:00Z",
-            total_amount: 1041600.00,
-            invoice_type: "own",
-            owner_name: "DARWINBOX DIGITAL SOLUTIONS PRIVATE LIMITED",
-            assets: [
-                {
-                    category: "laptop",
-                    make: "Mac",
-                    serial_no: "SQ14D79JLJ4",
-                    warranty_type: "applecare",
-                    cost: 934399.99,
-                    model: "MacBook Air",
-                    os_type: "mac",
-                    processor: "M2 Max",
-                    ram: "16gb",
-                    storage: "512gb",
-                    warranty_period: "1year",
-                    warranty_start_date: "3122-08-09T00:00:00Z"
-                }
-            ],
-            licenses: []
-        };
+    const processWithGemini = async (base64String,fileType) => {
+        try {
+            const JsonResponse = await getDataFromGemini(base64String, fileType);
+            const document=JSON.parse(JsonResponse.candidates[0].content.parts[0].text);
+            return document;
+          } catch (error) {
+            console.error("Error processing the file with Gemini:", error);
+          }
     };
 
     const handleSaveInvoice = () => {
