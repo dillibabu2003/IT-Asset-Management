@@ -21,22 +21,21 @@ import {
   Popover,
   TablePagination,
   Tooltip,
+  Dialog,
 } from '@mui/material';
 import * as XLSX from 'xlsx';
 import Icon from './Icon';
-import { PAGE_LIMIT } from '../utils/constants';
 import axiosInstance from '../utils/axios';
 import ProtectedComponent from '../protectors/ProtectedComponent';
 import { convertSnakeCaseToPascaleCase, getColorAndBackgroundColorByStatus } from '../utils/helperFunctions';
 import { convertExpiryToReadable } from '../utils/helperFunctions';
 
-export default function CustomTable({ currentSection, data, page, setPage,pageLimit,setEditingRowIndex,setUnAssignRowIndex,setDeleteRowIndex,setPageLimit, userVisibleColumns }) {
+export default function CustomTable({ currentSection, data, page, setPage,pageLimit,setEditingRowIndex,setUnAssignRowIndex,setDeleteRowIndex,setPageLimit, userVisibleColumns,setAssignRowIndex }) {
   const [columns, setColumns] = useState(data.fields);
   const [orderBy, setOrderBy] = useState("");
   const [order, setOrder] = useState('asc');
   const [columnsMenuAnchor, setColumnsMenuAnchor] = useState(null);
   const [visibleColumns, setVisibleColumns] = useState(userVisibleColumns);
-
   const [filteredDocuments, setFilteredDocuments] = useState(data.data.documents);
 
   useEffect(() => {
@@ -79,7 +78,7 @@ export default function CustomTable({ currentSection, data, page, setPage,pageLi
     XLSX.utils.book_append_sheet(wb, ws, `${currentSection}`);
     XLSX.writeFile(wb, `${currentSection}.xlsx`);
   };
-
+  
   const searchText = (e) => {
     const searchValue = e.target.value.toLowerCase();
     const abortController = new AbortController();
@@ -235,6 +234,12 @@ export default function CustomTable({ currentSection, data, page, setPage,pageLi
                       !document.assigned_to && 
                     <IconButton size="small" color="error" onClick={(e) => {setDeleteRowIndex(rowIndex)}}>
                       <Icon name="trash-2" size={20} />
+                    </IconButton>
+                    }
+                    {
+                      !document.assigned_to && 
+                    <IconButton size="small" color="success" onClick={(e) => setAssignRowIndex(rowIndex)}>
+                      <Icon name="user-plus" size={20} />
                     </IconButton>
                     }
                   </TableCell>

@@ -156,6 +156,28 @@ function constructTableQuery(fields){
         $sort: { updatedAt: -1 } 
       },
       {
+        $lookup: {
+            from: "employees",
+            localField: "assigned_to",
+            foreignField: "_id",
+            as: "assigned_to"
+        }
+      },
+      {
+        $lookup: {
+            from: "invoices",
+            localField: "invoice_id",
+            foreignField: "_id",
+            as: "invoice"
+        }
+      },
+      {
+        $addFields: {
+            assigned_to: { $first: "$assigned_to.employee_id" },
+            invoice_id: { $first: "$invoice.invoice_id" }
+        }
+      },
+      {
         $project: queryProjectionObject
       },
       {

@@ -10,6 +10,7 @@ import Icon from '../components/Icon';
 import ProtectedComponent from '../protectors/ProtectedComponent';
 import { Link } from 'react-router';
 import toast from 'react-hot-toast';
+import AsynchronousAutoComplete from '../components/AsynchronousAutoComplete';
 
 const AssetsPage = () => {
     const [data, setData] = useState(null);
@@ -18,7 +19,9 @@ const AssetsPage = () => {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [editInfo, setEditInfo] = useState({ showEditForm: false, selectedRow: null });
     const [operationInfo, setOperationInfo] = useState({ showSnackBar: false, operation: null, message: "", selectedRow: null });
+    const [employeeId, setEmployeeId] = useState(null);
 
+    //Fetching Data Functions
     async function fetchAssetsByPageAndLimit(abortController, page, limit) {
         const response = await axiosInstance.get(`/objects/assets?page=${page}&limit=${limit}`, { signal: abortController.signal });
         return response.data;
@@ -38,7 +41,8 @@ const AssetsPage = () => {
         return Promise.all([assetsPromise, assetsMetadataPromise, userColumnPreferencesPromise]);
     }
 
-    async function refreshData(){
+    // Refersh data after any edits or deletes
+    async function refreshData() {
         const toastId = toast.loading("Refreshing data...");
         const abortController = new AbortController();
         fetchData(abortController).then((response) => {
@@ -49,10 +53,11 @@ const AssetsPage = () => {
             setData({ data: assets, fields: assetsMetaData, userColumnPreferences: userColumnPreferences });
         }).catch((error) => {
             console.log(error);
-            toast.error("An error occurred while refreshing data", { id: toastId});
+            toast.error("An error occurred while refreshing data", { id: toastId });
         });
     }
 
+    // Creating an asset
     async function createAsset(formData) {
         try {
             const response = await axiosInstance.post("/objects/assets/create", formData);
@@ -65,6 +70,11 @@ const AssetsPage = () => {
         }
     }
 
+    // Set the row index to be edited
+    const setEditingRowIndex = (rowIndex) => {
+        setEditInfo({ showEditForm: true, selectedRow: rowIndex });
+    }
+    // Editing an asset
     async function saveEditedData(formData) {
         try {
             const response = await axiosInstance.put("/objects/assets/update", formData);
@@ -80,21 +90,40 @@ const AssetsPage = () => {
         }
     }
 
-    const setEditingRowIndex = (rowIndex) => {
-        setEditInfo({ showEditForm: true, selectedRow: rowIndex });
+    // Set the row index to be assigned
+    const setAssignRowIndex = (rowIndex) => {
+        setOperationInfo({ showSnackBar: true, operation: "assign", message: `Are you sure you want to assign asset ${data.data.documents[rowIndex].serial_no} to an employee?`, selectedRow: rowIndex });
+    }
+    // Assign an asset
+    async function assignAsset() {        
+        const reqBody = {
+            object_name: "assets",
+            employee_info: {
+                employee_id: employeeId
+            },
+            serial_no: data.data.documents[operationInfo.selectedRow].serial_no
+        };
+        try {
+            const response = await axiosInstance.post('/checkout/assign/individual', reqBody);
+            if (response.data.success) {
+                toast.success(response.data.message);
+                setTimeout(() => {
+                    refreshData();
+                }, 1000);
+                setOperationInfo(prev=>{return {...prev, showSnackBar: false}});
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Error completing checkout';
+            toast.error(errorMessage);
+            console.error(errorMessage);
+        }
     }
 
+    // Set the row index to be unassigned
     const setUnAssignRowIndex = (rowIndex) => {
         setOperationInfo({ showSnackBar: true, operation: "unassign", message: `Are you sure you want to unassign asset ${data.data.documents[rowIndex].serial_no} from ${data.data.documents[rowIndex].assigned_to}?`, selectedRow: rowIndex });
     }
-
-    const setDeleteRowIndex = (rowIndex) => {
-        if(data.data.documents[rowIndex].assigned_to){
-            return toast.error("Cannot delete assigned asset");
-        }
-        setOperationInfo({ showSnackBar: true, operation: "delete", message: `Are you sure you want to delete ${data.data.documents[rowIndex].serial_no} asset?`, selectedRow: rowIndex });
-    }
-
+    // Unassign an asset
     async function unAssignAsset() {
         try {
             const response = await axiosInstance.post(`/checkout/unassign/individual`, {
@@ -109,32 +138,64 @@ const AssetsPage = () => {
                 setTimeout(() => {
                     refreshData();
                 }, 1000);
-                setOperationInfo({ showSnackBar: false, operation: null, message: "", selectedRow: null });
+                setOperationInfo(prev=>{return {...prev, showSnackBar: false}});
             }
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
         }
     }
 
-    async function deleteAsset(){
+    // Set the row index to be deleted
+    const setDeleteRowIndex = (rowIndex) => {
+        if (data.data.documents[rowIndex].assigned_to) {
+            return toast.error("Cannot delete assigned asset");
+        }
+        setOperationInfo({ showSnackBar: true, operation: "delete", message: `Are you sure you want to delete ${data.data.documents[rowIndex].serial_no} asset?`, selectedRow: rowIndex });
+    }
+
+    // Delete an asset
+    async function deleteAsset() {
         try {
-            const response = await axiosInstance.delete(`/objects/assets/delete`,{
-               data:{
-                object_name: "assets",
-                serial_no: data.data.documents[operationInfo.selectedRow].serial_no
-               }
+            const response = await axiosInstance.delete(`/objects/assets/delete`, {
+                data: {
+                    object_name: "assets",
+                    serial_no: data.data.documents[operationInfo.selectedRow].serial_no
+                }
             });
             if (response.data.success) {
                 toast.success(response.data.message);
                 setTimeout(() => {
                     refreshData();
                 }, 1000);
-                setOperationInfo({ showSnackBar: false, operation: null, message: "", selectedRow: null });
+                setOperationInfo(prev=>{return {...prev, showSnackBar: false}});
             }
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
         }
     }
+
+
+    // Employee AutoComplete
+    const employeeOptionLabel = (option) => { return option ? `${option.employee_id || ''} ${option.firstname || ''} ${option.lastname || ''}`.trim() : '' };
+    const employeeOptionEqualToLabel = (option, value) => { return option?.employee_id === value?.employee_id };
+    const handleAutoCompleteChange = (field) => (event) => {
+        console.log('field:', field);
+        console.log('event:', event.target.value.employee_id);
+        setEmployeeId(event.target.value.employee_id);
+    };
+
+    // Dialog Actions configuration
+    const dialogActions = {
+        assign: assignAsset,
+        unassign: unAssignAsset,
+        delete: deleteAsset
+    };
+    const dialogActionColors = {
+        assign: "success",
+        unassign: "warning",
+        delete: "error"
+    };
+
 
     useEffect(() => {
         const abortController = new AbortController();
@@ -200,7 +261,7 @@ const AssetsPage = () => {
                             acc[key] = '';
                             return acc;
                         }, {})}
-                        closeDialog={() => setShowCreateForm(false)} 
+                        closeDialog={() => setShowCreateForm(false)}
                         saveData={createAsset}
                         aria-describedby={`create-assets-form`}
                     />
@@ -210,11 +271,12 @@ const AssetsPage = () => {
                         pageLimit={pageLimit}
                         setPageLimit={setPageLimit}
                         setEditingRowIndex={setEditingRowIndex}
-                        data={data} 
+                        data={data}
                         setPage={setPage}
                         userVisibleColumns={data.userColumnPreferences}
                         setUnAssignRowIndex={setUnAssignRowIndex}
                         setDeleteRowIndex={setDeleteRowIndex}
+                        setAssignRowIndex={setAssignRowIndex}
                     />
                     {editInfo.showEditForm && data.fields && data.data && (
                         <EditForm
@@ -237,13 +299,26 @@ const AssetsPage = () => {
                 open={operationInfo.showSnackBar}
                 onClose={() => setOperationInfo({ showSnackBar: false, operation: null, message: "", selectedRow: null })}
             >
-                <DialogTitle>Confirm {operationInfo.operation == "unassign" ? "Unassign" : "Delete"}</DialogTitle>
+                <DialogTitle>Confirm {operationInfo.operation?.substring(0, 1).toUpperCase() + operationInfo.operation?.substring(1)}</DialogTitle>
                 <DialogContent>
                     {operationInfo.message}
+                    {
+                        operationInfo.operation == "unassign" &&
+                        <Typography variant="body2" sx={{ mt: 2, color: "text.secondary" }}>
+                            Unassigning an asset will make it available for reassignment. Are you sure you want to unassign this asset?
+                        </Typography>
+                    }
+                    {
+                        operationInfo.operation == "assign" &&
+                        <Box sx={{ mt: 2 }}>
+
+                            <AsynchronousAutoComplete fetchUrl="/employees/search" optionLabelFunction={employeeOptionLabel} optionaEqualToValueFunction={employeeOptionEqualToLabel} sendInputToParent={handleAutoCompleteChange('employee_id')} />
+                        </Box>
+                    }
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOperationInfo(prev => { return { ...prev, showSnackBar: false } })}>Cancel</Button>
-                    <Button onClick={operationInfo.operation =="unassign" ? unAssignAsset: deleteAsset} color={operationInfo.operation == "unassign" ? "warning" : "error"}>{operationInfo.operation == "unassign" ? "Unassign" : "Delete"}</Button>
+                    <Button onClick={dialogActions[operationInfo.operation]} color={dialogActionColors[operationInfo.operation]}>{operationInfo.operation?.substring(0, 1).toUpperCase() + operationInfo.operation?.substring(1)}</Button>
                 </DialogActions>
             </Dialog>
         </React.Fragment>
