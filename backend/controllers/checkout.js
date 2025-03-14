@@ -14,18 +14,15 @@ function createCheckout(objectName, employee_info, refId, checkout_id) {
         checkout_id: `CHK${checkout_id}`,
         type: objectName,
         type_reference_id: refId,
+        type_reference_model: objectName == "assets" ? "Asset" : "License",
         start: new Date(),
         employee_id: employee_info._id,
     });
     return checkout;
 }
-async function validateAvailabilityAndReturnItems(model, filters, requiredCount) {
-    const items = await model.find({ ...filters }).limit(requiredCount);
-    const availableCount = items?.length || 0;
-    const result = { areAvailable: availableCount >= requiredCount, items: items };
-    // console.log(result);
-
-    return result;
+async function validateAvailabilityAndReturnItems(model, serial_numbers) {
+    const items = await model.find({serial_no: {$in: serial_numbers}, status: {$in: ["available","reissue"]}});
+    return items;
 }
 async function validateEmployeeAndReturnEmployeeDetails(employee_id) {
     const employeeDetails = await Employee.findOne({ employee_id: employee_id });
@@ -34,39 +31,42 @@ async function validateEmployeeAndReturnEmployeeDetails(employee_id) {
     }
     return employeeDetails;
 }
-async function executeAssignItemsCheckoutTransaction(model, filters, objectName, employees_info, requiredItemCount) {
+async function executeAssignItemsCheckoutTransaction(model, serial_numbers, objectName, employees_info, requiredItemCount) {
     //TODO: check whether this is handling assigning the previously assigned assets to new employee or assigning new assets to new employee
     const session = await mongoose.startSession();
     try {
         session.startTransaction();
-        const { areAvailable, items } = await validateAvailabilityAndReturnItems(model, filters, requiredItemCount);
-        if (!areAvailable) {
+        const availableItems = await validateAvailabilityAndReturnItems(model, serial_numbers);
+        if (availableItems.length < serial_numbers.length) {
             throw new ApiError(400, null, 'Checkout denied due to unavailability');
         }
         const entireCheckoutCountTillNow = await Checkout.countDocuments({}, { session: session });
-        for (let i = 0; i < requiredItemCount; i++) {
+        for (let i = 0; i < availableItems.length; i++) {
             
             //Check if employee exists and get employee details
             const employeeDetails = await validateEmployeeAndReturnEmployeeDetails(employees_info[i].employee_id);
+            if(!employeeDetails){
+                throw new ApiError(400, null, `Employee does not exist with id ${employees_info[i].employee_id}`);
+            }
             
-            const totalCheckoutsTillNowOfEmployee = await Checkout.countDocuments({ employee_id: employees_info[i]._id }, { session: session });
-            
-            console.log("employeeee"+employeeDetails);
             //Calculate total checkouts till now of this employee
+            
+            const totalCheckoutsTillNowOfEmployee = await Checkout.find({ employee_id: employeeDetails._id }, { session: session }).countDocuments();
+
             //Generate id for the item based on employee id and total checkouts till now of employee
-            const generatedId = items[i].generateId(employeeDetails.employee_id, totalCheckoutsTillNowOfEmployee);
+            const generatedId = availableItems[i].generateId(employeeDetails.employee_id, totalCheckoutsTillNowOfEmployee);
 
             //Update item status and assign to employee
-            items[i].status = objectName == "assets" ? "deployed" : "activated";
-            items[i].assigned_to = employeeDetails._id;
+            availableItems[i].status = objectName == "assets" ? "deployed" : "activated";
+            availableItems[i].assigned_to = employeeDetails._id;
 
             //Create checkout record
             
-            const checkout = createCheckout(objectName, employeeDetails, items[i]._id, entireCheckoutCountTillNow + i + 1);
+            const checkout = createCheckout(objectName, employeeDetails, availableItems[i]._id, entireCheckoutCountTillNow + i + 1);
 
             //Save item and checkout record
             await checkout.save({ session: session });
-            await items[i].save({ session: session });
+            await availableItems[i].save({ session: session });
         }
         await session.commitTransaction();
     } catch (error) {
@@ -94,7 +94,7 @@ async function executeUnassignItemsCheckoutTransaction(model, objectName, infoTo
             // Update checkout record
             await Checkout.findOneAndUpdate(
                 { type_reference_id: item._id, employee_id: employeeDetails._id },
-                { end_date: new Date() },
+                { end: new Date(Date.now()) },
                 { session: session }
             );
 
@@ -113,7 +113,6 @@ async function executeUnassignItemsCheckoutTransaction(model, objectName, infoTo
             }
             await item.save({ session: session });
         }
-
         await session.commitTransaction();
     } catch (error) {
         await session.abortTransaction();
@@ -128,18 +127,18 @@ async function executeUnassignItemsCheckoutTransaction(model, objectName, infoTo
 }
 
 
-
+//Controller Functions
 const assignItem = asyncHandler(async (req, res) => {
-    const { object_name, employee_info, filters } = req.body;
+    const { object_name, employee_info, serial_no } = req.body;
     //Write zod schema for this
-    if (!object_name || !employee_info || !employee_info.employee_id || !filters || typeof filters !== 'object' || (filters.status != "available" && filters.status != "reissue")) {
+    if (!object_name || !employee_info || !employee_info.employee_id || !serial_no) {
         throw new ApiError(422, null, 'Invalid checkout information');
     }
     const model = getModelByObjectName(object_name);
     if (!model) {
         throw new ApiError(400, null, 'Invalid Checkout');
     }
-    await executeAssignItemsCheckoutTransaction(model, filters, object_name, [employee_info], 1);
+    await executeAssignItemsCheckoutTransaction(model, [serial_no], object_name, [employee_info], 1);
     res.status(200).json(new ApiResponse(200, null, 'Checkout successfull'));
 });
 
@@ -188,4 +187,24 @@ const unAssignBulkItems = asyncHandler(async (req, res) => {
 
     res.status(200).json(new ApiResponse(200, null, 'Unassignment successfull'));
 });
-module.exports = { assignItem, assignBulkItems, unAssignItem, unAssignBulkItems };
+
+const getPaginatedCheckouts = asyncHandler(async (req, res) => {
+    const { page, limit } = req.query;
+    if (!page || !limit) {
+        throw new ApiError(400, "Invalid query parameters");
+    }
+    const parsedPageNumber = parseInt(page);
+    const parsedDocumentsLimit = parseInt(limit);
+    const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
+    if (isNaN(parsedPageNumber) || isNaN(parsedDocumentsLimit)) {
+        throw new ApiError(400, "Invalid query parameters");
+    }
+    const totalCheckouts = await Checkout.countDocuments();
+    const checkouts = await Checkout.find()
+        .populate('employee_id')
+        .populate('type_reference_id')
+        .skip(skip)
+        .limit(parsedDocumentsLimit);
+    res.status(200).json(new ApiResponse(200, { checkouts: [...checkouts], total: totalCheckouts }, 'Checkouts fetched successfully')); 
+    });
+module.exports = { assignItem, assignBulkItems, unAssignItem, unAssignBulkItems,getPaginatedCheckouts };

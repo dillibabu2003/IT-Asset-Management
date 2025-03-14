@@ -47,6 +47,7 @@ const seedDB = async () => {
         password: 'password456',
         date_of_birth: new Date('1992-02-02'),
         gender: 'female',
+        status: 'active',
     });
     
     await user1.save();
