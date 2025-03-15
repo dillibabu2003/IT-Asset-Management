@@ -28,11 +28,13 @@ import {
     InputLabel,
     MenuItem
 } from '@mui/material';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import getDataFromGemini from '../utils/gemini';
 import { DatePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
 import Icon from "../components/Icon";
 import { convertPascaleCaseToSnakeCase, convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
+import axiosInstance from '../utils/axios';
+import toast from 'react-hot-toast';
 
 
 function InputField({ label, type, id, value, options, required, setInputValue }) {
@@ -60,7 +62,7 @@ function InputField({ label, type, id, value, options, required, setInputValue }
                 <DatePicker
                     label={label}
                     value={value ? dayjs(value) : null}
-                    onChange={(value) => setInuputValue(id, dayjs(value).format('YYYY-MM-DD'))}
+                    onChange={(value) => setInputValue(id, dayjs(value).format('YYYY-MM-DD'))}
                     slotProps={{
                         textField: {
                             fullWidth: true,
@@ -75,14 +77,14 @@ function InputField({ label, type, id, value, options, required, setInputValue }
                         label={label}
                         type={type}
                         value={value}
-                        onChange={(e) => setInput(id, e.target.value)}
+                        onChange={(e) => setInputValue(id, e.target.value)}
                     />)
             : (
                 <TextField
                     fullWidth
                     label={label}
                     value={value}
-                    onChange={(e) => setInput(id, e.target.value)}
+                    onChange={(e) => setInputValue(id, e.target.value)}
                 />
             ));
 }
@@ -131,11 +133,11 @@ function TableFilter({ columns, onApplyFilters, open, onClose }) {
 function EditableItemTable({ items, columns, onEdit, onDelete }) {
     if (items.length == 0) return <>No items found.</>;
 
-    return <Box sx={{ mt: 3 }}>
+    return <Box>
         {
             items.map((item, index) => {
                 return (
-                    <Grid container spacing={3}>
+                    <Grid container spacing={3} sx={{ mt: 0 }}>
                         {Object.keys(columns).map((key) => {
                             const column = columns[key];
                             return (
@@ -165,12 +167,13 @@ function EditableItemTable({ items, columns, onEdit, onDelete }) {
     </Box>
 }
 
-const genAI = new GoogleGenerativeAI('YOUR_API_KEY');
+
 
 const columns = {
     invoice_id: { id: 'invoice_id', label: 'Invoice ID', type: 'text', required: true },
     vendor_name: { id: 'vendor_name', label: 'Vendor Name', type: 'text', required: true },
     invoice_date: { id: 'invoice_date', label: 'Invoice Date', type: 'datetime', required: true },
+    invoice_description: { id: 'invoice_description', label: 'Invoice Description', type: 'text', required: true },
     owner_name: { id: 'owner_name', label: 'Owner Name', type: 'text', required: true },
     assets: {
         serial_no: { id: 'serial_no', label: 'Serial No', type: 'text', required: true },
@@ -433,12 +436,50 @@ function InvoiceSection() {
         }
     };
 
+    const uploadFileToS3 = async (url, file, fileType) => {
+        const s3Response = await axiosInstance.put(url, file, { headers: { "Content-Type": fileType } });
+        return s3Response.status === 200;
+    }
+
     const handleFileInput = async (e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            await processFile(file);
-            e.target.value = ''
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Ensure correct file type (PDF, PNG, JPEG)
+        if (!["application/pdf", "image/png", "image/jpeg"].includes(file.type)) {
+            toast.error("Invalid file format. Please upload a PDF, PNG, or JPEG file.");
+            return;
         }
+
+        if (file.size > 10 * 1024 * 1024) { // 10MB size limit
+            toast.error("File size exceeds the limit of 10MB.");
+            return;
+        }
+
+        const document = await processFile(file);
+        setCurrentInvoice(document);
+        // Convert file to base64 using FileReader
+        // const reader = new FileReader();
+        // reader.onloadend = async () => {
+        //   const base64String = reader.result.split(',')[1]; // Remove the data URL prefix
+        //   // console.log("Base64 Encoded File: ", base64String);
+
+        //   // Call your function to process the base64 string with Gemini
+        //   try {
+        //     const JsonResponse = await getDataFromGemini(base64String, file.type);
+        //     const document=JSON.parse(JsonResponse.candidates[0].content.parts[0].text);
+        //     console.log(document);
+        //     setCurrentInvoice(document);
+        //   } catch (error) {
+        //     console.error("Error processing the file with Gemini:", error);
+        //   }
+        // };
+
+        // reader.onerror = () => {
+        //   console.error("Error reading file");
+        // };
+
+        // reader.readAsDataURL(file); // Reads the file as a Data URL (base64 encoded string)
     };
 
     const processFile = async (file) => {
@@ -447,321 +488,327 @@ function InvoiceSection() {
             setProcessingStatus({ loading: true, message: 'Uploading file...' });
 
             // Simulate file upload
-            await new Promise(resolve => setTimeout(resolve, 1500));
             setProcessingStatus(prev => ({ ...prev, message: "Extracting text..." }));
 
             // Read file content
             const content = await readFileContent(file);
+            const base64String = content.split(',')[1]; // Remove the data URL prefix
+
             setProcessingStatus(prev => ({ ...prev, message: "Parsing invoice..." }));
 
             // Process with Gemini AI
-            const result = await processWithGemini(content);
-
-            setCurrentInvoice(result);
+            const result = await processWithGemini(base64String, file.type);
+            return result;
             // setPreviewOpen(true);
         } catch (err) {
+            console.log(err);
             setError('Error processing invoice. Please try again.');
         } finally {
             setProcessingStatus(prev => { return { loading: false, message: null } });
         }
     };
 
+
     const readFileContent = async (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (e) => resolve(e.target?.result);
             reader.onerror = (e) => reject(e);
-            reader.readAsText(file);
+            reader.readAsDataURL(file);
         });
     };
 
-    const processWithGemini = async (content) => {
-        // Simulate AI processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Mock response based on the provided structure
-        return {
-            invoice_id: "212315",
-            vendor_name: "CONQUER TECHNOLOGIES",
-            invoice_date: "3122-08-09T00:00:00Z",
-            total_amount: 1041600.00,
-            invoice_type: "own",
-            owner_name: "DARWINBOX DIGITAL SOLUTIONS PRIVATE LIMITED",
-            assets: [
-                {
-                    category: "laptop",
-                    make: "Mac",
-                    serial_no: "SQ14D79JLJ4",
-                    warranty_type: "applecare",
-                    cost: 934399.99,
-                    model: "MacBook Air",
-                    os_type: "mac",
-                    processor: "M2 Max",
-                    ram: "16gb",
-                    storage: "512gb",
-                    warranty_period: "1year",
-                    warranty_start_date: "3122-08-09T00:00:00Z"
-                }
-            ],
-            licenses: []
-        };
+    const processWithGemini = async (base64String, fileType) => {
+        try {
+            const JsonResponse = await getDataFromGemini(base64String, fileType);
+            const document = JSON.parse(JsonResponse.candidates[0].content.parts[0].text);
+            return document;
+        } catch (error) {
+            console.error("Error processing the file with Gemini:", error);
+        }
     };
 
-    const handleSaveInvoice = () => {
-        // Save invoice logic here
+    const handleSaveInvoice = async() => {
         console.log(currentInvoice);
-        setPreviewOpen(false);
-        setCurrentInvoice(null);
+        // Save to DB call should come here...
+
+        // Save to s3.
+        const file = fileInputRef.current.files[0];
+        console.log(file);
+        // console.log(fileInputRef.current.target.files[0]);
+        const fileType = file.type;
+        const toastId = toast.loading("Uploading the file to s3...");
+        try {
+            const preSignedUrlResponse = await axiosInstance.post("/services/s3/put-object-url", {
+                "content_type": fileType,
+                "type": "invoice"
+            })
+
+            if (preSignedUrlResponse.data.success) {
+                const { url, file_name } = preSignedUrlResponse.data.data;
+                const response = await uploadFileToS3(url, file, fileType);
+                if (response) {
+                    toast.success("Invoice uploaded successfully",{id: toastId});
+                    fileInputRef.current.value=null;
+                    setCurrentInvoice(null);
+                }
+            }
+        } catch (error) {
+            console.error('Error uploading file to S3:', error);
+            toast.error(error.response.data.message || "Failed to save invoice.",{id: toastId});
+        }
+
+
     };
 
-    const handleApplyFilters = (newFilters) => {
-        setFilters(newFilters);
-        // Apply filters to data
-    };
+const handleApplyFilters = (newFilters) => {
+    setFilters(newFilters);
+    // Apply filters to data
+};
 
-    return (
-        <Box>
-            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5" fontWeight="500">Invoices</Typography>
+return (
+    <Box>
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h5" fontWeight="500">Invoices</Typography>
+        </Box>
+
+        <Paper
+            sx={{
+                p: 3,
+                mb: 3,
+                border: '2px dashed',
+                borderColor: dragActive ? 'primary.main' : 'grey.300',
+                backgroundColor: dragActive ? 'action.hover' : 'background.paper',
+                transition: 'all 0.2s ease-in-out'
+            }}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+        >
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Icon name="upload" size={48} color="#666" />
+                <Typography variant="h6" sx={{ mt: 2 }}>
+                    Drag and drop your invoice here
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    or
+                </Typography>
+                <Button
+                    variant="outlined"
+                    onClick={() => fileInputRef.current?.click()}
+                    sx={{ textTransform: 'none' }}
+                >
+                    Browse Files
+                </Button>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileInput}
+                    style={{ display: 'none' }}
+                    accept=".pdf,.png,.jpg,.jpeg"
+                />
+                <Typography variant="caption" display="block" sx={{ mt: 1 }} color="text.secondary">
+                    Supported formats: PDF, PNG, JPEG (Max size: 10MB)
+                </Typography>
             </Box>
 
-            <Paper
-                sx={{
-                    p: 3,
-                    mb: 3,
-                    border: '2px dashed',
-                    borderColor: dragActive ? 'primary.main' : 'grey.300',
-                    backgroundColor: dragActive ? 'action.hover' : 'background.paper',
-                    transition: 'all 0.2s ease-in-out'
-                }}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-            >
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <Icon name="upload" size={48} color="#666" />
-                    <Typography variant="h6" sx={{ mt: 2 }}>
-                        Drag and drop your invoice here
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        or
-                    </Typography>
-                    <Button
-                        variant="outlined"
-                        onClick={() => fileInputRef.current?.click()}
-                        sx={{ textTransform: 'none' }}
-                    >
-                        Browse Files
-                    </Button>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileInput}
-                        style={{ display: 'none' }}
-                        accept=".pdf,.png,.jpg,.jpeg"
-                    />
-                    <Typography variant="caption" display="block" sx={{ mt: 1 }} color="text.secondary">
-                        Supported formats: PDF, PNG, JPEG (Max size: 10MB)
-                    </Typography>
-                </Box>
-
-                {processingStatus.loading && (
-                    <Box sx={{ mt: 2 }}>
-                        <Stack spacing={2}>
-                            <Alert severity="info" icon={<CircularProgress size={20} />}>
-                                {processingStatus.message}
-                            </Alert>
-                        </Stack>
-                    </Box>
-                )}
-
-                {error && (
-                    <Box sx={{ mt: 2 }}>
-                        <Alert severity="error" onClose={() => setError(null)}>
-                            {error}
+            {processingStatus.loading && (
+                <Box sx={{ mt: 2 }}>
+                    <Stack spacing={2}>
+                        <Alert severity="info" icon={<CircularProgress size={20} />}>
+                            {processingStatus.message}
                         </Alert>
-                    </Box>
-                )}
-            </Paper>
-            {currentInvoice && (
-                <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" sx={{ mb: 2 }}>Invoice Details</Typography>
-                    <Grid container spacing={3} sx={{ mt: 1 }}>
-
-                        {
-                            Object.keys(columns).map((key) => {
-                                const column = columns[key];
-                                return (column.type != undefined &&
-                                    <Grid item xs={12} key={column.id} md={6}>
-                                        <InputField
-                                            label={column.label}
-                                            type={column.type}
-                                            id={column.id}
-                                            value={currentInvoice[key]}
-                                            options={column.options}
-                                            required={column.required}
-                                            setInputValue={setCurrentInvoice}
-                                        />
-                                    </Grid>
-                                )
-                            })
-                        }
-                    </Grid>
+                    </Stack>
                 </Box>
             )}
-            {
-                currentInvoice && Object.keys(columns).map((outerKey) => {
-                    const innerObject = columns[outerKey]; // {serial_no: {id: ,label: , type: }}
-                    return (
-                        innerObject.type == undefined &&
-                        <Box sx={{ mt: 3 }}>
-                            <Typography variant="h6" sx={{ mb: 2 }}>{convertSnakeCaseToPascaleCase(outerKey)}</Typography>
 
-                            <EditableItemTable
-                                items={currentInvoice[outerKey]}
-                                columns={innerObject}
-                                onEdit={(index, key, value) => {
-                                    setCurrentInvoice((prev) => {
-                                        const updatedAssets = [...prev.assets];
-                                        updatedAssets[index][key] = value;
-                                        return { ...prev, assets: updatedAssets };
-                                    });
-                                }}
-                                onDelete={(index) => {
-                                    setCurrentInvoice((prev) => {
-                                        const updatedAssets = [...prev.assets];
-                                        updatedAssets.splice(index, 1);
-                                        return { ...prev, assets: updatedAssets };
-                                    });
-                                }}
-                            />
-                        </Box>
-                    )
-                })
-            }
-            {
-                currentInvoice && (
+            {error && (
+                <Box sx={{ mt: 2 }}>
+                    <Alert severity="error" onClose={() => setError(null)}>
+                        {error}
+                    </Alert>
+                </Box>
+            )}
+        </Paper>
+        {currentInvoice && (
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>Invoice Details</Typography>
+                <Grid container spacing={3} sx={{ mt: 1 }}>
+
+                    {
+                        Object.keys(columns).map((key) => {
+                            const column = columns[key];
+                            return (column.type != undefined &&
+                                <Grid item xs={12} key={column.id} md={6}>
+                                    <InputField
+                                        label={column.label}
+                                        type={column.type}
+                                        id={column.id}
+                                        value={currentInvoice[key]}
+                                        options={column.options}
+                                        required={column.required}
+                                        setInputValue={setCurrentInvoice}
+                                    />
+                                </Grid>
+                            )
+                        })
+                    }
+                </Grid>
+            </Box>
+        )}
+        {
+            currentInvoice && Object.keys(columns).map((outerKey) => {
+                const innerObject = columns[outerKey]; // {serial_no: {id: ,label: , type: }}
+                return (
+                    innerObject.type == undefined &&
                     <Box sx={{ mt: 3 }}>
-                        <Button
-                            variant="contained"
-                            onClick={handleSaveInvoice}
-                        >
-                            Save Invoice
-                        </Button>
+                        <Typography variant="h6" sx={{ mb: 2 }}>{convertSnakeCaseToPascaleCase(outerKey)}</Typography>
+
+                        <EditableItemTable
+                            items={currentInvoice[outerKey]}
+                            columns={innerObject}
+                            onEdit={(index, key, value) => {
+                                setCurrentInvoice((prev) => {
+                                    const updatedAssets = [...prev.assets];
+                                    updatedAssets[index][key] = value;
+                                    return { ...prev, assets: updatedAssets };
+                                });
+                            }}
+                            onDelete={(index) => {
+                                setCurrentInvoice((prev) => {
+                                    const updatedAssets = [...prev.assets];
+                                    updatedAssets.splice(index, 1);
+                                    return { ...prev, assets: updatedAssets };
+                                });
+                            }}
+                        />
                     </Box>
                 )
-            }
+            })
+        }
+        {
+            currentInvoice && (
+                <Box sx={{ mt: 3 }}>
+                    <Button
+                        variant="contained"
+                        onClick={handleSaveInvoice}
+                    >
+                        Save Invoice
+                    </Button>
+                </Box>
+            )
+        }
 
-            {/* </DialogContent>
+        {/* </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setPreviewOpen(false)}>Cancel</Button>
                     <Button onClick={handleSaveInvoice} variant="contained">Save Invoice</Button>
                 </DialogActions>
             </Dialog> */}
-            {!currentInvoice &&
-                <React.Fragment>
-                    <TableFilter
-                        columns={filterColumns}
-                        onApplyFilters={handleApplyFilters}
-                        open={filterOpen}
-                        onClose={() => setFilterOpen(false)}
-                    />
+        {!currentInvoice &&
+            <React.Fragment>
+                <TableFilter
+                    columns={filterColumns}
+                    onApplyFilters={handleApplyFilters}
+                    open={filterOpen}
+                    onClose={() => setFilterOpen(false)}
+                />
 
-                    <Paper sx={{ p: 3 }}>
-                        <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
-                            <TextField
-                                placeholder="Search invoices..."
-                                size="small"
-                                sx={{ width: 300 }}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Icon name="search" size={20} />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
-                            <Box sx={{ flexGrow: 1 }} />
-                            <Button
-                                variant="outlined"
-                                startIcon={<Icon name="filter" size={18} />}
-                                onClick={() => setFilterOpen(true)}
-                                sx={{ textTransform: 'none' }}
-                            >
-                                Filter
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                startIcon={<Icon name="download" size={18} />}
-                                sx={{ textTransform: 'none' }}
-                            >
-                                Export
-                            </Button>
-                        </Box>
+                <Paper sx={{ p: 3 }}>
+                    <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+                        <TextField
+                            placeholder="Search invoices..."
+                            size="small"
+                            sx={{ width: 300 }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Icon name="search" size={20} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                        <Box sx={{ flexGrow: 1 }} />
+                        <Button
+                            variant="outlined"
+                            startIcon={<Icon name="filter" size={18} />}
+                            onClick={() => setFilterOpen(true)}
+                            sx={{ textTransform: 'none' }}
+                        >
+                            Filter
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<Icon name="download" size={18} />}
+                            sx={{ textTransform: 'none' }}
+                        >
+                            Export
+                        </Button>
+                    </Box>
 
-                        <TableContainer>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Invoice ID</TableCell>
-                                        <TableCell>Vendor Name</TableCell>
-                                        <TableCell>Date</TableCell>
-                                        <TableCell>Total Amount</TableCell>
-                                        <TableCell>Type</TableCell>
-                                        <TableCell align="right">Actions</TableCell>
+                    <TableContainer>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>Invoice ID</TableCell>
+                                    <TableCell>Vendor Name</TableCell>
+                                    <TableCell>Date</TableCell>
+                                    <TableCell>Total Amount</TableCell>
+                                    <TableCell>Type</TableCell>
+                                    <TableCell align="right">Actions</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {[currentInvoice].filter(Boolean).map((invoice) => (
+                                    <TableRow key={invoice.invoice_id} hover>
+                                        <TableCell>{invoice.invoice_id}</TableCell>
+                                        <TableCell>{invoice.vendor_name}</TableCell>
+                                        <TableCell>{new Date(invoice.invoice_date).toLocaleDateString()}</TableCell>
+                                        <TableCell>${invoice.total_amount.toLocaleString()}</TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={invoice.invoice_type}
+                                                color="primary"
+                                                size="small"
+                                            />
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                                                <IconButton size="small">
+                                                    <Icon name="eye" size={18} />
+                                                </IconButton>
+                                                <IconButton size="small">
+                                                    <Icon name="download" size={18} />
+                                                </IconButton>
+                                                <IconButton size="small">
+                                                    <Icon name="more-vertical" size={18} />
+                                                </IconButton>
+                                            </Stack>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {[currentInvoice].filter(Boolean).map((invoice) => (
-                                        <TableRow key={invoice.invoice_id} hover>
-                                            <TableCell>{invoice.invoice_id}</TableCell>
-                                            <TableCell>{invoice.vendor_name}</TableCell>
-                                            <TableCell>{new Date(invoice.invoice_date).toLocaleDateString()}</TableCell>
-                                            <TableCell>${invoice.total_amount.toLocaleString()}</TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    label={invoice.invoice_type}
-                                                    color="primary"
-                                                    size="small"
-                                                />
-                                            </TableCell>
-                                            <TableCell align="right">
-                                                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                                    <IconButton size="small">
-                                                        <Icon name="eye" size={18} />
-                                                    </IconButton>
-                                                    <IconButton size="small">
-                                                        <Icon name="download" size={18} />
-                                                    </IconButton>
-                                                    <IconButton size="small">
-                                                        <Icon name="more-vertical" size={18} />
-                                                    </IconButton>
-                                                </Stack>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
 
-                        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="body2" color="text.secondary">
-                                Showing 1 to 1 of 1 entries
-                            </Typography>
-                            <Pagination
-                                count={1}
-                                page={page}
-                                onChange={(_, value) => setPage(value)}
-                                color="primary"
-                                size="small"
-                            />
-                        </Box>
-                    </Paper>
-                </React.Fragment>
-            }
-        </Box>
-    );
+                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="body2" color="text.secondary">
+                            Showing 1 to 1 of 1 entries
+                        </Typography>
+                        <Pagination
+                            count={1}
+                            page={page}
+                            onChange={(_, value) => setPage(value)}
+                            color="primary"
+                            size="small"
+                        />
+                    </Box>
+                </Paper>
+            </React.Fragment>
+        }
+    </Box>
+);
 }
 
 export default InvoiceSection;

@@ -22,11 +22,13 @@ import ProtectedComponent from '../protectors/ProtectedComponent';
 import axiosInstance from '../utils/axios';
 import toast from 'react-hot-toast';
 
+
 const invoices = [
   { id: '#INV-2025001', vendor: 'Apple Inc.', date: 'Jan 15, 2025', amount: 1299.00, status: 'Processed' },
   { id: '#INV-2025002', vendor: 'Microsoft Corp.', date: 'Jan 14, 2025', amount: 899.00, status: 'Pending' },
   { id: '#INV-2025003', vendor: 'Amazon.com', date: 'Jan 13, 2025', amount: 2499.00, status: 'Rejected' },
 ];
+
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -44,6 +46,7 @@ const getStatusColor = (status) => {
 function InvoiceSection() {
   const [page, setPage] = useState(1);
   const [dragActive, setDragActive] = useState(false);
+  const [documents,setDocuments]=useState({});
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -60,28 +63,41 @@ function InvoiceSection() {
   }
   const handleUpload = async (e) => {
     const file = e.target.files[0];
-    const fileType = file.type;
-    if(fileType!=="application/pdf" && fileType!=="image/png" && fileType!=="image/jpeg"){
-      toast.error("Invalid file format. Please upload a PDF, PNG or JPEG file");
+    if (!file) return;
+  
+    // Ensure correct file type (PDF, PNG, JPEG)
+    if (!["application/pdf", "image/png", "image/jpeg"].includes(file.type)) {
+      toast.error("Invalid file format. Please upload a PDF, PNG, or JPEG file.");
       return;
     }
-    if(file.size>10*1024*1024){
-      toast.error("File size exceeds the limit of 10MB");
+  
+    if (file.size > 10 * 1024 * 1024) { // 10MB size limit
+      toast.error("File size exceeds the limit of 10MB.");
       return;
     }
-    const preSignedUrlResponse = await axiosInstance.post("/services/s3/put-object-url", {
-      "content_type": fileType,
-      "type": "invoice"
-    })
-    if(preSignedUrlResponse.data.success){
-      const { url, file_name } = preSignedUrlResponse.data.data;
-      const response = await uploadFileToS3(url,file,fileType,file_name);
-      if(response){
-        toast.success("Invoice uploaded successfully");
-        e.target.value=null;
+  
+    // Convert file to base64 using FileReader
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result.split(',')[1]; // Remove the data URL prefix
+      // console.log("Base64 Encoded File: ", base64String);
+  
+      // Call your function to process the base64 string with Gemini
+      try {
+        const JsonResponse = await getDataFromGemini(base64String, file.type);
+        const document=JSON.parse(JsonResponse.candidates[0].content.parts[0].text);
+        console.log(document);
+        setDocuments(document);
+      } catch (error) {
+        console.error("Error processing the file with Gemini:", error);
       }
-    }
-
+    };
+  
+    reader.onerror = () => {
+      console.error("Error reading file");
+    };
+  
+    reader.readAsDataURL(file); // Reads the file as a Data URL (base64 encoded string)
   };
 
   return (
