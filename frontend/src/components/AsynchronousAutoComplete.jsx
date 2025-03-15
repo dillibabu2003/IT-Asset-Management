@@ -36,8 +36,6 @@ export default function AsynchronousAutoComplete({
   };
 
   const handleInputChange = (event, newInputValue) => {
-    sendInputToParent && sendInputToParent(event);
-    console.log(event);
     setInputValue(newInputValue);
     
     // Check if current input matches any existing options

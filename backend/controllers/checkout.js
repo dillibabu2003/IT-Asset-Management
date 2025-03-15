@@ -8,8 +8,6 @@ const mongoose = require('mongoose');
 const ApiResponse = require('../utils/ApiResponse');
 
 function createCheckout(objectName, employee_info, refId, checkout_id) {
-    
-    
     const checkout = new Checkout({
         checkout_id: `CHK${checkout_id}`,
         type: objectName,
@@ -20,7 +18,7 @@ function createCheckout(objectName, employee_info, refId, checkout_id) {
     });
     return checkout;
 }
-async function validateAvailabilityAndReturnItems(model, serial_numbers) {
+async function validateAvailabilityAndReturnItems(model, serial_numbers) {    
     const items = await model.find({serial_no: {$in: serial_numbers}, status: {$in: ["available","reissue"]}});
     return items;
 }
@@ -31,7 +29,7 @@ async function validateEmployeeAndReturnEmployeeDetails(employee_id) {
     }
     return employeeDetails;
 }
-async function executeAssignItemsCheckoutTransaction(model, serial_numbers, objectName, employees_info, requiredItemCount) {
+async function executeAssignItemsCheckoutTransaction(model, serial_numbers, objectName, employees_info) {
     //TODO: check whether this is handling assigning the previously assigned assets to new employee or assigning new assets to new employee
     const session = await mongoose.startSession();
     try {
@@ -143,16 +141,22 @@ const assignItem = asyncHandler(async (req, res) => {
 });
 
 const assignBulkItems = asyncHandler(async (req, res) => {
-    const { object_name, employees_info, filters } = req.body;
+    const { object_name, info_to_assign } = req.body;
     //Write zod schema for this
-    if (!object_name || !employees_info || employees_info.length == 0 || !filters || typeof filters !== 'object' || (filters.status != "available" && filters.status != "reissue")) {
-        throw new ApiError(422, null, 'Invalid checkout information item type or employee info or filters or required count is missing.');
+    if (!object_name || !info_to_assign || info_to_assign.length == 0) {
+        throw new ApiError(422, null, 'Invalid checkout information object_name or info_to_assing is missing.');
     }
     const model = getModelByObjectName(object_name);
     if (!model) {
         throw new ApiError(400, null, 'Invalid Checkout');
     }
-    await executeAssignItemsCheckoutTransaction(model, filters, object_name, employees_info, employees_info.length);
+    const serial_numbers = info_to_assign.map(item => item.serial_no);
+    const employee_ids = info_to_assign.map(item => {return {employee_id: item.employee_id}});
+    if (new Set(serial_numbers).size !== serial_numbers.length) {
+        throw new ApiError(400, null, 'Duplicate serial numbers found');
+    }
+
+    await executeAssignItemsCheckoutTransaction(model, serial_numbers, object_name,employee_ids);
     res.status(200).json(new ApiResponse(200, null, 'Checkout successfull'));
 });
 
@@ -176,7 +180,7 @@ const unAssignItem = asyncHandler(async (req, res) => {
 const unAssignBulkItems = asyncHandler(async (req, res) => {
     const { object_name, info_to_unassign } = req.body;
     //Write zod schema for this
-    if (!object_name || info_to_unassign.length == 0) {
+    if (!object_name || !info_to_unassign ||info_to_unassign.length == 0) {
         throw new ApiError(422, null, 'Invalid checkout information item type or employee info or filters or required count is missing.');
     }
     const model = getModelByObjectName(object_name);

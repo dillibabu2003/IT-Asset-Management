@@ -419,6 +419,28 @@ const deleteDocumentOfObjectName = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, deletedDocument, `${objectName} deleted successfully`));
 });
 
+const deleteBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
+    const objectName = req.params.objectName;
+    const model = getModelByObjectName(objectName);
+    const {serial_nos,object_name}=req.body;
+    if (!model) {
+        throw new ApiError(400, null, "Invalid object name");
+    }
+    if(!serial_nos || serial_nos.length==0){
+        throw new ApiError(400,null,"Invalid request body");
+    }
+    const documents = await model.find({ serial_no: { $in: serial_nos }, assigned_to: null });
+    // Try to delete the history of the assets as well.
+    if(!documents){
+        throw new ApiError(404,null,"Invalid serial numbers found");
+    }
+    if(serial_nos.length!=documents.length){
+        throw new ApiError(400,null,"Invalid serial numbers found or cannot delete assigned assets");
+    }
+    const deletedDocuments = await model.deleteMany({ _id: { $in: documents } });
+    res.status(200).json(new ApiResponse(200, deletedDocuments, `${objectName} deleted successfully`));
+});
+
 module.exports = {
     getPaginatedDataByObjectName,
     getUserColumnVisibilitiesByObjectName,
@@ -429,4 +451,5 @@ module.exports = {
     getModelByObjectName,
     updateDocumentOfObjectName,
     deleteDocumentOfObjectName,
+    deleteBulkDocumentsOfObjectName
 };
