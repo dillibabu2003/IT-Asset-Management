@@ -94,8 +94,6 @@ async function fetchPaginatedDocumentsByObjectName(objectName, page, limit, skip
     switch (objectName) {
         case "assets":
             return Asset.aggregate(aggregateQuery).exec();
-        case "invoices":
-            return Invoice.find().skip((page - 1) * limit).limit(limit).exec();
         case "licenses":
             return License.aggregate(aggregateQuery).exec();
         default:
@@ -361,11 +359,12 @@ const getUserColumnVisibilitiesByObjectName = asyncHandler(async (req, res) => {
 const createBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
     const objectName = req.params.objectName;
     const model = getModelByObjectName(objectName);
+    console.log("Request Body",req.body);
+    const documents = req.body;
     if (!model) {
         throw new ApiError(400, null, "Invalid object name");
     }
-    const documents = req.body.documents;
-
+    
     if (!documents) {
         throw new ApiError(400, null, "Invalid request body");
     }

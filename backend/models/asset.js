@@ -66,6 +66,7 @@ const AssetSchema = new mongoose.Schema({
   },
   status: {
     type: String,
+    default: "available",
     enum: ["available", "deployed","about_to_archive", "archived", "reissue"],
     get: (v) => convertSnakeCaseToPascaleCase(v),
     set: (v) => convertPascaleCaseToSnakeCase(v),

@@ -8,7 +8,7 @@ const InvoiceSchema = new mongoose.Schema({
   },
   invoice_name: {
     type: String,
-    required: true,
+    // required: true,
   },
   date_of_upload: {
     type: Date,
@@ -18,7 +18,7 @@ const InvoiceSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  name_of_the_vendor: {
+  vendor_name: {
     type: String,
     required: true,
   },
@@ -26,19 +26,16 @@ const InvoiceSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  invoice_url: {
-    type: String,
-    required: true,
-  },
   data:{
-    type: Object,
-    required: true,
+      type: Map,
+      of: Object,
+      default: {},
   },
-  status: {
-    type: String,
-    enum: ["pending", "rejected", "processed"],
-    required: true,
-  },
+  // status: {
+  //   type: String,
+  //   enum: ["pending", "rejected", "processed"],
+  //   required: true,
+  // },
 });
 
 module.exports = mongoose.model("Invoice", InvoiceSchema);

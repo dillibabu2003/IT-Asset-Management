@@ -1,7 +1,8 @@
 const express = require('express');
-const Invoice = require('../models/Invoice');
+const Invoice = require('../models/invoice');
 const authorizeClient = require('../middlewares/authorizeClient');
 const invoiceRouter = express.Router();
+const {createInvoice,updateInvoice,deleteInvoice,getPaginatedInvoices,getInvoiceById}=require('../controllers/invoice')
 
 // Get all invoices
 invoiceRouter.get('/',(req,res,next)=>{authorizeClient(["view:invoices"])(req,res,next)},getPaginatedInvoices);
