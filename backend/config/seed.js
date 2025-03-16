@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Asset = require('../models/asset');
-const Checkout = require('../models/checkout');
 const Invoice = require('../models/invoice');
 const License = require('../models/license');
 const MetaData = require('../models/metadata');
@@ -8,7 +7,6 @@ const Permission = require('../models/permission');
 const User = require('../models/user');
 const UserVisibility = require('../models/userPreference');
 const cleanedEnv = require('../utils/cleanedEnv');
-const metadata = require('../models/metadata');
 const Dashboard = require('../models/dashboard');
 const { roleEnum, statusEnum, genderEnum } = require('../utils/constants');
 const Employee = require('../models/employee');

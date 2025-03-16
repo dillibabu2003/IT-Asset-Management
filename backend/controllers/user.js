@@ -5,15 +5,14 @@ const Permission = require("../models/permission");
 const asyncHandler = require("../utils/asyncHandler");
 const { userSchema } = require("../utils/schemas");
 const cleanedEnv = require("../utils/cleanedEnv");
-const { fullAccess, EMAIL_TYPES } = require("../utils/constants")
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
-const { encryptData, decryptData } = require("../utils/encrypt");
+const { encryptData} = require("../utils/encrypt");
 const UserVisibility = require("../models/userPreference");
 const { uploadFileToS3 } = require("../services/s3");
 const mongoose = require("mongoose");
 const { hitEmailServerApi } = require("../services/email");
-const { maxHeaderSize } = require("http");
+const { EMAIL_TYPES } = require("../utils/constants");
 
 const initailizeAllObjectsFieldsAsVisibleWithUserid = async (userId,session) => {
       const userVisibility = new UserVisibility({
@@ -87,7 +86,7 @@ const createUser = asyncHandler(async (req, res) => {
             const objectKey = `${cleanedEnv.S3_PROFILE_PIC_FOLDER}/${fileName}${fileExtension}`;
             const {s3Response} = await uploadFileToS3(localFilePath, cleanedEnv.S3_BUCKET_NAME, objectKey);
             if (s3Response?.$metadata.httpStatusCode == 200) {
-                  isFileUploadedToS3 = true;
+                  
                   user.profile_pic = `https://${cleanedEnv.S3_BUCKET_NAME}.s3.${cleanedEnv.S3_REGION}.amazonaws.com/${objectKey}`;
             }
             fs.unlinkSync(localFilePath);
@@ -99,7 +98,7 @@ const createUser = asyncHandler(async (req, res) => {
       }
       console.log(user)
       const userInfo = await user.save({session: session});
-      const userVisibility=await initailizeAllObjectsFieldsAsVisibleWithUserid(userInfo.user_id,session);
+      await initailizeAllObjectsFieldsAsVisibleWithUserid(userInfo.user_id,session);
       await session.commitTransaction();
       session.endSession();
 

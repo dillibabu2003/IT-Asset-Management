@@ -729,18 +729,17 @@ const data = {
     }
 }
 indexRouter.get("/dashboard/assets", (req, res) => {
-    const { page, limit } = req.query;
+    
     console.log("Hitting api");
     res.status(200).json({ ...data.dashboardassets});
 })
 indexRouter.get("/dashboard/licenses", (req, res) => {
-    const { page, limit } = req.query;
+    
     console.log("Hitting api");
 
     res.status(200).json({ ...data.dashboardlicenses });
 })
 indexRouter.get("/dashboard/invoices", (req, res) => {
-    const { page, limit } = req.query;
     console.log("Hitting api");
 
     res.status(200).json({ ...data.dashboardinvoices });

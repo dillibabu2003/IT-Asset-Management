@@ -232,7 +232,7 @@ async function parseRawDashboardData(dashboardData,model){
     const elements = await Promise.all(elementPromises);
     return {id:dashboardData.id, label: dashboardData.label, tiles,elements};
 }
-const handleGetDashboardData = asyncHandler(async (req,res,next)=>{
+const handleGetDashboardData = asyncHandler(async (req,res)=>{
     const dashboardId = req.params.dashboardId;
     const isDashboardIdValid = validateDashboardId(dashboardId);
     if(!isDashboardIdValid){
@@ -247,7 +247,7 @@ const handleGetDashboardData = asyncHandler(async (req,res,next)=>{
     const parsedDashboardData = await parseRawDashboardData(rawDashboardData,model);
     res.status(200).json(new ApiResponse(200, parsedDashboardData, "Dashboard data fetched successfully"));
 });
-const handleGetDashboardMetadata = asyncHandler(async (req,res,next)=>{
+const handleGetDashboardMetadata = asyncHandler(async (req,res)=>{
     const dashboardId = req.params.dashboardId;
     const isDashboardIdValid = validateDashboardId(dashboardId);
     if(!isDashboardIdValid){
@@ -257,7 +257,7 @@ const handleGetDashboardMetadata = asyncHandler(async (req,res,next)=>{
     res.status(200).json(new ApiResponse(200, dashboardMetaData, "Dashboard metadata fetched successfully"));
 });
 
-const handleConfigureDashboard = asyncHandler(async (req,res,next)=>{
+const handleConfigureDashboard = asyncHandler(async (req,res)=>{
     const data = configureDashboardSchema.parse(req.body);
     const isDashboardIdValid = validateDashboardId(data.id);
     if(!isDashboardIdValid){
@@ -271,8 +271,8 @@ const handleConfigureDashboard = asyncHandler(async (req,res,next)=>{
 
     const tilesWithQueries = getTilesWithQueriesAttached(data.tiles);
     const elementsWithQueries = getElementsWithQueriesAttached(data.elements);
-    const tilesWithRemovedIds = tilesWithQueries.map(({_id, ...rest}) => rest);
-    const elementsWithRemovedIds = elementsWithQueries.map(({_id, ...rest}) => rest);   
+    const tilesWithRemovedIds = tilesWithQueries.map(({...rest}) => rest);
+    const elementsWithRemovedIds = elementsWithQueries.map(({...rest}) => rest);   
     data.tiles = tilesWithRemovedIds;
     data.elements = elementsWithRemovedIds;
 

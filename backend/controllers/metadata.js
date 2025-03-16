@@ -2,7 +2,6 @@ const Metadata=require('../models/metadata');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const asyncHandler = require('../utils/asyncHandler');
-const {metadataSchema}=require('../utils/schemas');
 
 const getMetaData=asyncHandler(async(req,res)=>{
     const metaDataType=req.params.belongs_to;

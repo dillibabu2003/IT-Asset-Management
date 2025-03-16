@@ -6,7 +6,6 @@ const cors=require("cors");
 const app = express();
 
 const indexRouter = require('../routes/index');
-const bodyParser = require('body-parser');
 
 app.use(cors({
     origin: "http://localhost:5173",
