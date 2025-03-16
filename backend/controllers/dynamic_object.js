@@ -511,7 +511,7 @@ const deleteDocumentOfObjectName = asyncHandler(async (req, res) => {
 const deleteBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
     const objectName = req.params.objectName;
     const model = getModelByObjectName(objectName);
-    const {serial_nos,object_name}=req.body;
+    const {serial_nos}=req.body;
     if (!model) {
         throw new ApiError(400, null, "Invalid object name");
     }

@@ -45,10 +45,7 @@ async function executeAssignItemsCheckoutTransaction(model, serial_numbers, obje
             if(!employeeDetails){
                 throw new ApiError(400, null, `Employee does not exist with id ${employees_info[i].employee_id}`);
             }
-            
-            //Calculate total checkouts till now of this employee
-            
-            const totalCheckoutsTillNowOfEmployee = await Checkout.find({ employee_id: employeeDetails._id }, { session: session }).countDocuments();
+
             //Update item status and assign to employee
             availableItems[i].status = objectName == "assets" ? "deployed" : "activated";
             availableItems[i].assigned_to = employeeDetails._id;
