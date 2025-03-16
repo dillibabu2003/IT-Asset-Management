@@ -2,7 +2,7 @@ const express = require('express');
 const authorizeClient = require('../middlewares/authorizeClient');
 const dynamicObjectRouter = express.Router();
 
-const { getPaginatedDataByObjectName, getUserColumnVisibilitiesByObjectName, createBulkDocumentsOfObjectName, createDocumentOfObjectName, getDataBySearchTermOfObjectName, getAllDataByFilterOfObjectName, updateDocumentOfObjectName, deleteDocumentOfObjectName, deleteBulkDocumentsOfObjectName } = require('../controllers/dynamic_object');
+const { getPaginatedDataByObjectName, getUserColumnVisibilitiesByObjectName, createBulkDocumentsOfObjectName, createDocumentOfObjectName, getDataBySearchTermOfObjectName, getAllDataByFilterOfObjectName, updateDocumentOfObjectName, deleteDocumentOfObjectName, deleteBulkDocumentsOfObjectName, getPaginatedDataWithFiltersByObjectName } = require('../controllers/dynamic_object');
 
 dynamicObjectRouter.get("/:objectName", (req, res, next) => { authorizeClient([`view:${req.params.objectName}`])(req, res, next) }, getPaginatedDataByObjectName);
 dynamicObjectRouter.get('/:objectName/column-visibilities', (req, res, next) => { authorizeClient([`view:${req.params.objectName}`])(req, res, next) }, getUserColumnVisibilitiesByObjectName);
@@ -14,4 +14,5 @@ dynamicObjectRouter.delete("/:objectName/delete/bulk", (req, res, next) => { aut
 
 dynamicObjectRouter.post("/:objectName/search", (req, res, next) => { authorizeClient([`view:${req.params.objectName}`])(req, res, next) }, getDataBySearchTermOfObjectName);
 dynamicObjectRouter.post("/:objectName/filter-docs/all", (req, res, next) => { authorizeClient([`view:${req.params.objectName}`])(req, res, next) }, getAllDataByFilterOfObjectName);
+dynamicObjectRouter.get("/:objectName/filter-docs/paginate", (req, res, next) => { authorizeClient([`view:${req.params.objectName}`])(req, res, next) }, getPaginatedDataWithFiltersByObjectName);
 module.exports = dynamicObjectRouter;

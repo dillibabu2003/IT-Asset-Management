@@ -22,10 +22,18 @@ const AssetsPage = () => {
     const [operationInfo, setOperationInfo] = useState({ showSnackBar: false, operation: null, message: "", selectedRow: null });
     const [employeeId, setEmployeeId] = useState(null);
     const [selectedRows, setSelectedRows] = useState([]);
-    const [bulkAssignInfo, setBulkAssignInfo] = useState({showBulkAssignDialog: false, selectedRows: [], serialNumbersMappedWithEmployeeIds: []});
+    const [bulkAssignInfo, setBulkAssignInfo] = useState({ showBulkAssignDialog: false, selectedRows: [], serialNumbersMappedWithEmployeeIds: [] });
+    const [filters, setFilters] = useState(sessionStorage.getItem('assets-filters') ? JSON.parse(sessionStorage.getItem('assets-filters')) : null);
     //Fetching Data Functions
     async function fetchAssetsByPageAndLimit(abortController, page, limit) {
-        const response = await axiosInstance.get(`/objects/assets?page=${page}&limit=${limit}`, { signal: abortController.signal });
+        const response = await axiosInstance.get('/objects/assets/filter-docs/paginate', {
+            params: {
+                page: page,
+                limit: limit,
+                filters: JSON.stringify(filters || {})
+            } 
+            },
+            {signal: abortController.signal});
         return response.data;
     }
     async function fetchAssetsMetaData(abortController) {
@@ -45,14 +53,15 @@ const AssetsPage = () => {
 
     // Refersh data after any edits or deletes
     async function refreshData() {
+        setSelectedRows([]);
         const toastId = toast.loading("Refreshing data...");
         const abortController = new AbortController();
-        fetchData(abortController).then((response) => {
-            const assets = response[0].data;
-            const assetsMetaData = response[1].data;
-            const userColumnPreferences = response[2].data;
+        fetchAssetsByPageAndLimit(abortController,page,pageLimit).then((response) => {
+            const assets = response.data;
+            // const assetsMetaData = response[1].data;
+            // const userColumnPreferences = response[2].data;
             toast.success("Data refreshed", { id: toastId });
-            setData({ data: assets, fields: assetsMetaData, userColumnPreferences: userColumnPreferences });
+            setData(prev=>{return {...prev, data: assets }});
         }).catch((error) => {
             console.log(error);
             toast.error("An error occurred while refreshing data", { id: toastId });
@@ -97,7 +106,7 @@ const AssetsPage = () => {
         setOperationInfo({ showSnackBar: true, operation: "assign", message: `Are you sure you want to assign asset ${data.data.documents[rowIndex].serial_no} to an employee?`, selectedRow: rowIndex });
     }
     // Assign an asset
-    async function assignAsset() {        
+    async function assignAsset() {
         const reqBody = {
             object_name: "assets",
             employee_info: {
@@ -112,7 +121,7 @@ const AssetsPage = () => {
                 setTimeout(() => {
                     refreshData();
                 }, 1000);
-                setOperationInfo(prev=>{return {...prev, showSnackBar: false}});
+                setOperationInfo(prev => { return { ...prev, showSnackBar: false } });
             }
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Error completing checkout';
@@ -140,7 +149,7 @@ const AssetsPage = () => {
                 setTimeout(() => {
                     refreshData();
                 }, 1000);
-                setOperationInfo(prev=>{return {...prev, showSnackBar: false}});
+                setOperationInfo(prev => { return { ...prev, showSnackBar: false } });
             }
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
@@ -169,7 +178,7 @@ const AssetsPage = () => {
                 setTimeout(() => {
                     refreshData();
                 }, 1000);
-                setOperationInfo(prev=>{return {...prev, showSnackBar: false}});
+                setOperationInfo(prev => { return { ...prev, showSnackBar: false } });
             }
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
@@ -201,11 +210,11 @@ const AssetsPage = () => {
                 setTimeout(() => {
                     refreshData();
                 }, 1000);
-                setOperationInfo(prev=>{return {...prev, showSnackBar: false}});
+                setOperationInfo(prev => { return { ...prev, showSnackBar: false } });
             }
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
-        }   
+        }
     }
 
     // Set the row indices to be unassigned to perform bulk unassign
@@ -224,8 +233,7 @@ const AssetsPage = () => {
         try {
             const assetsToBeUnAssigned = [];
             data.data.documents.map((asset, index) => {
-                if(selectedRows.includes(asset.serial_no))
-                {
+                if (selectedRows.includes(asset.serial_no)) {
                     assetsToBeUnAssigned.push({
                         serial_no: asset.serial_no,
                         employee_id: asset.assigned_to
@@ -235,13 +243,13 @@ const AssetsPage = () => {
             const response = await axiosInstance.post(`/checkout/unassign/bulk`, {
                 object_name: "assets",
                 info_to_unassign: assetsToBeUnAssigned
-                });
+            });
             if (response.data.success) {
                 toast.success(response.data.message);
                 setTimeout(() => {
                     refreshData();
                 }, 1000);
-                setOperationInfo(prev=>{return {...prev, showSnackBar: false}});
+                setOperationInfo(prev => { return { ...prev, showSnackBar: false } });
             }
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
@@ -253,8 +261,8 @@ const AssetsPage = () => {
         if (selectedRows.length === 0) {
             return toast.error("No rows selected");
         }
-        
-        setBulkAssignInfo({showBulkAssignDialog: true, selectedRows: selectedRows, serialNumbersMappedWithEmployeeIds: []});
+
+        setBulkAssignInfo({ showBulkAssignDialog: true, selectedRows: selectedRows, serialNumbersMappedWithEmployeeIds: [] });
     }
     const setEmployeeIdsWithSelectedRows = (assignmentInfo) => {
         console.log(assignmentInfo);
@@ -263,7 +271,7 @@ const AssetsPage = () => {
             serialNumbersMappedWithEmployeeIds: assignmentInfo
         }
         console.log(newBulkAssignInfo);
-        
+
         setBulkAssignInfo(newBulkAssignInfo);
         setOperationInfo({ showSnackBar: true, operation: "assign_bulk", message: `Are you sure you want to assign ${bulkAssignInfo.selectedRows.length} assets?`, selectedRow: selectedRows });
     }
@@ -271,7 +279,7 @@ const AssetsPage = () => {
     async function assignMultipleAssets() {
         try {
             console.log(bulkAssignInfo);
-            
+
             const response = await axiosInstance.post(`/checkout/assign/bulk`, {
                 object_name: "assets",
                 info_to_assign: bulkAssignInfo.serialNumbersMappedWithEmployeeIds
@@ -283,7 +291,7 @@ const AssetsPage = () => {
                     refreshData();
                 }, 1000);
 
-                setOperationInfo(prev=>{return {...prev, showSnackBar: false}});
+                setOperationInfo(prev => { return { ...prev, showSnackBar: false } });
             }
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
@@ -295,8 +303,6 @@ const AssetsPage = () => {
     const employeeOptionLabel = (option) => { return option ? `${option.employee_id || ''} ${option.firstname || ''} ${option.lastname || ''}`.trim() : '' };
     const employeeOptionEqualToLabel = (option, value) => { return option?.employee_id === value?.employee_id };
     const handleAutoCompleteChange = (field) => (event) => {
-        console.log('field:', field);
-        console.log('event:', event.target.value.employee_id);
         setEmployeeId(event.target.value.employee_id);
     };
 
@@ -319,6 +325,17 @@ const AssetsPage = () => {
     };
 
 
+    // Set Filters
+    const handleFilterChange = async(newFilters) => {
+        sessionStorage.setItem("assets-filters", JSON.stringify(newFilters));
+        setFilters(newFilters);
+    }
+    useEffect(() => {
+       if(filters==null || data ==null) return ;
+       refreshData();
+    }, [filters]);
+    
+
     useEffect(() => {
         const abortController = new AbortController();
 
@@ -327,6 +344,9 @@ const AssetsPage = () => {
                 const assets = response[0].data;
                 const assetsMetaData = response[1].data;
                 const userColumnPreferences = response[2].data;
+                console.log(data)
+                console.log(response);
+                
                 setData({ data: assets, fields: assetsMetaData, userColumnPreferences: userColumnPreferences });
             }).catch((error) => {
                 console.log(error);
@@ -373,7 +393,7 @@ const AssetsPage = () => {
                     </Box>
                 </ProtectedComponent>
             </Box>
-            {!data ? <Loader /> :
+            {data==null ? <Loader /> :
                 <React.Fragment>
                     <CreateForm
                         currentSection="assets"
@@ -395,6 +415,7 @@ const AssetsPage = () => {
                         setEditingRowIndex={setEditingRowIndex}
                         data={data}
                         setPage={setPage}
+                        handleFilterChange={handleFilterChange}
                         userVisibleColumns={data.userColumnPreferences}
                         setAssignRowIndex={setAssignRowIndex}
                         setUnAssignRowIndex={setUnAssignRowIndex}
@@ -421,12 +442,12 @@ const AssetsPage = () => {
                         />
                     )}
                     {bulkAssignInfo.showBulkAssignDialog && data.fields && data.data && (
-                        <AssignMultipleItems 
+                        <AssignMultipleItems
                             currentSection="assets"
                             isDialogOpen={bulkAssignInfo.showBulkAssignDialog}
                             employeeOptionLabel={employeeOptionLabel}
                             employeeOptionEqualToLabel={employeeOptionEqualToLabel}
-                            closeDialog={() => { setBulkAssignInfo(prev=>{ return {...prev,showBulkAssignDialog: false}}) }}
+                            closeDialog={() => { setBulkAssignInfo(prev => { return { ...prev, showBulkAssignDialog: false } }) }}
                             fields={data.fields}
                             items={data.data.documents}
                             selectedItemsSerialNumbers={bulkAssignInfo.selectedRows}

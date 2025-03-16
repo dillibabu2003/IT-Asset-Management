@@ -102,6 +102,75 @@ async function fetchPaginatedDocumentsByObjectName(objectName, page, limit, skip
             return null;
     }
 }
+async function fetchPaginatedDocumentsWithFiltersByObjectName(objectName, page, limit, skip,filters) {
+    const aggregateQuery = [
+        {
+            $match: filters
+        },
+        {
+            $facet: {
+                metadata: [{ $count: "total" }],
+                data: [
+                    { $skip: skip },
+                    { $limit: limit },
+                    {
+                        $lookup: {
+                            from: "invoices",
+                            localField: "invoice_id",
+                            foreignField: "_id",
+                            as: "invoice_info"
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: "employees",
+                            localField: "assigned_to",
+                            foreignField: "_id",
+                            as: "employee_info"
+                        }
+                    },
+                    {
+                        $addFields: {
+                            invoice_id: { $first: "$invoice_info.invoice_id" },
+                            date_of_received: {
+                                $dateToString: {
+                                    date: { $first: "$invoice_info.date_of_received" },
+                                    format: "%d/%m/%Y"
+                                }
+                            },
+                            name_of_the_vendor: { $first: "$invoice_info.name_of_the_vendor" },
+                            employee_name: {
+                                $concat: [
+                                    { $first: "$employee_info.firstname" },
+                                    " ",
+                                    { $first: "$employee_info.lastname" }
+                                ]
+                            },
+                            employee_email: { $first: "$employee_info.email" },
+                            assigned_to: { $first: "$employee_info.employee_id" },
+                        }
+                    },
+                    {
+                        $project: {
+                            invoice_info: 0,
+                            employee_info: 0
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+    switch (objectName) {
+        case "assets":
+            return Asset.aggregate(aggregateQuery).exec();
+        case "invoices":
+            return Invoice.find().skip((page - 1) * limit).limit(limit).exec();
+        case "licenses":
+            return License.aggregate(aggregateQuery).exec();
+        default:
+            return null;
+    }
+}
 
 
 const fetchAllDocumentsByFilter = async (objectName, filter) => {
@@ -252,7 +321,25 @@ const getPaginatedDataByObjectName = asyncHandler(async (req, res) => {
     const objectData = await fetchPaginatedDocumentsByObjectName(objectName, parsedPageNumber, parsedDocumentsLimit, skip);
     res.status(200).json(new ApiResponse(200, { documents: [...objectData], total: totalDocuments }, `${objectName} fetched successfully`));
 });
-
+const getPaginatedDataWithFiltersByObjectName = asyncHandler(async (req, res) => {
+    const objectName = req.params.objectName;
+    const model = getModelByObjectName(objectName);
+    if (!model) {
+        throw new ApiError(400, "Invalid object name");
+    }
+    const { page, limit,filters } = req.query;
+    if (!page || !limit||!filters) {
+        throw new ApiError(400, "Invalid query parameters. Page, limit and filters are required");
+    }
+    const parsedPageNumber = parseInt(page);
+    const parsedDocumentsLimit = parseInt(limit);
+    const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
+    if (isNaN(parsedPageNumber) || isNaN(parsedDocumentsLimit)) {
+        throw new ApiError(400, "Invalid query parameters");
+    }
+    const objectData = await fetchPaginatedDocumentsWithFiltersByObjectName(objectName, parsedPageNumber, parsedDocumentsLimit, skip,JSON.parse(filters));
+    res.status(200).json(new ApiResponse(200, { documents: [...objectData[0].data], total: objectData[0].metadata[0]?.total!=undefined ? objectData[0].metadata[0]?.total: 0 }, `${objectName} fetched successfully`));
+});
 
 const getUserColumnVisibilitiesByObjectName = asyncHandler(async (req, res) => {
     const userId = req.user._id;
@@ -448,6 +535,7 @@ module.exports = {
     createDocumentOfObjectName,
     getDataBySearchTermOfObjectName,
     getAllDataByFilterOfObjectName,
+    getPaginatedDataWithFiltersByObjectName,
     getModelByObjectName,
     updateDocumentOfObjectName,
     deleteDocumentOfObjectName,

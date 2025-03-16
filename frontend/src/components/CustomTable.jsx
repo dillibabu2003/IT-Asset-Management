@@ -26,11 +26,11 @@ import {
 } from '@mui/material';
 import * as XLSX from 'xlsx';
 import Icon from './Icon';
-import axiosInstance from '../utils/axios';
 import ProtectedComponent from '../protectors/ProtectedComponent';
 import { convertSnakeCaseToPascaleCase, getColorAndBackgroundColorByStatus } from '../utils/helperFunctions';
 import { convertExpiryToReadable } from '../utils/helperFunctions';
 import { alpha } from '@mui/material/styles';
+import Filters from './Filters';
 
 function EnhancedTableHead(props) {
   const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort, visibleColumns } = props;
@@ -88,7 +88,20 @@ EnhancedTableHead.propTypes = {
 };
 
 function EnhancedTableToolbar(props) {
-  const { numSelected, onExport, currentSection,items,visibleColumns,selectedRows,setVisibleColumns,setItemSerialNumbersToBeAssigned,setItemSerialNumbersToBeUnassigned,setItemSerialNumbersToBeDeleted } = props;
+  const { 
+    numSelected, 
+    onExport, 
+    currentSection,
+    columns,
+    items,
+    handleFilterChange,
+    visibleColumns,
+    selectedRows,
+    setVisibleColumns,
+    setItemSerialNumbersToBeAssigned,
+    setItemSerialNumbersToBeUnassigned,
+    setItemSerialNumbersToBeDeleted 
+  } = props;
   const [columnsMenuAnchor, setColumnsMenuAnchor] = useState(null);
 
   const handleColumnToggle = (columnId) => {
@@ -180,6 +193,8 @@ function EnhancedTableToolbar(props) {
         </Tooltip>
         </Box>
       ) : 
+      <Box sx={{ display: 'flex', alignItems: 'center',gap: 1 }}>
+      <Filters columns={columns} currentSection={currentSection} sendFilters={handleFilterChange}/>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
        <Button
             variant="outlined"
@@ -188,7 +203,6 @@ function EnhancedTableToolbar(props) {
           >
             Columns
           </Button>
-
       <Menu
       anchorEl={columnsMenuAnchor}
       open={Boolean(columnsMenuAnchor)}
@@ -219,12 +233,14 @@ function EnhancedTableToolbar(props) {
       </React.Fragment>
     </Menu>
       </Box>
+      </Box>
       }
     </Toolbar>
   );
 }
 
 EnhancedTableToolbar.propTypes = {
+  columns: PropTypes.object.isRequired,
   numSelected: PropTypes.number.isRequired,
   onExport: PropTypes.func.isRequired,
   currentSection: PropTypes.string.isRequired,
@@ -242,6 +258,7 @@ export default function CustomTable(
     page, 
     setPage, 
     pageLimit, 
+    handleFilterChange,
     setEditingRowIndex, 
     setAssignRowIndex, 
     setUnAssignRowIndex, 
@@ -334,8 +351,10 @@ export default function CustomTable(
       <EnhancedTableToolbar
         numSelected={selectedRows.length}
         onExport={exportToExcel}
+        columns={columns}
         currentSection={currentSection}
         items={filteredDocuments}
+        handleFilterChange={handleFilterChange}
         selectedRows={selectedRows}
         visibleColumns={visibleColumns}
         setVisibleColumns={setVisibleColumns}
