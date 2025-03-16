@@ -49,6 +49,7 @@ const LicenseSchema = new mongoose.Schema({
   },
   status: {
     type: String,
+    default:"available",
     enum: ["available", "activated","reissue", "about_to_archive", "archived"],
     get: (v) => convertSnakeCaseToPascaleCase(v),
     set: (v) => convertPascaleCaseToSnakeCase(v),
