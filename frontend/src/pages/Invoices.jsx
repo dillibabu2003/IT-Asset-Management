@@ -34,8 +34,8 @@ useEffect(()=>{
 },[page]);
   return (
     !data ? <Loader />:
-    // <InvoiceSection />
-    <InvoiceSection1 />
+    <InvoiceSection />
+    // <InvoiceSection1 />
     // <CustomTable currentSection="invoices" data={data} setPage={setPage}/>
   )
 }

@@ -14,12 +14,14 @@ const CheckoutSchema = new mongoose.Schema({
     get: (v) => convertSnakeCaseToPascaleCase(v),
     required: true,
   },
-  type_reference_id:{
+  type_reference_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: function() {
-      return this.type==="assets" ? "Asset" : "License";
-    },
+    refPath: 'type_reference_model',
     required: true,
+  },
+  type_reference_model: {
+    type: String,
+    enum: ["Asset", "License"],
   },
   employee_id: {
     type: mongoose.Schema.Types.ObjectId,
