@@ -6,6 +6,7 @@ const authorizeClient = (requiredPermissions) => {
     return async (req, res, next) => {
         try {
             // const userId = req.user.id; // Assuming user ID is available in the request object
+            // console.log(req.body);
             const userRole = req.user.role;
             const redisKey = `${userRole}:permissions`
 
