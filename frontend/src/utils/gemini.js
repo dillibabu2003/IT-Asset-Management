@@ -100,12 +100,12 @@ const getDataFromGemini=(file,fileType)=>{
                             'M1 Max'
                           ], description: "Processor details" },
                         os_type: { type: SchemaType.STRING, enum: ["ubuntu", "windows", "mac"], description: "Operating system type" },
-                        warranty_type: { type: SchemaType.STRING,enum:["basic","adp","apple care"],description: "Warranty type" },
+                        warranty: { type: SchemaType.STRING,enum:["basic","adp","apple care"],description: "Warranty type" },
                         warranty_period:{type:SchemaType.STRING,enum:["1year","2years","3years","4years"],description:"Warranty Period"},
                         warranty_start_date:{type:SchemaType.STRING,format: "date-time",description:"Invoice date is the warranty start date"},
                         cost: {type:SchemaType.NUMBER, description:"Cost of the individual item"}
                     },
-                    required: ["serial_no", "category", "make", "warranty_type"]
+                    required: ["serial_no", "category", "make", "warranty"]
                 }
             },
             licenses: {
@@ -115,15 +115,15 @@ const getDataFromGemini=(file,fileType)=>{
                     type: SchemaType.OBJECT,
                     properties: {
                         serial_no: { type: SchemaType.STRING, description: "Unique serial number of the license" },
-                        category: { type: SchemaType.STRING, enum: ["apple care","sophos", "grammarly", "microsoft", "adobe", "autodesk"], description: "Software category" },
+                        category: { type: SchemaType.STRING, enum: ["sophos", "grammarly", "microsoft", "adobe", "autodesk"], description: "Software category" },
                         model: { type: SchemaType.STRING, description: "License model" },
-                        warranty_type: { type: SchemaType.STRING, description: "Warranty type" },
+                        warranty: { type: SchemaType.STRING, description: "Warranty type" },
                         cost: {type:SchemaType.NUMBER, description:"Cost of the individual item"},
                         warranty_period:{type:SchemaType.STRING,enum:["1year","2years","3years","4years"],description:"Warranty Period"},
                         warranty_start_date:{type:SchemaType.STRING,format: "date-time",description:"Invoice date is the warranty start date"},
                     },
                     
-                    required: ["serial_no", "category", "model", "warranty_type"]
+                    required: ["serial_no", "category", "model", "warranty"]
                 }
             }
         },
@@ -152,6 +152,7 @@ const getDataFromGemini=(file,fileType)=>{
                    Double-check numerical and date values for accuracy. Don't Include Number of years of warranty unless it is specifically mentioned in the Invoice,
                     but the name of the warranty can be specified. If Apple Care Plus is there then consider it as a apple care warranty with 3 years of warranty_period and don't add this into the license section again even though it has any serial numbers. The warranty_start date will be the invoice_date.
                     If item is a APPLE MAC BOOK give the os_type as 'mac'
+                    
                     `},
                 {
                 inlineData: {
