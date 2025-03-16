@@ -19,7 +19,7 @@ async function generateAccessTokenAndRefreshToken(user){
     return [accessToken,refreshToken];
 }
  
-const handleLogin = asyncHandler(async (req,res,next)=>{
+const handleLogin = asyncHandler(async (req,res)=>{
     const data = loginSchema.parse(req.body);
     const user = await User.findOne({email: data.email});
     if(!user || !await user.validatePassword(data.password)) {
@@ -45,7 +45,7 @@ const handleLogin = asyncHandler(async (req,res,next)=>{
     .json(new ApiResponse(200,filteredUserInfo,"Logged in successfully."));
 });
  
-const handleRefreshAccessToken = asyncHandler(async (req,res,next)=>{
+const handleRefreshAccessToken = asyncHandler(async (req,res)=>{
     const refreshToken = req.cookies.refresh_token;
     const decodedInfo = await decryptJWT(refreshToken,cleanedEnv.REFRESH_TOKEN_SECRET);
     if(!refreshToken || !decodedInfo){
@@ -64,7 +64,7 @@ const handleRefreshAccessToken = asyncHandler(async (req,res,next)=>{
     .json(new ApiResponse(200, null,"Access token refreshed successfully."));
 });
  
-const handleLogout = asyncHandler(async (req,res,next)=>{
+const handleLogout = asyncHandler(async (req,res)=>{
     //remove the refreshToken from redis for this id.
     const refreshToken = req.cookies.refresh_token;
     if(refreshToken){

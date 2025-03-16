@@ -3,9 +3,7 @@ const mongoose = require("mongoose");
 const Asset = require("../models/asset");
 const Invoice = require("../models/invoice");
 const License = require("../models/license");
-const Employee = require("../models/employee");
 
-const Checkout = require("../models/checkout");
 const MetaData=require("../models/metadata");
 const UserColumnVisibilities = require("../models/userPreference");
 const ApiError = require("../utils/ApiError");
@@ -228,24 +226,25 @@ function validateRequired(field, value, fieldSchema) {
         throw new ApiError(400, null, `${field} is required`);
     }
 }
+// Functions which can be used for future purpose
 
 // Validate checkout status for assets and licenses
-async function validateStatus(document, objectName) {
-    const isAsset = objectName === 'assets';
-    const isLicense = objectName === 'licenses';
+// async function validateStatus(document, objectName) {
+//     const isAsset = objectName === 'assets';
+//     const isLicense = objectName === 'licenses';
 
-    if (!isAsset && !isLicense) return;
+//     if (!isAsset && !isLicense) return;
 
-    const status = document.status;
+//     const status = document.status;
 
-    if (isAsset && status !== "available") {
-        throw new ApiError(400, null, 'Asset status should be available.');
-    }
+//     if (isAsset && status !== "available") {
+//         throw new ApiError(400, null, 'Asset status should be available.');
+//     }
 
-    if (isLicense && status !== 'available') {
-        throw new ApiError(400, null, 'Status must be available.');
-    }
-}
+//     if (isLicense && status !== 'available') {
+//         throw new ApiError(400, null, 'Status must be available.');
+//     }
+// }
 
 // Validate a single document
 async function validateSingleDocument(document, schema, objectName, operationType, columnMetadataUnStructured) {
@@ -383,7 +382,9 @@ const createBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, createdDocuments, `${objectName} created successfully`));
 });
 
-const createDocumentOfObjectName = asyncHandler(async (req, res,next) => {
+
+
+const createDocumentOfObjectName = asyncHandler(async (req, res) => {
     const objectName = req.params.objectName;
     const model = getModelByObjectName(objectName);
     if (!model) {
@@ -504,6 +505,8 @@ const deleteDocumentOfObjectName = asyncHandler(async (req, res) => {
     }
     res.status(200).json(new ApiResponse(200, deletedDocument, `${objectName} deleted successfully`));
 });
+// Functions which can be used for future purpose
+
 
 const deleteBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
     const objectName = req.params.objectName;
@@ -526,6 +529,78 @@ const deleteBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
     const deletedDocuments = await model.deleteMany({ _id: { $in: documents } });
     res.status(200).json(new ApiResponse(200, deletedDocuments, `${objectName} deleted successfully`));
 });
+
+// const unassignDocumentOfObjectName = asyncHandler(async (req, res) => {
+//     const objectName = req.params.objectName;
+//     const model = getModelByObjectName(objectName);
+//     if (!model) {
+//         throw new ApiError(400, null, "Invalid object name");
+//     }
+//     const documentId = req.body.document_id;
+//     if (!documentId) {
+//         throw new ApiError(400, null, "Invalid request body");
+//     }
+//     const updatedDocument = await model.findByIdAndUpdate(documentId, { assigned_to: null }, { new: true });
+//     if (!updatedDocument) {
+//         throw new ApiError(404, null, "Document not found");
+//     }
+//     res.status(200).json(new ApiResponse(200, updatedDocument, `${objectName} unassigned successfully`));
+// });
+
+
+
+// const getDataBySearchTermOfObjectId = asyncHandler(async (req, res) => {
+//     const objectId = req.params.objectId;
+//     console.log(req.body);
+    
+//     const {searchKey,category,status} = req.body;
+//     if (searchKey==undefined || !category || !status) {
+//         throw new ApiError(400,null, "Invalid search term or category or status");
+//     }
+//     //check for the category as well 
+//     const model = getModelByObjectId(objectId);
+//     if (!model) {
+//         throw new ApiError(400,null, "Invalid object id");
+//     }
+//     if(searchKey.trim().length === 0){
+//         const firstTenDocuments = await fetchPaginatedDocumentsByFilter(objectId, {status}, 10,0); //add category filter here after updating db and seeding
+//         res.status(200).json(new ApiResponse(200, firstTenDocuments, `${objectId} fetched successfully`));
+//         return;
+//     }
+//     const objectData = await model.aggregate([
+//                 {
+//                       $search: {
+//                           index: "AssetIndex",
+//                           text: {
+//                             query: searchKey,
+//                             path: ["asset_id","make","model","ram","storage","processor","os_type"],
+//                             fuzzy: {
+//                                   prefixLength: 2,
+//                                   maxEdits: 2,
+//                             }
+//                           }
+//                       }
+//                } 
+//           ]);
+//     const totalDocuments = objectData.length;
+//     if(totalDocuments === 0){
+//         throw new ApiError(404,null, "No documents found");
+//     }
+//     res.status(200).json(new ApiResponse(200, objectData, `${objectId} fetched successfully`));
+// });
+
+// const getAllDataByFilterOfObjectId = asyncHandler(async (req, res) => {
+//     const objectId = req.params.objectId;
+//     const filter = req.body;
+//     if (!filter) {
+//         throw new ApiError(400,null, "Invalid filter");
+//     }
+//     delete filter?.object_id
+//     console.log(filter);
+    
+//     const objectData = await fetchAllDocumentsByFilter(objectId, filter);
+//     res.status(200).json(new ApiResponse(200, objectData, `${objectId} fetched successfully`));
+// });
 
 module.exports = {
     getPaginatedDataByObjectName,

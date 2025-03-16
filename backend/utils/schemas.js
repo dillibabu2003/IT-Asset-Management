@@ -1,5 +1,5 @@
 const zod=require('zod');
-const { statusEnum, genderEnum,passwordRegex,UrlRegex} = require('./constants');
+const { genderEnum,passwordRegex} = require('./constants');
 
 
 

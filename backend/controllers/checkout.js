@@ -1,5 +1,4 @@
 const asyncHandler = require('../utils/asyncHandler');
-const Metadata = require('../models/metadata');
 const Employee = require('../models/employee');
 const { getModelByObjectName } = require('./dynamic_object');
 const Checkout = require('../models/checkout');
@@ -50,10 +49,6 @@ async function executeAssignItemsCheckoutTransaction(model, serial_numbers, obje
             //Calculate total checkouts till now of this employee
             
             const totalCheckoutsTillNowOfEmployee = await Checkout.find({ employee_id: employeeDetails._id }, { session: session }).countDocuments();
-
-            //Generate id for the item based on employee id and total checkouts till now of employee
-            const generatedId = availableItems[i].generateId(employeeDetails.employee_id, totalCheckoutsTillNowOfEmployee);
-
             //Update item status and assign to employee
             availableItems[i].status = objectName == "assets" ? "deployed" : "activated";
             availableItems[i].assigned_to = employeeDetails._id;

@@ -1,7 +1,6 @@
 const ApiError = require("../utils/ApiError");
 const jwt=require("jsonwebtoken");
 const cleanedEnv=require("../utils/cleanedEnv");
-const {fullAccess}=require("../utils/constants");
 const asyncHandler = require("../utils/asyncHandler");
 const redisClient = require("../config/redis");
 
