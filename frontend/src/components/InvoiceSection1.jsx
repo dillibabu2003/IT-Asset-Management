@@ -35,6 +35,7 @@ import Icon from "../components/Icon";
 import { convertPascaleCaseToSnakeCase, convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 import axiosInstance from '../utils/axios';
 import toast from 'react-hot-toast';
+// import ApiError from '../../../backend/utils/ApiError';
 
 
 function InputField({ label, type, id, value, options, required, setInputValue }) {
@@ -233,8 +234,8 @@ const columns = {
             ],
             required: true
         },
-        warranty_type: {
-            id: 'warranty_type',
+        warranty: {
+            id: 'warranty',
             label: 'Warranty Type',
             type: 'select',
             options: [
@@ -344,8 +345,8 @@ const columns = {
         },
         model: { id: 'model', label: 'Model', type: 'text', required: true },
         cost: { id: 'cost', label: 'Cost', type: 'number', required: true },
-        warranty_type: {
-            id: 'warranty_type',
+        warranty: {
+            id: 'warranty',
             label: 'Warranty Type',
             type: 'select',
             options: [
@@ -528,6 +529,14 @@ function InvoiceSection() {
         }
     };
 
+    const addInvoiceData=async(document)=>{
+        try{
+            const invoiceResponse= await axiosInstance.post("/invoice/create",document);
+            return invoiceResponse;
+        }catch(err){
+            console.error("Error Updating the Invoice details: ",err);
+        }
+    }
     const handleSaveInvoice = async() => {
         console.log(currentInvoice);
         // Save to DB call should come here...
@@ -547,6 +556,7 @@ function InvoiceSection() {
             if (preSignedUrlResponse.data.success) {
                 const { url, file_name } = preSignedUrlResponse.data.data;
                 const response = await uploadFileToS3(url, file, fileType);
+                const dataUpdate=await addInvoiceData(currentInvoice);
                 if (response) {
                     toast.success("Invoice uploaded successfully",{id: toastId});
                     fileInputRef.current.value=null;
