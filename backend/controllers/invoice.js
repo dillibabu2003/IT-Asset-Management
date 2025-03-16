@@ -4,12 +4,27 @@ const License=require('../models/license');
 const Asset=require('../models/asset');
 const ApiResponse = require('../utils/ApiResponse');
 const { default: mongoose } = require('mongoose');
+const ApiError = require('../utils/ApiError');
+
 const convertYearsToNumbers=(years)=>{
     if(years==='1year')return 1;
     else if(years==='2years')return 2;
     else if(years==='3years')return 3;
     else if(years==='4years')return 4;
 }
+
+async function fetchPaginatedDocuments(limit, skip) {
+    const aggregateQuery = [
+        {
+            $skip: skip
+        },
+        {
+            $limit: limit
+        }
+    ]
+    return Invoice.aggregate(aggregateQuery).exec();
+}
+
 const createInvoice=asyncHandler(async (req, res) => {
     const allInvoiceData=req.body;
     const requiredInvoicedata={};
@@ -44,7 +59,7 @@ const createInvoice=asyncHandler(async (req, res) => {
 
         //Adding Assets
         if(allInvoiceData.assets.length){
-            console.log("assets: "+JSON.stringify(allInvoiceData.assets));
+            // console.log("assets: "+JSON.stringify(allInvoiceData.assets));
             const initialAssets=allInvoiceData.assets
             
             for(let i=0;i<initialAssets.length;i++){
@@ -56,7 +71,7 @@ const createInvoice=asyncHandler(async (req, res) => {
                initialAssets[i].end.setFullYear(initialAssets[i].end.getFullYear() + convertYearsToNumbers(initialAssets[i].warranty_period));
 
             }
-            console.log("filtered Assets: "+initialAssets); 
+            // console.log("filtered Assets: "+initialAssets); 
             const assets=await Asset.insertMany(initialAssets,{session:session});
             requiredInvoicedata.data["assets"]=assets;
         }
@@ -68,7 +83,7 @@ const createInvoice=asyncHandler(async (req, res) => {
         res.status(200).json(new ApiResponse(200,invoice,"Invoice Created Successfully"));
     } catch (err) {
         session.abortTransaction();
-        res.status(400).json({ message: err.message });
+        res.status(400).json(new ApiError(400,err,"Error Creating Invoice"));
     }finally{
        session.endSession();
     }
@@ -86,26 +101,54 @@ const updateInvoice = asyncHandler(async (req, res) => {
     }
 })
 const deleteInvoice=asyncHandler(async (req, res) => {
+    const session=await mongoose.startSession();
     try {
-        const invoice = await Invoice.findByIdAndDelete(req.params.id);
-        if (invoice) {
-            res.json({ message: 'Invoice deleted' });
-        } else {
-            res.status(404).json({ message: 'Invoice not found' });
-        }
+       await session.startTransaction();
+       const {invoice_id}=req.body;
+       console.log(invoice_id);
+       const invoice=await Invoice.findOne({invoice_id:invoice_id},null,{session:session});
+       console.log("invoice"+invoice);
+       if(!invoice){
+        throw new ApiError(422,null,"Invoice id is required");
+       }
+       console.log("license");
+       if(invoice.data.has('licenses')){
+          await License.deleteMany({invoice_id:invoice._id},{session:session});
+       }
+       if(invoice.data.has('assets')){
+          await Asset.deleteMany({invoice_id:invoice._id},{session:session});
+       }
+       const deletedInvoice=await Invoice.deleteOne({invoice_id:invoice_id},{session:session});            
+       await session.commitTransaction();
+       res.status(200).json(new ApiResponse(200,deletedInvoice,"Invoice deleted Succefully"));
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        await session.abortTransaction();
+        console.error(err);
+        res.status(400).json(new ApiError(400,err,"Error Deleting Invoice"));
+    } finally{
+       session.endSession();
     }
 })
 
 const getPaginatedInvoices=asyncHandler(async(req,res)=>{
-       const allInovices=await Invoice.find();
-        res.json(new ApiResponse(allInovices,{message:'All Invoice Fetched Successfully '}));
+    const { page, limit } = req.query;
+    if (!page || !limit) {
+        throw new ApiError(400, "Invalid query parameters");
+    }
+    const parsedPageNumber = parseInt(page);
+    const parsedDocumentsLimit = parseInt(limit);
+    const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
+    if (isNaN(parsedPageNumber) || isNaN(parsedDocumentsLimit)) {
+        throw new ApiError(400, "Invalid query parameters");
+    }
+    const totalInvoices = await Invoice.countDocuments();
+    const invoices = await fetchPaginatedDocuments(parsedDocumentsLimit, skip);
+    res.status(200).json(new ApiResponse(200, { invoices: [...invoices], totalInvoices: totalInvoices }, "Invoices fetched successfully"));
 })
 
 const getInvoiceById=asyncHandler(async(req,res)=>{
-      const invoiceId=req.body.invoice_id;
-      const invoice=await Invoice.find({invoice_id:invoiceId});
+      const {invoice_id}=req.body;
+      const invoice=await Invoice.find({invoice_id:invoice_id});
       res.json(new ApiResponse(invoice,{message:'Invoice Fetched Successfully'}));
 })
 module.exports={
