@@ -34,7 +34,8 @@ function CreateUser() {
                     setFields(metaDataResponse.data.data);
                     setError(null);
                     const initialFormData = {};
-                    metaDataResponse.data.data.map((field)=>{
+                    Object.keys(metaDataResponse.data.data).map((key)=>{
+                        const field = metaDataResponse.data.data[key];
                         if(field.create && field.type!="image" && field.type!="pdf"){
                             initialFormData[field.id]="";
                         }
@@ -75,7 +76,8 @@ function CreateUser() {
                 toast.success(response.data.message);
                 event.target.reset();
                 const initialFormData = {};
-                metaDataResponse.data.data.map((field)=>{
+                Object.keys(metaDataResponse.data.data).map((key)=>{
+                    const field = metaDataResponse.data.data[key];
                     if(field.create && field.type!="image" && field.type!="pdf"){
                         initialFormData[field.id]="";
                     }
@@ -87,7 +89,7 @@ function CreateUser() {
             const errorObject = error?.response?.data?.errors;
             console.log(errorObject);
             if(errorObject){
-                toast.error(errorObject[Object.keys(errorObject)[0]]);
+                toast.error(errorObject.message);
             }
         }
         
@@ -105,7 +107,11 @@ function CreateUser() {
             <Paper component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
                 <Grid container spacing={3}>
                     {/* User Details */}
-                    {fields.map((field) => ( field.create &&
+                    {
+                    Object.keys(fields).map((key) => {
+                        const field= fields[key];
+                        return(
+                         field.create &&
                         <Grid item xs={12} md={6} key={field.id} sx={{ mb: 2, width: '50%' }}>
                             {field.type === 'select' ? (
                                 <FormControl fullWidth>
@@ -187,7 +193,7 @@ function CreateUser() {
                                 />
                             )}
                         </Grid>
-                    ))}
+                    )})}
 
 
                     {/* </Grid>  */}

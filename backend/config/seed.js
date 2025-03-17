@@ -90,13 +90,13 @@ const seedDB = async () => {
 
     const invoice1 = new Invoice({
         invoice_id: 'INV001',
-        invoice_name: 'Invoice 1',
-        date_of_upload: new Date(),
-        date_of_received: new Date(),
-        name_of_the_vendor: 'Vendor A',
+        upload_date: new Date(),
+        invoice_date: new Date(),
+        vendor_name: 'Vendor A',
         amount: 1000.00,
-        status: 'processed',
-        invoice_url: 'https://example.com/invoice1.pdf',
+        owner_name: 'Owner A',
+        invoice_description: '',
+        invoice_filename: 'invoice.pdf',
         data:{
 
         }
@@ -104,25 +104,25 @@ const seedDB = async () => {
 
     const invoice2 = new Invoice({
         invoice_id: 'INV002',
-        invoice_name: 'Invoice 2',
-        date_of_upload: new Date(),
-        date_of_received: new Date(),
-        name_of_the_vendor: 'Vendor A',
+        upload_date: new Date(),
+        invoice_date: new Date(),
+        vendor_name: 'Vendor A',
+        owner_name: 'Owner B',
+        invoice_description: '',
         amount: 1000.00,
-        invoice_url: 'https://example.com/invoice2.pdf',
-        status: 'processed',
+        invoice_filename: 'invoice.pdf',
         data:{}
     });
 
     const invoice3 = new Invoice({
         invoice_id: 'INV003',
-        invoice_name: 'Invoice 3',
-        date_of_upload: new Date(),
-        date_of_received: new Date(),
-        name_of_the_vendor: 'Vendor A',
+        upload_date: new Date(),
+        invoice_date: new Date(),
+        vendor_name: 'Vendor A',
         amount: 1000.00,
-        invoice_url: 'https://example.com/invoice3.pdf',
-        status: 'processed',
+        invoice_description: '',
+        owner_name: 'Owner C',
+        invoice_filename: 'invoice.pdf',
         data:{}
     });
 
@@ -236,14 +236,13 @@ const seedDB = async () => {
                     "fields": [
                         "serial_no",
                         "asset_id",
-                        "name_of_the_vendor",
                         "ram",
                         "storage",
                         "processor",
                         "model",
                         "status"
                     ],
-                    "query": "[{\"$sort\":{\"updatedAt\":-1}},{\"$project\":{\"serial_no\":1,\"asset_id\":1,\"name_of_the_vendor\":1,\"ram\":1,\"storage\":1,\"processor\":1,\"model\":1,\"status\":1}},{\"$limit\":6}]",
+                    "query": "[{\"$sort\":{\"updatedAt\":-1}},{\"$project\":{\"serial_no\":1,\"asset_id\":1,\"ram\":1,\"storage\":1,\"processor\":1,\"model\":1,\"status\":1}},{\"$limit\":6}]",
                 }
             ],
         },
@@ -276,11 +275,10 @@ const seedDB = async () => {
                     "fields": [
                         "license_id",
                         "date_of_received",
-                        "name_of_the_vendor",
                         "warranty",
                         "status"
                     ],
-                    "query": "[{\"$sort\":{\"updatedAt\":-1}},{\"$project\":{\"license_id\":1,\"date_of_received\":1,\"name_of_the_vendor\":1,\"warranty\":1,\"status\":1}},{\"$limit\":6}]",
+                    "query": "[{\"$sort\":{\"updatedAt\":-1}},{\"$project\":{\"license_id\":1,\"date_of_received\":1,\"warranty\":1,\"status\":1}},{\"$limit\":6}]",
                 }
             ],
         },
@@ -324,11 +322,10 @@ const seedDB = async () => {
                         "invoice_id",
                         "date_of_received",
                         "date_of_upload",
-                        "name_of_the_vendor",
                         "amount",
                         "status"
                     ],
-                    "query": "[{\"$sort\":{\"updatedAt\":-1}},{\"$project\":{\"invoice_id\":1,\"date_of_received\":1,\"date_of_upload\":1,\"name_of_the_vendor\":1,\"amount\":1,\"status\":1}},{\"$limit\":6}]",
+                    "query": "[{\"$sort\":{\"updatedAt\":-1}},{\"$project\":{\"invoice_id\":1,\"date_of_received\":1,\"date_of_upload\":1,\"amount\":1,\"status\":1}},{\"$limit\":6}]",
                 }
             ],
         }
@@ -435,23 +432,137 @@ const seedDB = async () => {
         },
     ]);
     await MetaData.insertMany([
-        { belongs_to: "invoices", id: 'invoice_id', label: 'Invoice ID', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "invoices", id: 'invoice_name', label: 'Invoice Name', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "invoices", id: 'date_of_upload', label: 'Date Of Upload', type: 'date', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "invoices", id: 'date_of_received', label: 'Date Of Received', type: 'date', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "invoices", id: 'name_of_the_vendor', label: 'Name Of The Vendor', type: 'text', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "invoices", id: 'amount', label: 'Amount', type: 'numeric', required: true, additional: false, create: true, edit: true },
-        { belongs_to: "invoices", id: 'invoice_url', label: 'Invoice URL', type: 'text', required: true, additional: false, create: true, edit: true },
-        {
-            belongs_to: "invoices", id: 'status', label: 'Status', type: 'select', required: true, additional: false, create: true, edit: true, options: [
-                { label: 'Processed', value: 'processed' },
-                { label: 'Pending', value: 'pending' },
-                { label: 'Rejected', value: 'rejected' }
-            ]
-        },
-        {
-            belongs_to: "invoices", id: 'data', label: 'Data', type: 'object', required: true, additional: false, create: true, edit: true
-        }
+        //Here the assets,licenses metadatas are being added to the invoice itself the correct thing is to change the assets, license model and in frontend get these things separately by hitting apis for assets and licenses
+        //For now the entire flow gets disturbed if models of assets, licenses are changes better to keep them here.
+        //TODO: Revamp the entire flow to get assets, licenses and dynamic object controllers related to the changed schemas.
+        { id: 'invoice_id', label: 'Invoice ID', type: 'text', required: true, visible: true, create: true, edit: true, belongs_to: 'invoices' },
+        { id: 'vendor_name', label: 'Vendor Name', type: 'text', required: true, visible: true, create: true, edit: true, belongs_to: 'invoices' },
+        { id: 'invoice_date', label: 'Invoice Date', type: 'date', required: true, visible: true, create: true, edit: true, belongs_to: 'invoices' },
+        { id: 'upload_date', label: 'Upload Date', type: 'date', required: true, visible: true, create: true, edit: true, belongs_to: 'invoices' },
+        { id: 'invoice_description', label: 'Invoice Description', type: 'text', required: true, visible: true, create: true, edit: true, belongs_to: 'invoices' },
+        { id: 'owner_name', label: 'Owner Name', type: 'text', required: true, visible: true, create: true, edit: true, belongs_to: 'invoices' },
+        { id: 'category', label: 'Category', type: 'select', options: [
+            { label: 'Laptop', value: 'laptop' },
+            { label: 'Desktop', value: 'desktop' },
+            { label: 'Server', value: 'server' },
+            { label: 'Printer', value: 'printer' },
+            { label: 'Monitor', value: 'monitor' },
+            { label: 'Mouse', value: 'mouse' },
+            { label: 'Keyboard', value: 'keyboard' }
+        ], required: true, belongs_to: 'invoices' },
+        { id: 'make', label: 'Make', type: 'select', options: [
+            { label: 'Lenovo', value: 'lenovo' },
+            { label: 'Mac', value: 'mac' },
+            { label: 'Dell', value: 'dell' },
+            { label: 'HP', value: 'hp' },
+            { label: 'Logitech', value: 'logitech' },
+            { label: 'Samsung', value: 'samsung' },
+            { label: 'LG', value: 'lg' },
+            { label: 'Epson', value: 'epson' }
+        ], required: true, belongs_to: 'invoices' },
+        { id: 'model', label: 'Model', type: 'select', options: [
+            { label: 'MacBook Air', value: 'macbook_air' },
+            { label: 'MacBook Pro', value: 'macbook_pro' },
+            { label: 'ThinkPad X1 Carbon', value: 'thinkpad_x1_carbon' },
+            { label: 'ThinkPad T14', value: 'thinkpad_t14' },
+            { label: 'Latitude 9510', value: 'latitude_9510' },
+            { label: 'Inspiron 5406', value: 'inspiron_5406' },
+            { label: 'Galaxy Book Flex', value: 'galaxy_book_flex' },
+            { label: 'UltraFine 4K Display', value: 'ultrafine_4k_display' },
+            { label: 'WorkForce Pro WF-3820', value: 'workforce_pro_wf_3820' },
+            { label: 'Latitude', value: 'latitude' },
+            { label: 'ProBook', value: 'probook' },
+            { label: 'EliteBook', value: 'elitebook' },
+            { label: 'Chromebook', value: 'chromebook' },
+            { label: 'ThinkCentre', value: 'thinkcentre' },
+            { label: 'OptiPlex', value: 'optiplex' },
+            { label: 'Precision', value: 'precision' },
+            { label: 'PowerEdge', value: 'poweredge' },
+            { label: 'ProLiant', value: 'proliant' },
+            { label: 'Galaxy Book', value: 'galaxy_book' },
+            { label: 'UltraFine 5K Display', value: 'ultrafine_5k_display' },
+            { label: 'WorkForce Pro WF-7840', value: 'workforce_pro_wf_7840' }
+        ], required: true, belongs_to: 'invoices' },
+        { id: 'warranty', label: 'Warranty Type', type: 'select', options: [
+            { label: 'Apple Care', value: 'apple_care' },
+            { label: 'Basic', value: 'basic' },
+            { label: 'ADP', value: 'adp' }
+        ], required: true, belongs_to: 'invoices' },
+        { id: 'cost', label: 'Cost', type: 'numeric', required: true, belongs_to: 'invoices' },
+        { id: 'os_type', label: 'OS Type', type: 'select', options: [
+            { label: 'Mac', value: 'mac' },
+            { label: 'Windows', value: 'windows' },
+            { label: 'Linux', value: 'linux' }
+        ], required: true, belongs_to: 'invoices' },
+        { id: 'processor', label: 'Processor', type: 'select', options: [
+            { label: 'M1', value: 'm1' },
+            { label: 'M1 Pro', value: 'm1_pro' },
+            { label: 'M1 Max', value: 'm1_max' },
+            { label: 'M2', value: 'm2' },
+            { label: 'M2 Pro', value: 'm2_pro' },
+            { label: 'M2 Max', value: 'm2_max' },
+            { label: 'M3', value: 'm3' },
+            { label: 'M3 Pro', value: 'm3_pro' },
+            { label: 'M3 Max', value: 'm3_max' },
+            { label: 'i3', value: 'i3' },
+            { label: 'i5', value: 'i5' },
+            { label: 'i7', value: 'i7' },
+            { label: 'i9', value: 'i9' },
+            { label: 'Ryzen 3', value: 'ryzen_3' },
+            { label: 'Ryzen 5', value: 'ryzen_5' },
+            { label: 'Ryzen 7', value: 'ryzen_7' },
+            { label: 'Ryzen 9', value: 'ryzen_9' }
+        ], required: true, belongs_to: 'invoices' },
+        { id: 'ram', label: 'RAM', type: 'select', options: [
+            { label: '8GB', value: '8gb' },
+            { label: '16GB', value: '16gb' },
+            { label: '32GB', value: '32gb' },
+            { label: '64GB', value: '64gb' },
+            { label: '128GB', value: '128gb' }
+        ], required: true, belongs_to: 'invoices' },
+        { id: 'storage', label: 'Storage', type: 'select', options: [
+            { label: '128GB', value: '128gb' },
+            { label: '256GB', value: '256gb' },
+            { label: '512GB', value: '512gb' },
+            { label: '1TB', value: '1tb' },
+            { label: '2TB', value: '2tb' }
+        ], required: true, belongs_to: 'invoices' },
+        { id: 'warranty_period', label: 'Warranty Period', type: 'select', options: [
+            { label: '1 Year', value: '1year' },
+            { label: '2 Years', value: '2years' },
+            { label: '3 Years', value: '3years' },
+            { label: '4 Years', value: '4years' },
+            { label: '5 Years', value: '5years' }
+        ], required: true, belongs_to: 'invoices',default: '3years' },
+        { id: 'warranty_start_date', label: 'Warranty Start Date', type: 'date', required: true, belongs_to: 'invoices' },
+        { id: 'serial_no', label: 'Serial No', type: 'text', required: true, belongs_to: 'licenses' },
+        { id: 'category', label: 'Category', type: 'select', options: [
+            { label: 'Sophos', value: 'sophos' },
+            { label: 'Grammarly', value: 'grammarly' },
+            { label: 'Microsoft', value: 'microsoft' },
+            { label: 'Adobe', value: 'adobe' },
+            { label: 'Autodesk', value: 'autodesk' }
+        ], required: true, belongs_to: 'licenses' },
+        { id: 'model', label: 'Model', type: 'text', required: true, belongs_to: 'licenses' },
+        { id: 'cost', label: 'Cost', type: 'numeric', required: true, belongs_to: 'licenses' },
+        { id: 'warranty', label: 'Warranty Type', type: 'select', options: [
+            { label: 'Basic', value: 'basic' },
+            { label: 'ADP', value: 'adp' },
+            { label: 'Apple Care', value: 'apple_care' }
+        ], required: true, belongs_to: 'licenses' },
+        { id: 'warranty_period', label: 'Warranty Period', type: 'select', options: [
+            { label: '1 Year', value: '1year' },
+            { label: '2 Years', value: '2years' },
+            { label: '3 Years', value: '3years' },
+            { label: '4 Years', value: '4years' },
+            { label: '5 Years', value: '5years' }
+        ], required: true, belongs_to: 'licenses',default: '3years' },
+        { id: 'warranty_start_date', label: 'Warranty Start Date', type: 'date', required: true, belongs_to: 'licenses' },
+        { id: 'invoice_type', label: 'Invoice Type', type: 'select', options: [
+            { label: 'Own', value: 'own' },
+            { label: 'Rental', value: 'rental' }
+        ], belongs_to: 'invoices',required: true },
+        { id: 'total_amount', label: 'Total Amount', type: 'numeric', belongs_to: 'invoices',required:true }
     ]);
 
     const userPreferences1 = new UserVisibility({
@@ -475,7 +586,6 @@ const seedDB = async () => {
                 "assigned_to": true,
                 "expiry": true,
                 "date_of_received": true,
-                "name_of_the_vendor": true,
             },
             licenses: {
                 "serial_no": true,
@@ -483,7 +593,6 @@ const seedDB = async () => {
                 "category": true,
                 "invoice_id": true,
                 "date_of_received": true,
-                "name_of_the_vendor": true,
                 "assigned_to": true,
                 "model": true,
                 "start": true,
@@ -494,12 +603,12 @@ const seedDB = async () => {
             },
             invoices: {
                 "invoice_id": true,
-                "invoice_name": true,
-                "date_of_upload": true,
-                "date_of_received": true,
-                "name_of_the_vendor": true,
+                "owner_name": true,
+                "invoice_date": true,
+                "upload_date": true,
+                "invoice_description": true,
+                "vendor_name": true,
                 "amount": true,
-                "status": true,
             },
         },
     });
@@ -524,12 +633,10 @@ const seedDB = async () => {
                 "serial_no": true,
                 "asset_id": true,
                 "date_of_received": true,
-                "name_of_the_vendor": true,
             },
             licenses: {
                 "license_id": true,
                 "date_of_received": true,
-                "name_of_the_vendor": true,
                 "invoice_id": true,
                 "make": true,
                 "model": true,
@@ -542,7 +649,7 @@ const seedDB = async () => {
                 "invoice_id": true,
                 "date_of_upload": true,
                 "date_of_received": true,
-                "name_of_the_vendor": true,
+                "vendor_name": true,
                 "amount": true,
                 "status": true,
             },

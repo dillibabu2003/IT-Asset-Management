@@ -3,7 +3,7 @@ const path=require("path");
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, 'uploads/profile-pics')
+      cb(null, './uploads/profile-pics')
     },
     filename: function (req, file, cb) {
       const fileName = path.basename(req.user.id+path.extname(file.originalname));                         
@@ -15,9 +15,7 @@ const storage = multer.diskStorage({
     }
   })
   
-  const profilePicUpload = multer({ storage: storage }
-
-  );
+  const profilePicUpload = multer({ storage: storage });
 
   module.exports={profilePicUpload};
   

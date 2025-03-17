@@ -9,7 +9,7 @@ const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const { encryptData} = require("../utils/encrypt");
 const UserVisibility = require("../models/userPreference");
-const { uploadFileToS3 } = require("../services/s3");
+const { uploadFileToS3 } = require("./services");
 const mongoose = require("mongoose");
 const { hitEmailServerApi } = require("../services/email");
 const { EMAIL_TYPES } = require("../utils/constants");
@@ -98,7 +98,7 @@ const createUser = asyncHandler(async (req, res) => {
       }
       console.log(user)
       const userInfo = await user.save({session: session});
-      await initailizeAllObjectsFieldsAsVisibleWithUserid(userInfo.user_id,session);
+      await initailizeAllObjectsFieldsAsVisibleWithUserid(userInfo._id,session);
       await session.commitTransaction();
       session.endSession();
 
