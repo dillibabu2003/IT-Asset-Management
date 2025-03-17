@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Box,
     Button,
@@ -35,6 +35,7 @@ import Icon from "../components/Icon";
 import { convertPascaleCaseToSnakeCase, convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 import axiosInstance from '../utils/axios';
 import toast from 'react-hot-toast';
+import { PAGE_LIMIT } from '../utils/constants';
 // import ApiError from '../../../backend/utils/ApiError';
 
 
@@ -89,49 +90,7 @@ function InputField({ label, type, id, value, options, required, setInputValue }
                 />
             ));
 }
-
-function TableFilter({ columns, onApplyFilters, open, onClose }) {
-    const [filters, setFilters] = useState({});
-
-    const handleApplyFilters = () => {
-        onApplyFilters(filters);
-        onClose();
-    };
-
-    return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>Filter Invoices</DialogTitle>
-            <DialogContent>
-                <Stack spacing={2}>
-                    {Object.keys(columns).map((key) => {
-                        const column = columns[key];
-                        return (
-                            <TextField
-                                key={key}
-                                fullWidth
-                                size="small"
-                                label={column.label}
-                                select={column.type === 'select'}
-                                value={filters[key] || ''}
-                                onChange={(e) => setFilters({ ...filters, [key]: e.target.value })}
-                            >
-                                {column.type === 'select' && column.options.map((option) => (
-                                    <option key={option} value={option}>{option}</option>
-                                ))}
-                            </TextField>
-                        );
-                    })}
-                </Stack>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Cancel</Button>
-                <Button onClick={handleApplyFilters} variant="contained">Apply</Button>
-            </DialogActions>
-        </Dialog>
-    );
-}
-
-function EditableItemTable({ items, columns, onEdit, onDelete }) {
+function ParsedInvoiceData({ items, columns, onEdit, onDelete }) {
     if (items.length == 0) return <>No items found.</>;
 
     return <Box>
@@ -148,7 +107,7 @@ function EditableItemTable({ items, columns, onEdit, onDelete }) {
                                         label={column.label}
                                         type={column.type}
                                         id={column.id}
-                                        value={item[key]}
+                                        value={item[key] || column.default}
                                         options={column.options}
                                         required={column.required}
                                         setInputValue={
@@ -171,11 +130,11 @@ function EditableItemTable({ items, columns, onEdit, onDelete }) {
 
 
 const columns = {
-    invoice_id: { id: 'invoice_id', label: 'Invoice ID', type: 'text', required: true },
-    vendor_name: { id: 'vendor_name', label: 'Vendor Name', type: 'text', required: true },
-    invoice_date: { id: 'invoice_date', label: 'Invoice Date', type: 'datetime', required: true },
-    invoice_description: { id: 'invoice_description', label: 'Invoice Description', type: 'text', required: true },
-    owner_name: { id: 'owner_name', label: 'Owner Name', type: 'text', required: true },
+    invoice_id: { id: 'invoice_id', label: 'Invoice ID', type: 'text', required: true,visible: true,create:true,edit: true},
+    vendor_name: { id: 'vendor_name', label: 'Vendor Name', type: 'text', required: true,visible: true,create:true,edit: true},
+    invoice_date: { id: 'invoice_date', label: 'Invoice Date', type: 'datetime', required: true,visible: true,create:true,edit: true},
+    invoice_description: { id: 'invoice_description', label: 'Invoice Description', type: 'text', required: true,visible: true,create:true,edit: true},
+    owner_name: { id: 'owner_name', label: 'Owner Name', type: 'text', required: true,visible: true,create:true,edit: true },
     assets: {
         serial_no: { id: 'serial_no', label: 'Serial No', type: 'text', required: true },
         category: {
@@ -185,7 +144,11 @@ const columns = {
             options: [
                 { label: 'Laptop', value: 'laptop' },
                 { label: 'Desktop', value: 'desktop' },
-                { label: 'Server', value: 'server' }
+                { label: 'Server', value: 'server' },
+                { label: 'Printer', value: 'printer' },
+                { label: 'Monitor', value: 'monitor' },
+                { label: 'Mouse', value: 'mouse' },
+                { label: 'Keyboard', value: 'keyboard' }
             ],
             required: true
         },
@@ -319,6 +282,7 @@ const columns = {
                 { label: '4 Years', value: '4years' },
                 { label: '5 Years', value: '5years' }
             ],
+            default: '3years',
             required: true
         },
         warranty_start_date: {
@@ -402,19 +366,23 @@ const filterColumns = {
 
 
 
-function InvoiceSection() {
-    const [page, setPage] = useState(1);
+function InvoiceSection(
+    {
+        refreshData,
+        ...props
+    }
+) {
+    
     const [dragActive, setDragActive] = useState(false);
     const [processingStatus, setProcessingStatus] = useState({
         loading: false,
         message: null
     });
     const [currentInvoice, setCurrentInvoice] = useState(null);
-    const [previewOpen, setPreviewOpen] = useState(false);
     const [error, setError] = useState(null);
-    const [filterOpen, setFilterOpen] = useState(false);
-    const [filters, setFilters] = useState({});
     const fileInputRef = useRef(null);
+
+    
 
     const handleDrag = (e) => {
         e.preventDefault();
@@ -459,39 +427,13 @@ function InvoiceSection() {
 
         const document = await processFile(file);
         setCurrentInvoice(document);
-        // Convert file to base64 using FileReader
-        // const reader = new FileReader();
-        // reader.onloadend = async () => {
-        //   const base64String = reader.result.split(',')[1]; // Remove the data URL prefix
-        //   // console.log("Base64 Encoded File: ", base64String);
-
-        //   // Call your function to process the base64 string with Gemini
-        //   try {
-        //     const JsonResponse = await getDataFromGemini(base64String, file.type);
-        //     const document=JSON.parse(JsonResponse.candidates[0].content.parts[0].text);
-        //     console.log(document);
-        //     setCurrentInvoice(document);
-        //   } catch (error) {
-        //     console.error("Error processing the file with Gemini:", error);
-        //   }
-        // };
-
-        // reader.onerror = () => {
-        //   console.error("Error reading file");
-        // };
-
-        // reader.readAsDataURL(file); // Reads the file as a Data URL (base64 encoded string)
     };
 
     const processFile = async (file) => {
         try {
             setError(null);
-            setProcessingStatus({ loading: true, message: 'Uploading file...' });
-
-            // Simulate file upload
-            setProcessingStatus(prev => ({ ...prev, message: "Extracting text..." }));
-
             // Read file content
+            setProcessingStatus({ loading: true, message: 'Uploading file...' });
             const content = await readFileContent(file);
             const base64String = content.split(',')[1]; // Remove the data URL prefix
 
@@ -529,296 +471,195 @@ function InvoiceSection() {
         }
     };
 
-    const addInvoiceData=async(document)=>{
-        try{
-            const invoiceResponse= await axiosInstance.post("/invoice/create",document);
+    const addInvoiceDataToDB = async (document) => {
+        try {
+            const invoiceResponse = await axiosInstance.post("/invoices/create", document);
             return invoiceResponse;
-        }catch(err){
-            console.error("Error Updating the Invoice details: ",err);
+        } catch (err) {
+            console.error("Error Updating the Invoice details: ", err);
+            return err.response;
         }
     }
-    const handleSaveInvoice = async() => {
-        console.log(currentInvoice);
-        // Save to DB call should come here...
-
-        // Save to s3.
+    const handleSaveInvoice = async () => {
         const file = fileInputRef.current.files[0];
-        console.log(file);
-        // console.log(fileInputRef.current.target.files[0]);
         const fileType = file.type;
-        const toastId = toast.loading("Uploading the file to s3...");
+        const toastId = toast.loading("Saving data...");
         try {
+            const invoice_filename = currentInvoice.invoice_id+"."+fileType.split("/")[1];
+            currentInvoice.invoice_filename = invoice_filename;
+            const savedData = await addInvoiceDataToDB(currentInvoice);
+            const invoice = savedData.data.data;
+            if(!savedData.data.success){
+                toast.error("Failed to save data.", { id: toastId });
+                return;
+            }
+            toast.loading("Uploading invoice...", { id: toastId });
             const preSignedUrlResponse = await axiosInstance.post("/services/s3/put-object-url", {
                 "content_type": fileType,
-                "type": "invoice"
-            })
-
+                "type": "invoice",
+                "file_name": invoice.invoice_id
+            });
             if (preSignedUrlResponse.data.success) {
                 const { url, file_name } = preSignedUrlResponse.data.data;
                 const response = await uploadFileToS3(url, file, fileType);
-                const dataUpdate=await addInvoiceData(currentInvoice);
                 if (response) {
-                    toast.success("Invoice uploaded successfully",{id: toastId});
-                    fileInputRef.current.value=null;
+                    toast.success("Invoice uploaded and data saved successfully.", { id: toastId });
+                    fileInputRef.current.value = null;
+                    setTimeout(() => {
+                        refreshData();
+                    }, 1000);
                     setCurrentInvoice(null);
                 }
             }
         } catch (error) {
-            console.error('Error uploading file to S3:', error);
-            toast.error(error.response.data.message || "Failed to save invoice.",{id: toastId});
+            console.error('Error occurred while uploading or saving data. Try again.', error);
+            toast.error(error.response.data.message || "Failed to save invoice.", { id: toastId });
         }
 
 
     };
 
-const handleApplyFilters = (newFilters) => {
-    setFilters(newFilters);
-    // Apply filters to data
-};
-
-return (
-    <Box>
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h5" fontWeight="500">Invoices</Typography>
-        </Box>
-
-        <Paper
-            sx={{
-                p: 3,
-                mb: 3,
-                border: '2px dashed',
-                borderColor: dragActive ? 'primary.main' : 'grey.300',
-                backgroundColor: dragActive ? 'action.hover' : 'background.paper',
-                transition: 'all 0.2s ease-in-out'
-            }}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-        >
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Icon name="upload" size={48} color="#666" />
-                <Typography variant="h6" sx={{ mt: 2 }}>
-                    Drag and drop your invoice here
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    or
-                </Typography>
-                <Button
-                    variant="outlined"
-                    onClick={() => fileInputRef.current?.click()}
-                    sx={{ textTransform: 'none' }}
-                >
-                    Browse Files
-                </Button>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileInput}
-                    style={{ display: 'none' }}
-                    accept=".pdf,.png,.jpg,.jpeg"
-                />
-                <Typography variant="caption" display="block" sx={{ mt: 1 }} color="text.secondary">
-                    Supported formats: PDF, PNG, JPEG (Max size: 10MB)
-                </Typography>
+    return (
+        <Box>
+            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h5" fontWeight="500">Invoices</Typography>
             </Box>
 
-            {processingStatus.loading && (
-                <Box sx={{ mt: 2 }}>
-                    <Stack spacing={2}>
-                        <Alert severity="info" icon={<CircularProgress size={20} />}>
-                            {processingStatus.message}
+            <Paper
+                sx={{
+                    p: 3,
+                    mb: 3,
+                    border: '2px dashed',
+                    borderColor: dragActive ? 'primary.main' : 'grey.300',
+                    backgroundColor: dragActive ? 'action.hover' : 'background.paper',
+                    transition: 'all 0.2s ease-in-out'
+                }}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+            >
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Icon name="upload" size={48} color="#666" />
+                    <Typography variant="h6" sx={{ mt: 2 }}>
+                        Drag and drop your invoice here
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        or
+                    </Typography>
+                    <Button
+                        variant="outlined"
+                        onClick={() => fileInputRef.current?.click()}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Browse Files
+                    </Button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileInput}
+                        style={{ display: 'none' }}
+                        accept=".pdf,.png,.jpg,.jpeg"
+                    />
+                    <Typography variant="caption" display="block" sx={{ mt: 1 }} color="text.secondary">
+                        Supported formats: PDF, PNG, JPEG (Max size: 10MB)
+                    </Typography>
+                </Box>
+
+                {processingStatus.loading && (
+                    <Box sx={{ mt: 2 }}>
+                        <Stack spacing={2}>
+                            <Alert severity="info" icon={<CircularProgress size={20} />}>
+                                {processingStatus.message}
+                            </Alert>
+                        </Stack>
+                    </Box>
+                )}
+
+                {error && (
+                    <Box sx={{ mt: 2 }}>
+                        <Alert severity="error" onClose={() => setError(null)}>
+                            {error}
                         </Alert>
-                    </Stack>
+                    </Box>
+                )}
+            </Paper>
+            {currentInvoice && (
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>Invoice Details</Typography>
+                    <Grid container spacing={3} sx={{ mt: 1 }}>
+                        {
+                            Object.keys(columns).map((key) => {
+                                const column = columns[key];
+                                return (column.type != undefined &&
+                                    <Grid item xs={12} key={column.id} md={6}>
+                                        {/* Main details of invoice will be rendered here. */}
+                                        <InputField
+                                            label={column.label}
+                                            type={column.type}
+                                            id={column.id}
+                                            value={currentInvoice[key] ?? column.default}
+                                            options={column.options}
+                                            required={column.required}
+                                            setInputValue={setCurrentInvoice}
+                                        />
+                                    </Grid>
+                                )
+                            })
+                        }
+                    </Grid>
                 </Box>
             )}
-
-            {error && (
-                <Box sx={{ mt: 2 }}>
-                    <Alert severity="error" onClose={() => setError(null)}>
-                        {error}
-                    </Alert>
-                </Box>
-            )}
-        </Paper>
-        {currentInvoice && (
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>Invoice Details</Typography>
-                <Grid container spacing={3} sx={{ mt: 1 }}>
-
-                    {
-                        Object.keys(columns).map((key) => {
-                            const column = columns[key];
-                            return (column.type != undefined &&
-                                <Grid item xs={12} key={column.id} md={6}>
-                                    <InputField
-                                        label={column.label}
-                                        type={column.type}
-                                        id={column.id}
-                                        value={currentInvoice[key]}
-                                        options={column.options}
-                                        required={column.required}
-                                        setInputValue={setCurrentInvoice}
-                                    />
-                                </Grid>
-                            )
-                        })
-                    }
-                </Grid>
-            </Box>
-        )}
-        {
-            currentInvoice && Object.keys(columns).map((outerKey) => {
-                const innerObject = columns[outerKey]; // {serial_no: {id: ,label: , type: }}
-                return (
-                    innerObject.type == undefined &&
+            {
+                currentInvoice && Object.keys(columns).map((outerKey) => {
+                    const innerObject = columns[outerKey]; // {serial_no: {id: ,label: , type: }}
+                    return (
+                        innerObject.type == undefined &&
+                        <Box sx={{ mt: 3 }}>
+                            <Typography variant="h6" sx={{ mb: 2 }}>{convertSnakeCaseToPascaleCase(outerKey)}</Typography>
+                            {/* Details related to asset or license will be over here */}
+                            <ParsedInvoiceData
+                                items={currentInvoice[outerKey]}
+                                columns={innerObject}
+                                onEdit={(index, key, value) => {
+                                    setCurrentInvoice((prev) => {
+                                        const updatedData = [...prev[outerKey]];
+                                        updatedData[index][key] = value;
+                                        return { ...prev, [outerKey]: updatedData };
+                                    });
+                                }}
+                                onDelete={(index) => {
+                                    setCurrentInvoice((prev) => {
+                                        const updatedData = [...prev[outerKey]];
+                                        updatedData.splice(index, 1);
+                                        return { ...prev, [outerKey]: updatedData };
+                                    });
+                                }}
+                            />
+                        </Box>
+                    )
+                })
+            }
+            {
+                currentInvoice && (
                     <Box sx={{ mt: 3 }}>
-                        <Typography variant="h6" sx={{ mb: 2 }}>{convertSnakeCaseToPascaleCase(outerKey)}</Typography>
-
-                        <EditableItemTable
-                            items={currentInvoice[outerKey]}
-                            columns={innerObject}
-                            onEdit={(index, key, value) => {
-                                setCurrentInvoice((prev) => {
-                                    const updatedAssets = [...prev.assets];
-                                    updatedAssets[index][key] = value;
-                                    return { ...prev, assets: updatedAssets };
-                                });
-                            }}
-                            onDelete={(index) => {
-                                setCurrentInvoice((prev) => {
-                                    const updatedAssets = [...prev.assets];
-                                    updatedAssets.splice(index, 1);
-                                    return { ...prev, assets: updatedAssets };
-                                });
-                            }}
-                        />
+                        <Button
+                            variant="contained"
+                            onClick={handleSaveInvoice}
+                        >
+                            Save Invoice
+                        </Button>
                     </Box>
                 )
-            })
-        }
-        {
-            currentInvoice && (
-                <Box sx={{ mt: 3 }}>
-                    <Button
-                        variant="contained"
-                        onClick={handleSaveInvoice}
-                    >
-                        Save Invoice
-                    </Button>
-                </Box>
-            )
-        }
+            }
+            {!currentInvoice &&
+                <React.Fragment>
 
-        {/* </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setPreviewOpen(false)}>Cancel</Button>
-                    <Button onClick={handleSaveInvoice} variant="contained">Save Invoice</Button>
-                </DialogActions>
-            </Dialog> */}
-        {!currentInvoice &&
-            <React.Fragment>
-                <TableFilter
-                    columns={filterColumns}
-                    onApplyFilters={handleApplyFilters}
-                    open={filterOpen}
-                    onClose={() => setFilterOpen(false)}
-                />
-
-                <Paper sx={{ p: 3 }}>
-                    <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
-                        <TextField
-                            placeholder="Search invoices..."
-                            size="small"
-                            sx={{ width: 300 }}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Icon name="search" size={20} />
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                        <Box sx={{ flexGrow: 1 }} />
-                        <Button
-                            variant="outlined"
-                            startIcon={<Icon name="filter" size={18} />}
-                            onClick={() => setFilterOpen(true)}
-                            sx={{ textTransform: 'none' }}
-                        >
-                            Filter
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            startIcon={<Icon name="download" size={18} />}
-                            sx={{ textTransform: 'none' }}
-                        >
-                            Export
-                        </Button>
-                    </Box>
-
-                    <TableContainer>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>Invoice ID</TableCell>
-                                    <TableCell>Vendor Name</TableCell>
-                                    <TableCell>Date</TableCell>
-                                    <TableCell>Total Amount</TableCell>
-                                    <TableCell>Type</TableCell>
-                                    <TableCell align="right">Actions</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {[currentInvoice].filter(Boolean).map((invoice) => (
-                                    <TableRow key={invoice.invoice_id} hover>
-                                        <TableCell>{invoice.invoice_id}</TableCell>
-                                        <TableCell>{invoice.vendor_name}</TableCell>
-                                        <TableCell>{new Date(invoice.invoice_date).toLocaleDateString()}</TableCell>
-                                        <TableCell>${invoice.total_amount.toLocaleString()}</TableCell>
-                                        <TableCell>
-                                            <Chip
-                                                label={invoice.invoice_type}
-                                                color="primary"
-                                                size="small"
-                                            />
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                                <IconButton size="small">
-                                                    <Icon name="eye" size={18} />
-                                                </IconButton>
-                                                <IconButton size="small">
-                                                    <Icon name="download" size={18} />
-                                                </IconButton>
-                                                <IconButton size="small">
-                                                    <Icon name="more-vertical" size={18} />
-                                                </IconButton>
-                                            </Stack>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-
-                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="body2" color="text.secondary">
-                            Showing 1 to 1 of 1 entries
-                        </Typography>
-                        <Pagination
-                            count={1}
-                            page={page}
-                            onChange={(_, value) => setPage(value)}
-                            color="primary"
-                            size="small"
-                        />
-                    </Box>
-                </Paper>
-            </React.Fragment>
-        }
-    </Box>
-);
+                   
+                </React.Fragment>
+            }
+        </Box>
+    );
 }
 
 export default InvoiceSection;

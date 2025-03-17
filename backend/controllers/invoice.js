@@ -5,6 +5,7 @@ const Asset=require('../models/asset');
 const ApiResponse = require('../utils/ApiResponse');
 const { default: mongoose } = require('mongoose');
 const ApiError = require('../utils/ApiError');
+const UserColumnVisibilities = require('../models/userPreference');
 
 const convertYearsToNumbers=(years)=>{
     if(years==='1year')return 1;
@@ -29,11 +30,14 @@ const createInvoice=asyncHandler(async (req, res) => {
     const allInvoiceData=req.body;
     const requiredInvoicedata={};
     //Creating Invoices
-    requiredInvoicedata.date_of_upload=new Date();
-    requiredInvoicedata.date_of_received=allInvoiceData.invoice_date;
+    requiredInvoicedata.upload_date=new Date();
+    requiredInvoicedata.invoice_date=allInvoiceData.invoice_date;
+    requiredInvoicedata.invoice_description=allInvoiceData.invoice_description;
     requiredInvoicedata.vendor_name=allInvoiceData.vendor_name;
     requiredInvoicedata.amount=allInvoiceData.total_amount;
     requiredInvoicedata.invoice_id=allInvoiceData.invoice_id;
+    requiredInvoicedata.owner_name=allInvoiceData.owner_name;
+    requiredInvoicedata.invoice_filename=allInvoiceData.invoice_filename;
     requiredInvoicedata.data={};
     const session=await mongoose.startSession();
     try {
@@ -51,7 +55,7 @@ const createInvoice=asyncHandler(async (req, res) => {
                 initialLicenses[i].start=initialLicenses[i].warranty_start_date;
                 delete initialLicenses[i].warranty_start_date;
                 initialLicenses[i].end = new Date(initialLicenses[i].start);
-                initialLicenses[i].end.setFullYear(initialLicenses[i].end.getFullYear() + convertYearsToNumbers(initialLicenses[i].warranty_period));
+                initialLicenses[i].end.setFullYear(initialLicenses[i].end.getFullYear() + convertYearsToNumbers(initialLicenses[i].warranty_period ?? '3years'));    
             }
             const licenses=await License.insertMany(initialLicenses,{session:session});
             requiredInvoicedata.data["licenses"]=licenses;
@@ -68,7 +72,7 @@ const createInvoice=asyncHandler(async (req, res) => {
                delete initialAssets[i].warranty_start_date;
                delete initialAssets[i].warranty_type;
                initialAssets[i].end = new Date(initialAssets[i].start);
-               initialAssets[i].end.setFullYear(initialAssets[i].end.getFullYear() + convertYearsToNumbers(initialAssets[i].warranty_period));
+               initialAssets[i].end.setFullYear(initialAssets[i].end.getFullYear() + convertYearsToNumbers(initialAssets[i].warranty_period ?? '3years'));
 
             }
             // console.log("filtered Assets: "+initialAssets); 
@@ -151,10 +155,24 @@ const getInvoiceById=asyncHandler(async(req,res)=>{
       const invoice=await Invoice.find({invoice_id:invoice_id});
       res.json(new ApiResponse(invoice,{message:'Invoice Fetched Successfully'}));
 })
+const getUserColumnVisibilities = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const allColumnVisibilites = await UserColumnVisibilities.findOne({ user_id: userId });
+    if (!allColumnVisibilites) {
+        throw new ApiError(400, null, "User preferences not found");
+    }
+    
+    const invoicePreferences = allColumnVisibilites.visible_fields.get("invoices");
+    if (!invoicePreferences) {
+        throw new ApiError(400, null, "Invalid object name");
+    }
+    res.status(200).json(new ApiResponse(200, invoicePreferences, `Invoices Column preferences fetched successfully.`));
+});
 module.exports={
     createInvoice,
     updateInvoice,
     deleteInvoice,
     getPaginatedInvoices,
-    getInvoiceById
+    getInvoiceById,
+    getUserColumnVisibilities
 }

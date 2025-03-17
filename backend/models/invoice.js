@@ -6,15 +6,19 @@ const InvoiceSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  invoice_name: {
+  owner_name: {
     type: String,
     // required: true,
   },
-  date_of_upload: {
+  invoice_filename:{
+    type: String,
+    required: true
+  },
+  invoice_date: {
     type: Date,
     required: true,
   },
-  date_of_received: {
+  upload_date: {
     type: Date,
     required: true,
   },
@@ -25,6 +29,9 @@ const InvoiceSchema = new mongoose.Schema({
   amount: {
     type: Number,
     required: true,
+  },
+  invoice_description:{
+    type: String,
   },
   data:{
       type: Map,

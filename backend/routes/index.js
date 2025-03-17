@@ -20,7 +20,7 @@ indexRouter.use("/metadata",authenticateClient,metadataRouter);
 indexRouter.use("/services",authenticateClient,servicesRouter);
 indexRouter.use("/employees",authenticateClient,employeeRouter);
 indexRouter.use("/checkout",authenticateClient,checkoutRouter);
-indexRouter.use("/invoice",authenticateClient,invoiceRouter);
+indexRouter.use("/invoices",authenticateClient,invoiceRouter);
 
 
 
