@@ -12,7 +12,7 @@ dynamicObjectRouter.put("/:objectName/update", (req, res, next) => { authorizeCl
 dynamicObjectRouter.delete("/:objectName/delete", (req, res, next) => { authorizeClient([`delete:${req.params.objectName}`])(req, res, next) }, deleteDocumentOfObjectName);
 dynamicObjectRouter.delete("/:objectName/delete/bulk", (req, res, next) => { authorizeClient([`delete:${req.params.objectName}`])(req, res, next) }, deleteBulkDocumentsOfObjectName);
 
-dynamicObjectRouter.post("/:objectName/search", (req, res, next) => { authorizeClient([`view:${req.params.objectName}`])(req, res, next) }, getDataBySearchTermOfObjectName);
+dynamicObjectRouter.get("/:objectName/search", (req, res, next) => { authorizeClient([`view:${req.params.objectName}`])(req, res, next) }, getDataBySearchTermOfObjectName);
 dynamicObjectRouter.post("/:objectName/filter-docs/all", (req, res, next) => { authorizeClient([`view:${req.params.objectName}`])(req, res, next) }, getAllDataByFilterOfObjectName);
 dynamicObjectRouter.get("/:objectName/filter-docs/paginate", (req, res, next) => { authorizeClient([`view:${req.params.objectName}`])(req, res, next) }, getPaginatedDataWithFiltersByObjectName);
 module.exports = dynamicObjectRouter;

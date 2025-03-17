@@ -410,33 +410,36 @@ const getDataBySearchTermOfObjectName = asyncHandler(async (req, res) => {
     const objectName = req.params.objectName;
     console.log(req.body);
 
-    const { searchKey, category, status } = req.body;
-    if (searchKey == undefined || !category || !status) {
-        throw new ApiError(400, null, "Invalid search term or category or status");
+    const { searchKey,filters } = req.body;
+    if (searchKey === undefined && Object.keys(filters).length===0) {
+        throw new ApiError(400, null, "Invalid search term or category");
+    }
+    if(searchKey===undefined){
+        const objectData = await fetchPaginatedDocumentsWithFiltersByObjectName(objectName, parsedPageNumber, parsedDocumentsLimit, skip,JSON.parse(filters));
+        res.status(200).json(new ApiResponse(200, { documents: [...objectData[0].data], total: objectData[0].metadata[0]?.total!=undefined ? objectData[0].metadata[0]?.total: 0 }, `${objectName} fetched successfully`));
     }
     //check for the category as well
     const model = getModelByObjectName(objectName);
     if (!model) {
         throw new ApiError(400, null, "Invalid object name");
     }
-    if (searchKey.trim().length === 0) {
-        const firstTenDocuments = await fetchPaginatedDocumentsByFilter(objectName, { status }, 10, 0); //add category filter here after updating db and seeding
-        res.status(200).json(new ApiResponse(200, firstTenDocuments, `${objectName} fetched successfully`));
-        return;
-    }
+
     const objectData = await model.aggregate([
         {
             $search: {
-                index: "AssetIndex",
+                index: `${objectName}Index`,
                 text: {
                     query: searchKey,
                     path: ["asset_id", "make", "model", "ram", "storage", "processor", "os_type"],
                     fuzzy: {
                         prefixLength: 2,
-                        maxEdits: 2,
+                        // maxEdits: 2,
                     }
                 }
             }
+        },
+        {
+             $match:filters
         }
     ]);
     const totalDocuments = objectData.length;
