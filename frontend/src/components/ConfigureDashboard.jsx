@@ -19,6 +19,7 @@ import { ICONS } from '../utils/constants';
 import axiosInstance from '../utils/axios';
 import { DatePicker } from '@mui/x-date-pickers';
 import {availableDashboards} from '../utils/constants'
+import toast from 'react-hot-toast';
 
 function ConfigureDashboard() {
   const [selectedDashboard, setSelectedDashboard] = useState('');
@@ -181,8 +182,10 @@ function ConfigureDashboard() {
     console.log(dashboard);
     try {
       const response = await axiosInstance.post(`/dashboards/${selectedDashboard}/configure`, dashboard);
+      toast.success(response.data.message);
       console.log(response);
     } catch (error) {
+      toast.success(error.response.data.message);
       console.error(error);
 
     }
