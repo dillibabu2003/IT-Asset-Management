@@ -31,9 +31,9 @@ const AssetsPage = () => {
                 page: page,
                 limit: limit,
                 filters: JSON.stringify(filters || {})
-            } 
-            },
-            {signal: abortController.signal});
+            }
+        },
+            { signal: abortController.signal });
         return response.data;
     }
     async function fetchAssetsMetaData(abortController) {
@@ -56,12 +56,14 @@ const AssetsPage = () => {
         setSelectedRows([]);
         const toastId = toast.loading("Refreshing data...");
         const abortController = new AbortController();
-        fetchAssetsByPageAndLimit(abortController,page,pageLimit).then((response) => {
+        fetchAssetsByPageAndLimit(abortController, page, pageLimit).then((response) => {
             const assets = response.data;
             // const assetsMetaData = response[1].data;
             // const userColumnPreferences = response[2].data;
+            console.log(assets);
+            
             toast.success("Data refreshed", { id: toastId });
-            setData(prev=>{return {...prev, data: assets }});
+            setData(prev => { return { ...prev, data: assets } });
         }).catch((error) => {
             console.log(error);
             toast.error("An error occurred while refreshing data", { id: toastId });
@@ -278,8 +280,6 @@ const AssetsPage = () => {
 
     async function assignMultipleAssets() {
         try {
-            console.log(bulkAssignInfo);
-
             const response = await axiosInstance.post(`/checkout/assign/bulk`, {
                 object_name: "assets",
                 info_to_assign: bulkAssignInfo.serialNumbersMappedWithEmployeeIds
@@ -296,6 +296,90 @@ const AssetsPage = () => {
         } catch (error) {
             toast.error(error.response.data.message || "An error occurred");
         }
+    }
+
+    async function fetchAssetsBySearchTerm(searchValue) {
+        const abortController = new AbortController();
+        try {
+            const response = await axiosInstance.get("/objects/assets/search",
+                {
+                    params: {
+                        search_key: searchValue,
+                        page: page,
+                        page_limit: pageLimit,
+                        filters: JSON.stringify(filters || {})
+                    },
+                    signal: abortController.signal
+                }
+            );
+            // const sortedDocs =[];
+            //  response.data.data.documents.map(asset =>{
+            //     if(asset.serial_no.toLowerCase().includes(searchValue) ||
+            //     asset.assigned_to?.toLowerCase().includes(searchValue) ||
+            //     asset.status.toLowerCase().includes(searchValue) ||
+            //     asset.category.toLowerCase().includes(searchValue) ||
+            //     asset.model?.toLowerCase().includes(searchValue)){
+            //         sortedDocs.push(asset);
+            //     }
+            // });
+            
+            // console.log(sortedDocs);
+            
+            if(response.data.success){
+                setData(prev => {
+                    return {
+                        ...prev,
+                        data: response.data.data
+                    }
+                }
+                );
+                // setData(prev=>{ return { ...prev, data: response.data.data }});
+            }
+        } catch (error) {
+            console.error(error);
+        };
+    }
+
+    async function searchText(value) {
+        const searchValue =value.trim().toLowerCase();
+        if (searchValue.length<=2) {
+            if(data.data.documents.length == 0 || searchValue.length==0){
+                refreshData();
+            }
+        }
+        // Check if current input matches any existing options
+    const matchesExisting = data.data.documents.some(asset => 
+        asset.serial_no?.toLowerCase().includes(searchValue) ||
+        asset.assigned_to?.toLowerCase().includes(searchValue) ||
+        asset.status?.toLowerCase().includes(searchValue) ||
+        asset.category?.toLowerCase().includes(searchValue) ||
+        asset.model?.toLowerCase().includes(searchValue)
+        ) ;
+      if (matchesExisting && searchValue.length > 0) {
+        setData(prev => {
+            return {
+                ...prev,
+                data:{
+                    ...prev.data,
+                    documents: prev.data.documents.filter(asset => 
+                        asset.serial_no?.toLowerCase().includes(searchValue) ||
+                        asset.assigned_to?.toLowerCase().includes(searchValue) ||
+                        asset.status?.toLowerCase().includes(searchValue) ||
+                        asset.category?.toLowerCase().includes(searchValue) ||
+                        asset.model?.toLowerCase().includes(searchValue)
+                    )
+                }
+            }
+        }
+        );
+      }
+      // If no matches, fetch new options from backend
+      if (!matchesExisting && searchValue.length > 0) {
+        const timeoutId = setTimeout(() => {
+            fetchAssetsBySearchTerm(searchValue);
+        }, 700);
+        return () => clearTimeout(timeoutId);
+      }
     }
 
 
@@ -326,15 +410,15 @@ const AssetsPage = () => {
 
 
     // Set Filters
-    const handleFilterChange = async(newFilters) => {
+    const handleFilterChange = async (newFilters) => {
         sessionStorage.setItem("assets-filters", JSON.stringify(newFilters));
         setFilters(newFilters);
     }
     useEffect(() => {
-       if(filters==null || data ==null) return ;
-       refreshData();
+        if (filters == null || data == null) return;
+        refreshData();
     }, [filters]);
-    
+
 
     useEffect(() => {
         const abortController = new AbortController();
@@ -346,7 +430,7 @@ const AssetsPage = () => {
                 const userColumnPreferences = response[2].data;
                 console.log(data)
                 console.log(response);
-                
+
                 setData({ data: assets, fields: assetsMetaData, userColumnPreferences: userColumnPreferences });
             }).catch((error) => {
                 console.log(error);
@@ -393,7 +477,7 @@ const AssetsPage = () => {
                     </Box>
                 </ProtectedComponent>
             </Box>
-            {data==null ? <Loader /> :
+            {data == null ? <Loader /> :
                 <React.Fragment>
                     <CreateForm
                         currentSection="assets"
@@ -425,6 +509,7 @@ const AssetsPage = () => {
                         setItemSerialNumbersToBeUnassigned={setItemSerialNumbersToBeUnassigned}
                         selectedRows={selectedRows}
                         setSelectedRows={setSelectedRows}
+                        searchText={searchText}
                     />
                     {editInfo.showEditForm && data.fields && data.data && (
                         <EditForm

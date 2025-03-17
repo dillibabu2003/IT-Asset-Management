@@ -23,6 +23,7 @@ import {
   Tooltip,
   Toolbar,
   Typography,
+  InputAdornment,
 } from '@mui/material';
 import * as XLSX from 'xlsx';
 import Icon from './Icon';
@@ -100,7 +101,8 @@ function EnhancedTableToolbar(props) {
     setVisibleColumns,
     setItemSerialNumbersToBeAssigned,
     setItemSerialNumbersToBeUnassigned,
-    setItemSerialNumbersToBeDeleted 
+    setItemSerialNumbersToBeDeleted,
+    searchText
   } = props;
   const [columnsMenuAnchor, setColumnsMenuAnchor] = useState(null);
 
@@ -135,6 +137,8 @@ function EnhancedTableToolbar(props) {
   return (
     <Toolbar
       sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
         pl: { sm: 2 },
         pr: { xs: 1, sm: 1 },
         ...(numSelected > 0 && {
@@ -153,14 +157,19 @@ function EnhancedTableToolbar(props) {
           {numSelected} selected
         </Typography>
       ) : (
-        <Typography
-          sx={{ flex: '1 1 100%' }}
-          variant="h6"
-          id="tableTitle"
-          component="div"
-        >
-          {currentSection}
-        </Typography>
+        <TextField
+            placeholder={`Search ${currentSection}...`}
+            size="small"
+            sx={{ width: 300 }}
+            InputProps={{
+                startAdornment: (
+                    <InputAdornment position="start">
+                        <Icon name="search" size={20} />
+                    </InputAdornment>
+                ),
+            }}
+            onChange={(e) => searchText(e.target.value)}
+        />
       )}
       {numSelected > 0 ? (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -269,10 +278,11 @@ export default function CustomTable(
     setPageLimit, 
     userVisibleColumns, 
     selectedRows,
-    setSelectedRows 
+    setSelectedRows,
+    searchText
   }) {
   const [columns] = useState(data.fields);
-  const [orderBy, setOrderBy] = useState('serial_no');
+  const [orderBy, setOrderBy] = useState(null);
   const [order, setOrder] = useState('asc');
   const [visibleColumns, setVisibleColumns] = useState(userVisibleColumns);
   const [filteredDocuments, setFilteredDocuments] = useState(data.data.documents);
@@ -339,6 +349,7 @@ export default function CustomTable(
   };
 
   const sortedDocuments = [...filteredDocuments].sort((a, b) => {
+    if(orderBy==null) return filteredDocuments;
     if (order === 'asc') {
       return a[orderBy] < b[orderBy] ? -1 : 1;
     } else {
@@ -361,6 +372,7 @@ export default function CustomTable(
         setItemSerialNumbersToBeAssigned={setItemSerialNumbersToBeAssigned}
         setItemSerialNumbersToBeUnassigned={setItemSerialNumbersToBeUnassigned}
         setItemSerialNumbersToBeDeleted={setItemSerialNumbersToBeDeleted}
+        searchText={searchText}
       />
       <TableContainer sx={{ maxHeight: 600, overflow: 'auto', maxWidth: '100%', whiteSpace: 'nowrap' }}>
         <Table stickyHeader>

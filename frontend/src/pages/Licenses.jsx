@@ -298,6 +298,92 @@ const LicensePage = () => {
         }
     }
 
+    async function fetchLicensesBySearchTerm(searchValue) {
+        const abortController = new AbortController();
+        try {
+            const response = await axiosInstance.get("/objects/licenses/search",
+                {
+                    params: {
+                        search_key: searchValue,
+                        page: page,
+                        page_limit: pageLimit,
+                        filters: JSON.stringify(filters || {})
+                    },
+                    signal: abortController.signal
+                }
+            );
+            // const sortedDocs =[];
+            //  response.data.data.documents.map(asset =>{
+            //     if(asset.serial_no.toLowerCase().includes(searchValue) ||
+            //     asset.assigned_to?.toLowerCase().includes(searchValue) ||
+            //     asset.status.toLowerCase().includes(searchValue) ||
+            //     asset.category.toLowerCase().includes(searchValue) ||
+            //     asset.model?.toLowerCase().includes(searchValue)){
+            //         sortedDocs.push(asset);
+            //     }
+            // });
+            
+            // console.log(sortedDocs);
+            
+            if(response.data.success){
+                setData(prev => {
+                    return {
+                        ...prev,
+                        data: response.data.data
+                    }
+                }
+                );
+                // setData(prev=>{ return { ...prev, data: response.data.data }});
+            }
+        } catch (error) {
+            console.error(error);
+        };
+    }
+
+    async function searchText(value) {
+        const searchValue =value.trim().toLowerCase();
+        console.log(searchValue.length);
+        
+        if (searchValue.length<=2) {
+            if(data.data.documents.length == 0 || searchValue.length==0){
+                refreshData();
+            }
+        }
+        // Check if current input matches any existing options
+    const matchesExisting = data.data.documents.some(asset => 
+        asset.serial_no?.toLowerCase().includes(searchValue) ||
+        asset.assigned_to?.toLowerCase().includes(searchValue) ||
+        asset.status?.toLowerCase().includes(searchValue) ||
+        asset.category?.toLowerCase().includes(searchValue) ||
+        asset.model?.toLowerCase().includes(searchValue)
+        ) ;
+      if (matchesExisting && searchValue.length > 0) {
+        setData(prev => {
+            return {
+                ...prev,
+                data:{
+                    ...prev.data,
+                    documents: prev.data.documents.filter(asset => 
+                        asset.serial_no?.toLowerCase().includes(searchValue) ||
+                        asset.assigned_to?.toLowerCase().includes(searchValue) ||
+                        asset.status?.toLowerCase().includes(searchValue) ||
+                        asset.category?.toLowerCase().includes(searchValue) ||
+                        asset.model?.toLowerCase().includes(searchValue)
+                    )
+                }
+            }
+        }
+        );
+      }
+      // If no matches, fetch new options from backend
+      if (!matchesExisting && searchValue.length > 0) {
+        const timeoutId = setTimeout(() => {
+            fetchLicensesBySearchTerm(searchValue);
+        }, 700);
+        return () => clearTimeout(timeoutId);
+      }
+    }
+
 
     // Employee AutoComplete
     const employeeOptionLabel = (option) => { return option ? `${option.employee_id || ''} ${option.firstname || ''} ${option.lastname || ''}`.trim() : '' };
@@ -367,7 +453,7 @@ const LicensePage = () => {
     return (
         <React.Fragment>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5" fontWeight="500">licenses</Typography>
+                <Typography variant="h5" fontWeight="500">Licenses</Typography>
 
                 <ProtectedComponent requiredPermission={"create:licenses"}>
                     <Box sx={{ display: 'flex', gap: "8px", alignItems: "center" }}>
@@ -425,6 +511,7 @@ const LicensePage = () => {
                         setItemSerialNumbersToBeUnassigned={setItemSerialNumbersToBeUnassigned}
                         selectedRows={selectedRows}
                         setSelectedRows={setSelectedRows}
+                        searchText={searchText}
                     />
                     {editInfo.showEditForm && data.fields && data.data && (
                         <EditForm

@@ -47,6 +47,7 @@ async function executeAssignItemsCheckoutTransaction(model, serial_numbers, obje
             }
 
             //Update item status and assign to employee
+            availableItems[i].generateId(employeeDetails.employee_id,totalCheckoutsTillNowOfEmployee);
             availableItems[i].status = objectName == "assets" ? "deployed" : "activated";
             availableItems[i].assigned_to = employeeDetails._id;
 

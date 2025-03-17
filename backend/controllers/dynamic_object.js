@@ -408,45 +408,104 @@ const createDocumentOfObjectName = asyncHandler(async (req, res) => {
 
 const getDataBySearchTermOfObjectName = asyncHandler(async (req, res) => {
     const objectName = req.params.objectName;
-    console.log(req.body);
-
-    const { searchKey,filters } = req.body;
-    if (searchKey === undefined && Object.keys(filters).length===0) {
-        throw new ApiError(400, null, "Invalid search term or category");
+    const { search_key, filters,page,page_limit } = req.query;
+    if (search_key == undefined || !filters || !page || !page_limit) {
+        throw new ApiError(400, null, "Invalid search term or filters or page or page_limit");
     }
-    if(searchKey===undefined){
-        const objectData = await fetchPaginatedDocumentsWithFiltersByObjectName(objectName, parsedPageNumber, parsedDocumentsLimit, skip,JSON.parse(filters));
-        res.status(200).json(new ApiResponse(200, { documents: [...objectData[0].data], total: objectData[0].metadata[0]?.total!=undefined ? objectData[0].metadata[0]?.total: 0 }, `${objectName} fetched successfully`));
-    }
-    //check for the category as well
     const model = getModelByObjectName(objectName);
+    const parsedPageNumber = parseInt(page);
+    const parsedDocumentsLimit = parseInt(page_limit);
+    const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
     if (!model) {
         throw new ApiError(400, null, "Invalid object name");
     }
-
+    if (search_key.trim().length === 0) {
+        const firstTenDocuments = await fetchPaginatedDocumentsWithFiltersByObjectName(objectName,parsedPageNumber,parsedDocumentsLimit,skip, JSON.parse(filters) ?? {}); 
+        res.status(200).json(new ApiResponse(200, {documents: firstTenDocuments}, `${objectName} fetched successfully`));
+        return;
+    }
+    let path=["serial_no","category","assigned_to","status"];
+    if(objectName=="assets"){
+        path.push("asset_id","make","model","ram","storage","processor","os_type");
+    }
+    else if(objectName=="licenses"){
+        path.push("license_id","model");
+    }
     const objectData = await model.aggregate([
         {
             $search: {
                 index: `${objectName}Index`,
                 text: {
-                    query: searchKey,
-                    path: ["asset_id", "make", "model", "ram", "storage", "processor", "os_type"],
+                    query: search_key,
+                    path: path,
                     fuzzy: {
                         prefixLength: 2,
                         // maxEdits: 2,
                     }
                 }
             }
+        }, {
+            $match: JSON.parse(filters)
         },
         {
-             $match:filters
+            $facet: {
+                metadata: [{ $count: "total" }],
+                data: [
+                    { $skip: skip },
+                    { $limit: parsedDocumentsLimit },
+                    {
+                        $lookup: {
+                            from: "invoices",
+                            localField: "invoice_id",
+                            foreignField: "_id",
+                            as: "invoice_info"
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: "employees",
+                            localField: "assigned_to",
+                            foreignField: "_id",
+                            as: "employee_info"
+                        }
+                    },
+                    {
+                        $addFields: {
+                            invoice_id: { $first: "$invoice_info.invoice_id" },
+                            date_of_received: {
+                                $dateToString: {
+                                    date: { $first: "$invoice_info.date_of_received" },
+                                    format: "%d/%m/%Y"
+                                }
+                            },
+                            name_of_the_vendor: { $first: "$invoice_info.name_of_the_vendor" },
+                            employee_name: {
+                                $concat: [
+                                    { $first: "$employee_info.firstname" },
+                                    " ",
+                                    { $first: "$employee_info.lastname" }
+                                ]
+                            },
+                            employee_email: { $first: "$employee_info.email" },
+                            assigned_to: { $first: "$employee_info.employee_id" },
+                        }
+                    },
+                    {
+                        $project: {
+                            invoice_info: 0,
+                            employee_info: 0
+                        }
+                    }
+                ]
+            }
         }
     ]);
     const totalDocuments = objectData.length;
     if (totalDocuments === 0) {
         throw new ApiError(404, null, "No documents found");
     }
-    res.status(200).json(new ApiResponse(200, objectData, `${objectName} fetched successfully`));
+    res.status(200).json(new ApiResponse(200, { documents: [...objectData[0].data], total: objectData[0].metadata[0]?.total!=undefined ? objectData[0].metadata[0]?.total: 0 }, `${objectName} fetched successfully`));
+
 });
 
 const getAllDataByFilterOfObjectName = asyncHandler(async (req, res) => {
@@ -508,7 +567,6 @@ const deleteDocumentOfObjectName = asyncHandler(async (req, res) => {
     }
     res.status(200).json(new ApiResponse(200, deletedDocument, `${objectName} deleted successfully`));
 });
-// Functions which can be used for future purpose
 
 
 const deleteBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
@@ -533,6 +591,7 @@ const deleteBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, deletedDocuments, `${objectName} deleted successfully`));
 });
 
+// Functions which can be used for future purpose
 // const unassignDocumentOfObjectName = asyncHandler(async (req, res) => {
 //     const objectName = req.params.objectName;
 //     const model = getModelByObjectName(objectName);
