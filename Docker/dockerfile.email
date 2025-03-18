@@ -1,0 +1,7 @@
+FROM node:alpine
+WORKDIR /usr/src/app
+COPY ./email/package* ./
+RUN npm install
+COPY ./email ./
+EXPOSE 8885
+CMD ["npm", "start"]
