@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -11,68 +11,83 @@ import {
   IconButton,
   Chip,
   TextField,
-} from '@mui/material';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import Icon from './Icon';
-import { ICONS } from '../utils/constants';
-import axiosInstance from '../utils/axios';
-import { DatePicker } from '@mui/x-date-pickers';
-import {availableDashboards} from '../utils/constants'
-import toast from 'react-hot-toast';
+} from "@mui/material";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import Icon from "./Icon";
+import { ICONS } from "../utils/constants";
+import axiosInstance from "../utils/axios";
+import { DatePicker } from "@mui/x-date-pickers";
+import { availableDashboards } from "../utils/constants";
+import toast from "react-hot-toast";
 
 function ConfigureDashboard() {
-  const [selectedDashboard, setSelectedDashboard] = useState('');
+  const [selectedDashboard, setSelectedDashboard] = useState("");
   const [dashboard, setDashboard] = useState(null);
   const [fields, setFields] = useState([]);
 
   console.log(fields);
-  
+
   useEffect(() => {
     const abortController = new AbortController();
     async function fetchDashboardMetadataById(dashboard_id, abortController) {
       try {
-        const response = await axiosInstance.get(`/dashboards/${dashboard_id}/metadata`, { signal: abortController.signal });
+        const response = await axiosInstance.get(
+          `/dashboards/${dashboard_id}/metadata`,
+          { signal: abortController.signal },
+        );
         return response.data;
-      }
-      catch (error) {
+      } catch (error) {
         return error;
       }
     }
-    async function fetchFieldsOfObjectToWhichThisDashboardBelongTo(belongs_to, abortController) {
+    async function fetchFieldsOfObjectToWhichThisDashboardBelongTo(
+      belongs_to,
+      abortController,
+    ) {
       try {
-        const response = await axiosInstance.get(`/metadata/${belongs_to}`, { signal: abortController.signal });
+        const response = await axiosInstance.get(`/metadata/${belongs_to}`, {
+          signal: abortController.signal,
+        });
         return response.data;
-      }
-      catch (error) {
+      } catch (error) {
         return error;
       }
     }
 
     async function fetchRequiredData(abortController) {
-      const dashboardDataPromise = fetchDashboardMetadataById(selectedDashboard, abortController);
-      const fieldsPromise = fetchFieldsOfObjectToWhichThisDashboardBelongTo(selectedDashboard, abortController);
+      const dashboardDataPromise = fetchDashboardMetadataById(
+        selectedDashboard,
+        abortController,
+      );
+      const fieldsPromise = fetchFieldsOfObjectToWhichThisDashboardBelongTo(
+        selectedDashboard,
+        abortController,
+      );
       return Promise.all([dashboardDataPromise, fieldsPromise]);
     }
 
     if (selectedDashboard) {
-      fetchRequiredData(abortController).then(([dashboardData, fields]) => {
-        setDashboard(dashboardData.data);
-        setFields(fields.data);
-      }).catch((error) => {
-        console.error(error);
-        //TODO: add toastify here
-      });
+      fetchRequiredData(abortController)
+        .then(([dashboardData, fields]) => {
+          setDashboard(dashboardData.data);
+          setFields(fields.data);
+        })
+        .catch((error) => {
+          console.error(error);
+          //TODO: add toastify here
+        });
     }
     return () => {
       abortController.abort();
-    }
+    };
   }, [selectedDashboard]);
 
   const handleDragEnd = (result) => {
     if (!result.destination || !dashboard) return;
 
     const listType = result.type;
-    const list = listType === 'tile' ? [...dashboard.tiles] : [...dashboard.elements];
+    const list =
+      listType === "tile" ? [...dashboard.tiles] : [...dashboard.elements];
     const [removed] = list.splice(result.source.index, 1);
     list.splice(result.destination.index, 0, removed);
 
@@ -83,16 +98,16 @@ function ConfigureDashboard() {
 
     setDashboard({
       ...dashboard,
-      [listType === 'tile' ? 'tiles' : 'elements']: updatedList,
+      [listType === "tile" ? "tiles" : "elements"]: updatedList,
     });
   };
 
   const handleDeleteTile = (tileId) => {
     console.log(tileId);
-    
+
     if (!dashboard) return;
     const updatedTiles = dashboard.tiles
-      .filter(t => t._id !== tileId)
+      .filter((t) => t._id !== tileId)
       .map((tile, index) => ({ ...tile, order: index }));
 
     setDashboard({
@@ -104,7 +119,7 @@ function ConfigureDashboard() {
   const handleDeleteElement = (elementId) => {
     if (!dashboard) return;
     const updatedElements = dashboard.elements
-      .filter(e => e._id !== elementId)
+      .filter((e) => e._id !== elementId)
       .map((element, index) => ({ ...element, order: index }));
 
     setDashboard({
@@ -117,14 +132,14 @@ function ConfigureDashboard() {
     if (!dashboard) return;
     const newTile = {
       _id: `t${Date.now()}`,
-      title: 'New Tile',
-      func: 'count',
-      matcher_field: '',
+      title: "New Tile",
+      func: "count",
+      matcher_field: "",
       order: dashboard.tiles.length,
-      matcher_value: '',
-      target: '',
-      color: '#000000',
-      icon: 'check-circle',
+      matcher_value: "",
+      target: "",
+      color: "#000000",
+      icon: "check-circle",
     };
     setDashboard({
       ...dashboard,
@@ -136,8 +151,8 @@ function ConfigureDashboard() {
     if (!dashboard) return;
     const newElement = {
       _id: `e${Date.now()}`,
-      title: 'New Element',
-      type: 'table',
+      title: "New Element",
+      type: "table",
       fields: [],
       order: dashboard.elements.length,
     };
@@ -151,14 +166,14 @@ function ConfigureDashboard() {
     if (!dashboard) return;
     setDashboard({
       ...dashboard,
-      tiles: dashboard.tiles.map(t =>
-        t._id === tileId ?
-          {
-            ...t,
-            [field]: value,
-            ...(field === 'matcher_field' && { matcher_value: '' })
-          } :
-          t
+      tiles: dashboard.tiles.map((t) =>
+        t._id === tileId
+          ? {
+              ...t,
+              [field]: value,
+              ...(field === "matcher_field" && { matcher_value: "" }),
+            }
+          : t,
       ),
     });
   };
@@ -167,8 +182,8 @@ function ConfigureDashboard() {
     if (!dashboard) return;
     setDashboard({
       ...dashboard,
-      elements: dashboard.elements.map(e =>
-        e._id === elementId ? { ...e, [field]: value } : e
+      elements: dashboard.elements.map((e) =>
+        e._id === elementId ? { ...e, [field]: value } : e,
       ),
     });
   };
@@ -180,20 +195,24 @@ function ConfigureDashboard() {
     console.log(data);
     console.log(dashboard);
     try {
-      const response = await axiosInstance.post(`/dashboards/${selectedDashboard}/configure`, dashboard);
+      const response = await axiosInstance.post(
+        `/dashboards/${selectedDashboard}/configure`,
+        dashboard,
+      );
       toast.success(response.data.message);
       console.log(response);
     } catch (error) {
       toast.success(error.response.data.message);
       console.error(error);
-
     }
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <form onSubmit={handleSubmit}>
-        <Typography variant="h5" gutterBottom>Configure Dashboard</Typography>
+        <Typography variant="h5" gutterBottom>
+          Configure Dashboard
+        </Typography>
 
         <Paper sx={{ p: 3, mb: 3 }}>
           <FormControl fullWidth>
@@ -203,8 +222,10 @@ function ConfigureDashboard() {
               onChange={(e) => setSelectedDashboard(e.target.value)}
               label="Select Dashboard"
             >
-              {availableDashboards.map(d => (
-                <MenuItem key={d.id} value={d.id}>{d.label}</MenuItem>
+              {availableDashboards.map((d) => (
+                <MenuItem key={d.id} value={d.id}>
+                  {d.label}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -213,7 +234,14 @@ function ConfigureDashboard() {
         {dashboard && (
           <>
             <Paper sx={{ p: 3, mb: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 3,
+                }}
+              >
                 <Typography variant="h6">Tiles</Typography>
                 <Button
                   startIcon={<Icon name="plus" size={18} />}
@@ -230,57 +258,104 @@ function ConfigureDashboard() {
                   {(provided) => (
                     <div {...provided.droppableProps} ref={provided.innerRef}>
                       {dashboard.tiles.map((tile, index) => (
-                        <Draggable key={tile._id} draggableId={tile._id} index={index}>
+                        <Draggable
+                          key={tile._id}
+                          draggableId={tile._id}
+                          index={index}
+                        >
                           {(provided) => (
                             <Paper
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              sx={{ p: 2, mb: 2, bgcolor: 'grey.50' }}
+                              sx={{ p: 2, mb: 2, bgcolor: "grey.50" }}
                             >
-                              <Box container="true" sx={{ display: "flex", gap: 3, alignItems: 'center' }} spacing={2} alignItems="center">
+                              <Box
+                                container="true"
+                                sx={{
+                                  display: "flex",
+                                  gap: 3,
+                                  alignItems: "center",
+                                }}
+                                spacing={2}
+                                alignItems="center"
+                              >
                                 <Box {...provided.dragHandleProps}>
                                   <Icon name="grip-vertical" size={20} />
                                 </Box>
-                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flex: 1 }}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    gap: 2,
+                                    alignItems: "center",
+                                    flex: 1,
+                                  }}
+                                >
                                   <Box sx={{ flex: "1 1 0px" }}>
                                     <TextField
                                       fullWidth
                                       size="small"
                                       label="Name"
                                       value={tile.title}
-                                      onChange={(e) => handleUpdateTile(tile._id, 'title', e.target.value)}
+                                      onChange={(e) =>
+                                        handleUpdateTile(
+                                          tile._id,
+                                          "title",
+                                          e.target.value,
+                                        )
+                                      }
                                     />
                                   </Box>
-                                  {(
+                                  {
                                     <Box sx={{ flex: "1 1 0px" }}>
                                       <FormControl fullWidth size="small">
                                         <InputLabel>Matcher Field</InputLabel>
                                         <Select
                                           value={tile.matcher_field}
                                           label="Matcher Field"
-                                          onChange={(e) => handleUpdateTile(tile._id, 'matcher_field', e.target.value)}
+                                          onChange={(e) =>
+                                            handleUpdateTile(
+                                              tile._id,
+                                              "matcher_field",
+                                              e.target.value,
+                                            )
+                                          }
                                         >
                                           {/* mock fields are here */}
-                                          {Object.keys(fields).map(key => (
-                                            <MenuItem key={fields[key].id} value={fields[key].id}>
+                                          {Object.keys(fields).map((key) => (
+                                            <MenuItem
+                                              key={fields[key].id}
+                                              value={fields[key].id}
+                                            >
                                               {fields[key].label}
                                             </MenuItem>
                                           ))}
                                         </Select>
                                       </FormControl>
                                     </Box>
-                                  )}
-                                  {fields[tile.matcher_field]?.type === 'select' && (
+                                  }
+                                  {fields[tile.matcher_field]?.type ===
+                                    "select" && (
                                     <Box sx={{ flex: "1 1 0px" }}>
                                       <FormControl fullWidth size="small">
                                         <InputLabel>Matcher Value</InputLabel>
                                         <Select
                                           value={tile.matcher_value}
                                           label="Matcher Value"
-                                          onChange={(e) => handleUpdateTile(tile._id, 'matcher_value', e.target.value)}
+                                          onChange={(e) =>
+                                            handleUpdateTile(
+                                              tile._id,
+                                              "matcher_value",
+                                              e.target.value,
+                                            )
+                                          }
                                         >
-                                          {fields[tile.matcher_field]?.options.map(option => (
-                                            <MenuItem key={option.value} value={option.value}>
+                                          {fields[
+                                            tile.matcher_field
+                                          ]?.options.map((option) => (
+                                            <MenuItem
+                                              key={option.value}
+                                              value={option.value}
+                                            >
                                               {option.label}
                                             </MenuItem>
                                           ))}
@@ -289,14 +364,25 @@ function ConfigureDashboard() {
                                     </Box>
                                   )}
 
-                                  {fields[tile.matcher_field]?.type === 'date' && (
+                                  {fields[tile.matcher_field]?.type ===
+                                    "date" && (
                                     <>
                                       <Box sx={{ flex: "1 1 0px" }}>
                                         <FormControl fullWidth size="small">
                                           <DatePicker
                                             label={"Matcher Start Date"}
                                             name={"start_date"}
-                                            onChange={(newValue) => { handleUpdateTile(tile._id, 'matcher_value', { start_date: newValue.$d, end_date: tile.matcher_value.end_date }) }}
+                                            onChange={(newValue) => {
+                                              handleUpdateTile(
+                                                tile._id,
+                                                "matcher_value",
+                                                {
+                                                  start_date: newValue.$d,
+                                                  end_date:
+                                                    tile.matcher_value.end_date,
+                                                },
+                                              );
+                                            }}
                                             slotProps={{
                                               textField: {
                                                 fullWidth: true,
@@ -311,7 +397,18 @@ function ConfigureDashboard() {
                                           <DatePicker
                                             label={"Matcher End Date"}
                                             name={"end_date"}
-                                            onChange={(newValue) => { handleUpdateTile(tile._id, 'matcher_value', { start_date: tile.matcher_value.start_date, end_date: newValue.$d }) }}
+                                            onChange={(newValue) => {
+                                              handleUpdateTile(
+                                                tile._id,
+                                                "matcher_value",
+                                                {
+                                                  start_date:
+                                                    tile.matcher_value
+                                                      .start_date,
+                                                  end_date: newValue.$d,
+                                                },
+                                              );
+                                            }}
                                             slotProps={{
                                               textField: {
                                                 fullWidth: true,
@@ -329,7 +426,13 @@ function ConfigureDashboard() {
                                       <Select
                                         value={tile.func}
                                         label="Function"
-                                        onChange={(e) => handleUpdateTile(tile._id, 'func', e.target.value)}
+                                        onChange={(e) =>
+                                          handleUpdateTile(
+                                            tile._id,
+                                            "func",
+                                            e.target.value,
+                                          )
+                                        }
                                       >
                                         <MenuItem value="count">Count</MenuItem>
                                         <MenuItem value="sum">Sum</MenuItem>
@@ -337,26 +440,35 @@ function ConfigureDashboard() {
                                       </Select>
                                     </FormControl>
                                   </Box>
-                                  {(tile.func === 'sum' || tile.func === 'avg') && (
+                                  {(tile.func === "sum" ||
+                                    tile.func === "avg") && (
                                     <Box sx={{ flex: "1 1 0px" }}>
                                       <FormControl fullWidth size="small">
                                         <InputLabel>Target Field</InputLabel>
                                         <Select
                                           value={tile.target}
                                           label="Target Field"
-                                          onChange={(e) => handleUpdateTile(tile._id, 'target', e.target.value)}
-                                        >
-                                          {
-                                            Object.keys(fields).map(key => {
-                                              const field=fields[key];
-                                              return (
-                                                field.type === 'numeric' &&
-                                                <MenuItem key={field.id} value={field.id}>
-                                                {field.label}
-                                              </MenuItem>
-                                              )
+                                          onChange={(e) =>
+                                            handleUpdateTile(
+                                              tile._id,
+                                              "target",
+                                              e.target.value,
+                                            )
                                           }
-                                          )}
+                                        >
+                                          {Object.keys(fields).map((key) => {
+                                            const field = fields[key];
+                                            return (
+                                              field.type === "numeric" && (
+                                                <MenuItem
+                                                  key={field.id}
+                                                  value={field.id}
+                                                >
+                                                  {field.label}
+                                                </MenuItem>
+                                              )
+                                            );
+                                          })}
                                         </Select>
                                       </FormControl>
                                     </Box>
@@ -368,12 +480,29 @@ function ConfigureDashboard() {
                                       <Select
                                         value={tile.icon}
                                         label="Icon"
-                                        onChange={(e) => handleUpdateTile(tile._id, 'icon', e.target.value)}
+                                        onChange={(e) =>
+                                          handleUpdateTile(
+                                            tile._id,
+                                            "icon",
+                                            e.target.value,
+                                          )
+                                        }
                                       >
                                         {ICONS.map((icon) => (
-                                          <MenuItem key={icon} value={icon} style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                                          <MenuItem
+                                            key={icon}
+                                            value={icon}
+                                            style={{
+                                              display: "flex",
+                                              gap: 3,
+                                              alignItems: "center",
+                                            }}
+                                          >
                                             <Icon name={icon} size={18} />
-                                            {icon.split("-").map(c => c.toUpperCase()).join(" ")}
+                                            {icon
+                                              .split("-")
+                                              .map((c) => c.toUpperCase())
+                                              .join(" ")}
                                           </MenuItem>
                                         ))}
                                       </Select>
@@ -384,9 +513,15 @@ function ConfigureDashboard() {
                                       type="color"
                                       label="Color"
                                       value={tile.color}
-                                      onChange={(e) => handleUpdateTile(tile._id, 'color', e.target.value)}
+                                      onChange={(e) =>
+                                        handleUpdateTile(
+                                          tile._id,
+                                          "color",
+                                          e.target.value,
+                                        )
+                                      }
                                     />
-                                    </Box>
+                                  </Box>
                                 </Box>
                                 <Box>
                                   <IconButton
@@ -410,7 +545,14 @@ function ConfigureDashboard() {
             </Paper>
 
             <Paper sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 3,
+                }}
+              >
                 <Typography variant="h6">Elements</Typography>
                 <Button
                   startIcon={<Icon name="plus" size={18} />}
@@ -427,25 +569,47 @@ function ConfigureDashboard() {
                   {(provided) => (
                     <div {...provided.droppableProps} ref={provided.innerRef}>
                       {dashboard.elements.map((element, index) => (
-                        <Draggable key={element._id} draggableId={element._id} index={index}>
+                        <Draggable
+                          key={element._id}
+                          draggableId={element._id}
+                          index={index}
+                        >
                           {(provided) => (
                             <Paper
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              sx={{ p: 2, mb: 2, bgcolor: 'grey.50' }}
+                              sx={{ p: 2, mb: 2, bgcolor: "grey.50" }}
                             >
-                              <Box container="true" sx={{ display: "flex", gap: 3 }} spacing={2} alignItems="center">
+                              <Box
+                                container="true"
+                                sx={{ display: "flex", gap: 3 }}
+                                spacing={2}
+                                alignItems="center"
+                              >
                                 <Box {...provided.dragHandleProps}>
                                   <Icon name="grip-vertical" size={20} />
                                 </Box>
-                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flex: 1 }}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    gap: 2,
+                                    alignItems: "center",
+                                    flex: 1,
+                                  }}
+                                >
                                   <Box sx={{ flex: "1 1 0px" }} xs={3}>
                                     <TextField
                                       fullWidth
                                       size="small"
                                       label="Title"
                                       value={element.title}
-                                      onChange={(e) => handleUpdateElement(element._id, 'title', e.target.value)}
+                                      onChange={(e) =>
+                                        handleUpdateElement(
+                                          element._id,
+                                          "title",
+                                          e.target.value,
+                                        )
+                                      }
                                     />
                                   </Box>
                                   <Box sx={{ flex: "1 1 0px" }} xs={3}>
@@ -455,15 +619,32 @@ function ConfigureDashboard() {
                                         value={element.type}
                                         label="Type"
                                         onChange={(e) => {
-                                          handleUpdateElement(element._id, 'type', e.target.value);
-                                          if (e.target.value === 'bar' && element.fields.length > 2 || e.target.value === 'pie' && element.fields.length > 1) {
-                                            handleUpdateElement(element._id, 'fields', []);
+                                          handleUpdateElement(
+                                            element._id,
+                                            "type",
+                                            e.target.value,
+                                          );
+                                          if (
+                                            (e.target.value === "bar" &&
+                                              element.fields.length > 2) ||
+                                            (e.target.value === "pie" &&
+                                              element.fields.length > 1)
+                                          ) {
+                                            handleUpdateElement(
+                                              element._id,
+                                              "fields",
+                                              [],
+                                            );
                                           }
                                         }}
                                       >
                                         <MenuItem value="table">Table</MenuItem>
-                                        <MenuItem value="pie">Pie Chart</MenuItem>
-                                        <MenuItem value="bar">Bar Chart</MenuItem>
+                                        <MenuItem value="pie">
+                                          Pie Chart
+                                        </MenuItem>
+                                        <MenuItem value="bar">
+                                          Bar Chart
+                                        </MenuItem>
                                       </Select>
                                     </FormControl>
                                   </Box>
@@ -471,19 +652,27 @@ function ConfigureDashboard() {
                                     <FormControl fullWidth size="small">
                                       <InputLabel>Fields</InputLabel>
                                       <Select
-                                        multiple={element.type === 'table'}
+                                        multiple={element.type === "table"}
                                         value={element.fields}
                                         label="Fields"
-                                        onChange={(e) => handleUpdateElement(
-                                          element._id,
-                                          'fields',
-                                          typeof e.target.value === 'string'
-                                            ? [e.target.value]
-                                            : e.target.value
-                                        )}
+                                        onChange={(e) =>
+                                          handleUpdateElement(
+                                            element._id,
+                                            "fields",
+                                            typeof e.target.value === "string"
+                                              ? [e.target.value]
+                                              : e.target.value,
+                                          )
+                                        }
                                         renderValue={(selected) => (
-                                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                            {(selected).map((value) => (
+                                          <Box
+                                            sx={{
+                                              display: "flex",
+                                              flexWrap: "wrap",
+                                              gap: 0.5,
+                                            }}
+                                          >
+                                            {selected.map((value) => (
                                               <Chip
                                                 key={value}
                                                 label={fields[value]?.label}
@@ -493,34 +682,43 @@ function ConfigureDashboard() {
                                           </Box>
                                         )}
                                       >
-                                        {element.type === 'table' ?
-                                          Object.keys(fields).map(key => {
-                                            const field=fields[key];
-                                            return (
-                                            <MenuItem key={field.id} value={field.id}>
-                                              {field.label}
-                                            </MenuItem>
-                                          )}) :
-                                          Object.keys(fields).map(key => {
-                                            const field=fields[key];
-                                            if (field.type === "select") {
-                                              return <MenuItem key={field.id} value={field.id}>
-                                                {field.label}
-                                              </MenuItem>
-                                            }
-                                          }
-                                          )}
+                                        {element.type === "table"
+                                          ? Object.keys(fields).map((key) => {
+                                              const field = fields[key];
+                                              return (
+                                                <MenuItem
+                                                  key={field.id}
+                                                  value={field.id}
+                                                >
+                                                  {field.label}
+                                                </MenuItem>
+                                              );
+                                            })
+                                          : Object.keys(fields).map((key) => {
+                                              const field = fields[key];
+                                              if (field.type === "select") {
+                                                return (
+                                                  <MenuItem
+                                                    key={field.id}
+                                                    value={field.id}
+                                                  >
+                                                    {field.label}
+                                                  </MenuItem>
+                                                );
+                                              }
+                                            })}
                                       </Select>
                                     </FormControl>
                                   </Box>
-
                                 </Box>
 
-                                <Box >
+                                <Box>
                                   <IconButton
                                     size="small"
                                     color="error"
-                                    onClick={() => handleDeleteElement(element._id)}
+                                    onClick={() =>
+                                      handleDeleteElement(element._id)
+                                    }
                                   >
                                     <Icon name="trash-2" size={18} />
                                   </IconButton>
@@ -537,15 +735,23 @@ function ConfigureDashboard() {
               </DragDropContext>
             </Paper>
 
-            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Box
+              sx={{
+                mt: 3,
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 2,
+              }}
+            >
               <Button variant="outlined">Cancel</Button>
-              <Button variant="contained" type='submit'>Save Changes</Button>
+              <Button variant="contained" type="submit">
+                Save Changes
+              </Button>
             </Box>
           </>
-        )
-        }
-      </form >
-    </Box >
+        )}
+      </form>
+    </Box>
   );
 }
 

@@ -1,6 +1,6 @@
-const {createClient} = require('redis');
-const cleanedEnv = require('../utils/cleanedEnv');
+const { createClient } = require("redis");
+const cleanedEnv = require("../utils/cleanedEnv");
 const redisClient = createClient({
-    url: cleanedEnv.REDIS_URI
+  url: cleanedEnv.REDIS_URI,
 });
-module.exports=redisClient;
+module.exports = redisClient;

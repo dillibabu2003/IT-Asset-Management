@@ -39,21 +39,23 @@ export default function AsynchronousAutoComplete({
 
   const handleInputChange = (event, newInputValue) => {
     setInputValue(newInputValue);
-    
+
     // Check if current input matches any existing options
-    const matchesExisting = options.some(option => 
+    const matchesExisting = options.some((option) =>
       optionLabelFunction(option)
         .toLowerCase()
-        .includes(newInputValue.toLowerCase())
+        .includes(newInputValue.toLowerCase()),
     );
     // Sort options based on how closely they match the input
     if (matchesExisting && newInputValue.length > 0) {
-      setOptions([...options].sort((a, b) => {
-        const aLabel = optionLabelFunction(a).toLowerCase();
-        const bLabel = optionLabelFunction(b).toLowerCase();
-        const searchTerm = newInputValue.toLowerCase();
-        return bLabel.indexOf(searchTerm) - aLabel.indexOf(searchTerm);
-      }));
+      setOptions(
+        [...options].sort((a, b) => {
+          const aLabel = optionLabelFunction(a).toLowerCase();
+          const bLabel = optionLabelFunction(b).toLowerCase();
+          const searchTerm = newInputValue.toLowerCase();
+          return bLabel.indexOf(searchTerm) - aLabel.indexOf(searchTerm);
+        }),
+      );
     }
     // If no matches, fetch new options from backend
     if (!matchesExisting && newInputValue.length > 0) {
@@ -74,13 +76,13 @@ export default function AsynchronousAutoComplete({
       getOptionLabel={optionLabelFunction}
       options={options}
       loading={loading}
-      filterOptions={(x)=>x}
+      filterOptions={(x) => x}
       onInputChange={handleInputChange}
       onChange={(event, newValue) => {
         const syntheticEvent = {
           target: {
-            value: newValue
-          }
+            value: newValue,
+          },
         };
         sendInputToParent && sendInputToParent(syntheticEvent);
       }}
@@ -94,7 +96,9 @@ export default function AsynchronousAutoComplete({
               ...params.InputProps,
               endAdornment: (
                 <React.Fragment>
-                  {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                  {loading ? (
+                    <CircularProgress color="inherit" size={20} />
+                  ) : null}
                   {params.InputProps.endAdornment}
                 </React.Fragment>
               ),

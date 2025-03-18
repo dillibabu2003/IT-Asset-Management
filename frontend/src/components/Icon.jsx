@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useMemo } from "react";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
 
 const fallback = <div className="w-6 h-6" />;
@@ -17,7 +17,7 @@ const Icon = ({ name, style, ...props }) => {
   } catch (error) {
     console.log(error);
     console.log(`Icon ${name} not found`);
-    
+
     return fallback; // Show fallback if the icon import fails
   }
 };

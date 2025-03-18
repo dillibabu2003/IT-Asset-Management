@@ -10,9 +10,9 @@ const InvoiceSchema = new mongoose.Schema({
     type: String,
     // required: true,
   },
-  invoice_filename:{
+  invoice_filename: {
     type: String,
-    required: true
+    required: true,
   },
   invoice_date: {
     type: Date,
@@ -30,13 +30,13 @@ const InvoiceSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  invoice_description:{
+  invoice_description: {
     type: String,
   },
-  data:{
-      type: Map,
-      of: Object,
-      default: {},
+  data: {
+    type: Map,
+    of: Object,
+    default: {},
   },
   // status: {
   //   type: String,

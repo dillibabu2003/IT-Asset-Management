@@ -4,23 +4,23 @@ const Asset = require("../models/asset");
 const Invoice = require("../models/invoice");
 const License = require("../models/license");
 
-const MetaData=require("../models/metadata");
+const MetaData = require("../models/metadata");
 const UserColumnVisibilities = require("../models/userPreference");
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 
 //utility functions
 function getModelByObjectName(objectName) {
-    switch (objectName) {
-        case "assets":
-            return Asset;
-        case "invoices":
-            return Invoice;
-        case "licenses":
-            return License;
-        default:
-            return null;
-    }
+  switch (objectName) {
+    case "assets":
+      return Asset;
+    case "invoices":
+      return Invoice;
+    case "licenses":
+      return License;
+    default:
+      return null;
+  }
 }
 
 // const fetchPaginatedDocumentsByFilter = async (objectName, filter, limit, skip) => {
@@ -36,195 +36,220 @@ function getModelByObjectName(objectName) {
 //     return documents;
 // }
 
-async function fetchPaginatedDocumentsByObjectName(objectName, page, limit, skip) {
-    const aggregateQuery = [
-        {
-            $skip: skip
+async function fetchPaginatedDocumentsByObjectName(
+  objectName,
+  page,
+  limit,
+  skip,
+) {
+  const aggregateQuery = [
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
+    },
+    {
+      $lookup: {
+        from: "invoices",
+        localField: "invoice_id",
+        foreignField: "_id",
+        as: "invoice_info",
+      },
+    },
+    {
+      $lookup: {
+        from: "employees",
+        localField: "assigned_to",
+        foreignField: "_id",
+        as: "employee_info",
+      },
+    },
+    {
+      $addFields: {
+        invoice_id: { $first: "$invoice_info.invoice_id" },
+        date_of_received: {
+          $dateToString: {
+            date: { $first: "$invoice_info.date_of_received" },
+            format: "%d/%m/%Y",
+          },
         },
-        {
-            $limit: limit
+        name_of_the_vendor: { $first: "$invoice_info.name_of_the_vendor" },
+        employee_name: {
+          $concat: [
+            { $first: "$employee_info.firstname" },
+            " ",
+            { $first: "$employee_info.lastname" },
+          ],
         },
-        {
+        employee_email: { $first: "$employee_info.email" },
+        assigned_to: { $first: "$employee_info.employee_id" },
+      },
+    },
+    {
+      $project: {
+        invoice_info: 0,
+        employee_info: 0,
+      },
+    },
+  ];
+  switch (objectName) {
+    case "assets":
+      return Asset.aggregate(aggregateQuery).exec();
+    case "licenses":
+      return License.aggregate(aggregateQuery).exec();
+    default:
+      return null;
+  }
+}
+async function fetchPaginatedDocumentsWithFiltersByObjectName(
+  objectName,
+  page,
+  limit,
+  skip,
+  filters,
+) {
+  const aggregateQuery = [
+    {
+      $match: filters,
+    },
+    {
+      $facet: {
+        metadata: [{ $count: "total" }],
+        data: [
+          { $skip: skip },
+          { $limit: limit },
+          {
             $lookup: {
-                from: "invoices",
-                localField: "invoice_id",
-                foreignField: "_id",
-                as: "invoice_info"
-            }
-        },
-        {
+              from: "invoices",
+              localField: "invoice_id",
+              foreignField: "_id",
+              as: "invoice_info",
+            },
+          },
+          {
             $lookup: {
-                from: "employees",
-                localField: "assigned_to",
-                foreignField: "_id",
-                as: "employee_info"
-            }
-        },
-        {
+              from: "employees",
+              localField: "assigned_to",
+              foreignField: "_id",
+              as: "employee_info",
+            },
+          },
+          {
             $addFields: {
-
-                invoice_id: { $first: "$invoice_info.invoice_id" },
-                date_of_received: {
-                    $dateToString: {
-                        date: { $first: "$invoice_info.date_of_received" },
-                        format: "%d/%m/%Y"
-                    }
+              invoice_id: { $first: "$invoice_info.invoice_id" },
+              date_of_received: {
+                $dateToString: {
+                  date: { $first: "$invoice_info.date_of_received" },
+                  format: "%d/%m/%Y",
                 },
-                name_of_the_vendor: { $first: "$invoice_info.name_of_the_vendor" },
-                employee_name: {
-                    $concat: [
-                        { $first: "$employee_info.firstname" },
-                        " ",
-                        { $first: "$employee_info.lastname" }
-                    ]
-                },
-                employee_email: { $first: "$employee_info.email" },
-                assigned_to: { $first: "$employee_info.employee_id" },
-            }
-        },
-        {
+              },
+              name_of_the_vendor: {
+                $first: "$invoice_info.name_of_the_vendor",
+              },
+              employee_name: {
+                $concat: [
+                  { $first: "$employee_info.firstname" },
+                  " ",
+                  { $first: "$employee_info.lastname" },
+                ],
+              },
+              employee_email: { $first: "$employee_info.email" },
+              assigned_to: { $first: "$employee_info.employee_id" },
+            },
+          },
+          {
             $project: {
-                invoice_info: 0,
-                employee_info: 0
-            }
-        }
-    ]
-    switch (objectName) {
-        case "assets":
-            return Asset.aggregate(aggregateQuery).exec();
-        case "licenses":
-            return License.aggregate(aggregateQuery).exec();
-        default:
-            return null;
-    }
+              invoice_info: 0,
+              employee_info: 0,
+            },
+          },
+        ],
+      },
+    },
+  ];
+  switch (objectName) {
+    case "assets":
+      return Asset.aggregate(aggregateQuery).exec();
+    case "invoices":
+      return Invoice.find()
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec();
+    case "licenses":
+      return License.aggregate(aggregateQuery).exec();
+    default:
+      return null;
+  }
 }
-async function fetchPaginatedDocumentsWithFiltersByObjectName(objectName, page, limit, skip,filters) {
-    const aggregateQuery = [
-        {
-            $match: filters
-        },
-        {
-            $facet: {
-                metadata: [{ $count: "total" }],
-                data: [
-                    { $skip: skip },
-                    { $limit: limit },
-                    {
-                        $lookup: {
-                            from: "invoices",
-                            localField: "invoice_id",
-                            foreignField: "_id",
-                            as: "invoice_info"
-                        }
-                    },
-                    {
-                        $lookup: {
-                            from: "employees",
-                            localField: "assigned_to",
-                            foreignField: "_id",
-                            as: "employee_info"
-                        }
-                    },
-                    {
-                        $addFields: {
-                            invoice_id: { $first: "$invoice_info.invoice_id" },
-                            date_of_received: {
-                                $dateToString: {
-                                    date: { $first: "$invoice_info.date_of_received" },
-                                    format: "%d/%m/%Y"
-                                }
-                            },
-                            name_of_the_vendor: { $first: "$invoice_info.name_of_the_vendor" },
-                            employee_name: {
-                                $concat: [
-                                    { $first: "$employee_info.firstname" },
-                                    " ",
-                                    { $first: "$employee_info.lastname" }
-                                ]
-                            },
-                            employee_email: { $first: "$employee_info.email" },
-                            assigned_to: { $first: "$employee_info.employee_id" },
-                        }
-                    },
-                    {
-                        $project: {
-                            invoice_info: 0,
-                            employee_info: 0
-                        }
-                    }
-                ]
-            }
-        }
-    ]
-    switch (objectName) {
-        case "assets":
-            return Asset.aggregate(aggregateQuery).exec();
-        case "invoices":
-            return Invoice.find().skip((page - 1) * limit).limit(limit).exec();
-        case "licenses":
-            return License.aggregate(aggregateQuery).exec();
-        default:
-            return null;
-    }
-}
-
 
 const fetchAllDocumentsByFilter = async (objectName, filter) => {
-    const model = getModelByObjectName(objectName);
-    if (!model) {
-        throw new ApiError(400, null, "Invalid object name");
-    }
-    const documents = await model.find(filter).exec();
-    return documents;
-}
+  const model = getModelByObjectName(objectName);
+  if (!model) {
+    throw new ApiError(400, null, "Invalid object name");
+  }
+  const documents = await model.find(filter).exec();
+  return documents;
+};
 
 //Validation functions
 async function validateFieldType(field, value, fieldSchema) {
-    const type = fieldSchema.type?.name?.toLowerCase() || typeof fieldSchema;
-    switch (type) {
-        case 'string':
-            if (typeof value !== 'string') throw new ApiError(400, null, `${field} must be a string`);
-            break;
-        case 'number':
-            if (typeof value !== 'number') throw new ApiError(400, null, `${field} must be a number`);
-            break;
-        case 'date':
-            if (!(value instanceof Date) && isNaN(Date.parse(value)))
-                throw new ApiError(400, null, `${field} must be a valid date`);
-            break;
-        case 'boolean':
-            if (typeof value !== 'boolean') throw new ApiError(400, null, `${field} must be a boolean`);
-            break;
-        case 'objectid':
-            if (fieldSchema.required) {
-                const refModel = mongoose.model(fieldSchema.ref);
-                if (!mongoose.Types.ObjectId.isValid(value)) {
-                    throw new ApiError(400, null, `${field} must be a valid id.`);
-                }
-                // Get the referenced model from the schema
-                if (refModel) {
-                    const refDoc = await refModel.findOne({ _id: value });
-                    if (!refDoc) {
-                        throw new ApiError(400, null, `${fieldSchema.ref} with id ${value} does not exist`);
-                    }
-                }
-            }
-            break;
-    }
+  const type = fieldSchema.type?.name?.toLowerCase() || typeof fieldSchema;
+  switch (type) {
+    case "string":
+      if (typeof value !== "string")
+        throw new ApiError(400, null, `${field} must be a string`);
+      break;
+    case "number":
+      if (typeof value !== "number")
+        throw new ApiError(400, null, `${field} must be a number`);
+      break;
+    case "date":
+      if (!(value instanceof Date) && isNaN(Date.parse(value)))
+        throw new ApiError(400, null, `${field} must be a valid date`);
+      break;
+    case "boolean":
+      if (typeof value !== "boolean")
+        throw new ApiError(400, null, `${field} must be a boolean`);
+      break;
+    case "objectid":
+      if (fieldSchema.required) {
+        const refModel = mongoose.model(fieldSchema.ref);
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          throw new ApiError(400, null, `${field} must be a valid id.`);
+        }
+        // Get the referenced model from the schema
+        if (refModel) {
+          const refDoc = await refModel.findOne({ _id: value });
+          if (!refDoc) {
+            throw new ApiError(
+              400,
+              null,
+              `${fieldSchema.ref} with id ${value} does not exist`,
+            );
+          }
+        }
+      }
+      break;
+  }
 }
 
 // Validate enum values
 function validateEnum(field, value, fieldSchema) {
-    if (fieldSchema.enum && !fieldSchema.enum.includes(value)) {
-        throw new ApiError(400, null, `Invalid ${field}. Must be one of: ${fieldSchema.enum.join(', ')}`);
-    }
+  if (fieldSchema.enum && !fieldSchema.enum.includes(value)) {
+    throw new ApiError(
+      400,
+      null,
+      `Invalid ${field}. Must be one of: ${fieldSchema.enum.join(", ")}`,
+    );
+  }
 }
 
 // Validate required fields
 function validateRequired(field, value, fieldSchema) {
-    if (fieldSchema.required && (value === null || value === undefined)) {
-        throw new ApiError(400, null, `${field} is required`);
-    }
+  if (fieldSchema.required && (value === null || value === undefined)) {
+    throw new ApiError(400, null, `${field} is required`);
+  }
 }
 // Functions which can be used for future purpose
 
@@ -247,348 +272,522 @@ function validateRequired(field, value, fieldSchema) {
 // }
 
 // Validate a single document
-async function validateSingleDocument(document, schema, objectName, operationType, columnMetadataUnStructured) {
-    // Validate each field in the document
-    const columnMetadataStructured = {};
-    // console.log(columnMetadataUnStructured);
-    columnMetadataUnStructured.forEach((item) => {
-      columnMetadataStructured[item.id] = item;
-    });
-    console.log(document);
-    for (const [field, value] of Object.entries(document)) {
-        const fieldSchema = schema[field];
-        if (!fieldSchema) {
-            throw new ApiError(400, null, `Invalid field: ${field}`);
-        }
-        //Instead of throwing error, we can delete the field
-        // console.log(field ," ",columnMetadataStructured[field].create);
-        if (operationType == "create" && columnMetadataStructured[field].create == false) {
-            delete document[field];
-            continue;
-        }
-        else if (operationType == "update" && columnMetadataStructured[field].edit == false) {
-            delete document[field];
-            continue;
-        }
-        validateRequired(field, value, fieldSchema);
-        await validateFieldType(field, value, fieldSchema);
-        validateEnum(field, value, fieldSchema);
+async function validateSingleDocument(
+  document,
+  schema,
+  objectName,
+  operationType,
+  columnMetadataUnStructured,
+) {
+  // Validate each field in the document
+  const columnMetadataStructured = {};
+  // console.log(columnMetadataUnStructured);
+  columnMetadataUnStructured.forEach((item) => {
+    columnMetadataStructured[item.id] = item;
+  });
+  console.log(document);
+  for (const [field, value] of Object.entries(document)) {
+    const fieldSchema = schema[field];
+    if (!fieldSchema) {
+      throw new ApiError(400, null, `Invalid field: ${field}`);
     }
-    console.log("Validation done");
-    return document;
+    //Instead of throwing error, we can delete the field
+    // console.log(field ," ",columnMetadataStructured[field].create);
+    if (
+      operationType == "create" &&
+      columnMetadataStructured[field].create == false
+    ) {
+      delete document[field];
+      continue;
+    } else if (
+      operationType == "update" &&
+      columnMetadataStructured[field].edit == false
+    ) {
+      delete document[field];
+      continue;
+    }
+    validateRequired(field, value, fieldSchema);
+    await validateFieldType(field, value, fieldSchema);
+    validateEnum(field, value, fieldSchema);
+  }
+  console.log("Validation done");
+  return document;
 }
 
 // Main validation function
 async function validateDocuments(objectName, documents, operationType) {
-    const model = getModelByObjectName(objectName);
-    console.log(model);
-    if (!model) {
-        throw new ApiError(400, null, "Invalid object name");
-    }
+  const model = getModelByObjectName(objectName);
+  console.log(model);
+  if (!model) {
+    throw new ApiError(400, null, "Invalid object name");
+  }
 
-    const schema = model.schema.obj;
-    const columnMetadata = await MetaData.find({ belongs_to: objectName}).select("-_id -__v -belongs_to");
-    if (!columnMetadata) {
-        throw new ApiError(400, null, "Column metadata not found");
-    }
-    for (const index in documents) {
-        documents[index]=await validateSingleDocument(documents[index], schema, objectName,operationType,columnMetadata);
-    }
-    return documents;
+  const schema = model.schema.obj;
+  const columnMetadata = await MetaData.find({ belongs_to: objectName }).select(
+    "-_id -__v -belongs_to",
+  );
+  if (!columnMetadata) {
+    throw new ApiError(400, null, "Column metadata not found");
+  }
+  for (const index in documents) {
+    documents[index] = await validateSingleDocument(
+      documents[index],
+      schema,
+      objectName,
+      operationType,
+      columnMetadata,
+    );
+  }
+  return documents;
 }
 
 //Controller functions
 const getPaginatedDataByObjectName = asyncHandler(async (req, res) => {
+  const objectName = req.params.objectName;
+  const model = getModelByObjectName(objectName);
+  if (!model) {
+    throw new ApiError(400, "Invalid object name");
+  }
+  const { page, limit } = req.query;
+  if (!page || !limit) {
+    throw new ApiError(400, "Invalid query parameters");
+  }
+  const parsedPageNumber = parseInt(page);
+  const parsedDocumentsLimit = parseInt(limit);
+  const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
+  if (isNaN(parsedPageNumber) || isNaN(parsedDocumentsLimit)) {
+    throw new ApiError(400, "Invalid query parameters");
+  }
+  const totalDocuments = await model.countDocuments();
+  const objectData = await fetchPaginatedDocumentsByObjectName(
+    objectName,
+    parsedPageNumber,
+    parsedDocumentsLimit,
+    skip,
+  );
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { documents: [...objectData], total: totalDocuments },
+        `${objectName} fetched successfully`,
+      ),
+    );
+});
+const getPaginatedDataWithFiltersByObjectName = asyncHandler(
+  async (req, res) => {
     const objectName = req.params.objectName;
     const model = getModelByObjectName(objectName);
     if (!model) {
-        throw new ApiError(400, "Invalid object name");
+      throw new ApiError(400, "Invalid object name");
     }
-    const { page, limit } = req.query;
-    if (!page || !limit) {
-        throw new ApiError(400, "Invalid query parameters");
+    const { page, limit, filters } = req.query;
+    if (!page || !limit || !filters) {
+      throw new ApiError(
+        400,
+        "Invalid query parameters. Page, limit and filters are required",
+      );
     }
     const parsedPageNumber = parseInt(page);
     const parsedDocumentsLimit = parseInt(limit);
     const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
     if (isNaN(parsedPageNumber) || isNaN(parsedDocumentsLimit)) {
-        throw new ApiError(400, "Invalid query parameters");
+      throw new ApiError(400, "Invalid query parameters");
     }
-    const totalDocuments = await model.countDocuments();
-    const objectData = await fetchPaginatedDocumentsByObjectName(objectName, parsedPageNumber, parsedDocumentsLimit, skip);
-    res.status(200).json(new ApiResponse(200, { documents: [...objectData], total: totalDocuments }, `${objectName} fetched successfully`));
-});
-const getPaginatedDataWithFiltersByObjectName = asyncHandler(async (req, res) => {
-    const objectName = req.params.objectName;
-    const model = getModelByObjectName(objectName);
-    if (!model) {
-        throw new ApiError(400, "Invalid object name");
-    }
-    const { page, limit,filters } = req.query;
-    if (!page || !limit||!filters) {
-        throw new ApiError(400, "Invalid query parameters. Page, limit and filters are required");
-    }
-    const parsedPageNumber = parseInt(page);
-    const parsedDocumentsLimit = parseInt(limit);
-    const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
-    if (isNaN(parsedPageNumber) || isNaN(parsedDocumentsLimit)) {
-        throw new ApiError(400, "Invalid query parameters");
-    }
-    const objectData = await fetchPaginatedDocumentsWithFiltersByObjectName(objectName, parsedPageNumber, parsedDocumentsLimit, skip,JSON.parse(filters));
-    res.status(200).json(new ApiResponse(200, { documents: [...objectData[0].data], total: objectData[0].metadata[0]?.total!=undefined ? objectData[0].metadata[0]?.total: 0 }, `${objectName} fetched successfully`));
-});
+    const objectData = await fetchPaginatedDocumentsWithFiltersByObjectName(
+      objectName,
+      parsedPageNumber,
+      parsedDocumentsLimit,
+      skip,
+      JSON.parse(filters),
+    );
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            documents: [...objectData[0].data],
+            total:
+              objectData[0].metadata[0]?.total != undefined
+                ? objectData[0].metadata[0]?.total
+                : 0,
+          },
+          `${objectName} fetched successfully`,
+        ),
+      );
+  },
+);
 
 const getUserColumnVisibilitiesByObjectName = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
-    const objectName = req.params.objectName;
-    if (!objectName) {
-        throw new ApiError(400, null, "Invalid object name");
-    }
-    const allColumnVisibilites = await UserColumnVisibilities.findOne({ user_id: userId });
-    if (!allColumnVisibilites) {
-        throw new ApiError(400, null, "User preferences not found");
-    }
-    const currentObjectNamePreferences = allColumnVisibilites.visible_fields.get(objectName);
-    if (!currentObjectNamePreferences) {
-        throw new ApiError(400, null, "Invalid object name");
-    }
-    res.status(200).json(new ApiResponse(200, currentObjectNamePreferences, `${objectName} Column preferences fetched successfully.`));
+  const userId = req.user._id;
+  const objectName = req.params.objectName;
+  if (!objectName) {
+    throw new ApiError(400, null, "Invalid object name");
+  }
+  const allColumnVisibilites = await UserColumnVisibilities.findOne({
+    user_id: userId,
+  });
+  if (!allColumnVisibilites) {
+    throw new ApiError(400, null, "User preferences not found");
+  }
+  const currentObjectNamePreferences =
+    allColumnVisibilites.visible_fields.get(objectName);
+  if (!currentObjectNamePreferences) {
+    throw new ApiError(400, null, "Invalid object name");
+  }
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        currentObjectNamePreferences,
+        `${objectName} Column preferences fetched successfully.`,
+      ),
+    );
 });
 
 const createBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
-    const objectName = req.params.objectName;
-    const model = getModelByObjectName(objectName);
-    console.log("Request Body",req.body);
-    const documents = req.body;
-    if (!model) {
-        throw new ApiError(400, null, "Invalid object name");
-    }
-    
-    if (!documents) {
-        throw new ApiError(400, null, "Invalid request body");
-    }
-    if (objectName === 'assets' || objectName === 'licenses') {
-        for (let i = 0; i < documents.length; i++) {
-            const invoice = await Invoice.findOne({ invoice_id: documents[i].invoice_id });
-            if (!invoice) {
-                throw new ApiError(400, null, "Invalid invoice id");
-            }
-            documents[i].invoice_id = invoice._id;
-        }
-    }
-    await validateDocuments(objectName, documents,"create");
+  const objectName = req.params.objectName;
+  const model = getModelByObjectName(objectName);
+  console.log("Request Body", req.body);
+  const documents = req.body;
+  if (!model) {
+    throw new ApiError(400, null, "Invalid object name");
+  }
 
-    const createdDocuments = await model.insertMany(documents);
-    res.status(200).json(new ApiResponse(200, createdDocuments, `${objectName} created successfully`));
+  if (!documents) {
+    throw new ApiError(400, null, "Invalid request body");
+  }
+  if (objectName === "assets" || objectName === "licenses") {
+    for (let i = 0; i < documents.length; i++) {
+      const invoice = await Invoice.findOne({
+        invoice_id: documents[i].invoice_id,
+      });
+      if (!invoice) {
+        throw new ApiError(400, null, "Invalid invoice id");
+      }
+      documents[i].invoice_id = invoice._id;
+    }
+  }
+  await validateDocuments(objectName, documents, "create");
+
+  const createdDocuments = await model.insertMany(documents);
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        createdDocuments,
+        `${objectName} created successfully`,
+      ),
+    );
 });
 
-
-
 const createDocumentOfObjectName = asyncHandler(async (req, res) => {
-    const objectName = req.params.objectName;
-    const model = getModelByObjectName(objectName);
-    if (!model) {
-        throw new ApiError(400, null, "Invalid object name");
+  const objectName = req.params.objectName;
+  const model = getModelByObjectName(objectName);
+  if (!model) {
+    throw new ApiError(400, null, "Invalid object name");
+  }
+  const document = req.body;
+  if (!document) {
+    throw new ApiError(400, null, "Invalid request body");
+  }
+  if (objectName === "assets" || objectName === "licenses") {
+    const invoice = await Invoice.findOne({ invoice_id: document.invoice_id });
+    if (!invoice) {
+      throw new ApiError(400, null, "Invalid invoice id");
     }
-    const document = req.body;
-    if (!document) {
-        throw new ApiError(400, null, "Invalid request body");
-    }
-    if (objectName === 'assets' || objectName === 'licenses') {
-        const invoice = await Invoice.findOne({ invoice_id: document.invoice_id });
-        if (!invoice) {
-            throw new ApiError(400, null, "Invalid invoice id");
-        }
-        document.invoice_id = invoice._id;
-    }
-    const updatedDocuments=await validateDocuments(objectName, [document],"create");
-    const createdDocument = await model.create(updatedDocuments[0]);
-    res.status(200).json(new ApiResponse(200, createdDocument, `${objectName} created successfully`));
+    document.invoice_id = invoice._id;
+  }
+  const updatedDocuments = await validateDocuments(
+    objectName,
+    [document],
+    "create",
+  );
+  const createdDocument = await model.create(updatedDocuments[0]);
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        createdDocument,
+        `${objectName} created successfully`,
+      ),
+    );
 });
 
 const getDataBySearchTermOfObjectName = asyncHandler(async (req, res) => {
-    const objectName = req.params.objectName;
-    const { search_key, filters,page,page_limit } = req.query;
-    if (search_key == undefined || !filters || !page || !page_limit) {
-        throw new ApiError(400, null, "Invalid search term or filters or page or page_limit");
-    }
-    const model = getModelByObjectName(objectName);
-    const parsedPageNumber = parseInt(page);
-    const parsedDocumentsLimit = parseInt(page_limit);
-    const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
-    if (!model) {
-        throw new ApiError(400, null, "Invalid object name");
-    }
-    if (search_key.trim().length === 0) {
-        const firstTenDocuments = await fetchPaginatedDocumentsWithFiltersByObjectName(objectName,parsedPageNumber,parsedDocumentsLimit,skip, JSON.parse(filters) ?? {}); 
-        res.status(200).json(new ApiResponse(200, {documents: firstTenDocuments}, `${objectName} fetched successfully`));
-        return;
-    }
-    let path=["serial_no","category","assigned_to","status"];
-    if(objectName=="assets"){
-        path.push("asset_id","make","model","ram","storage","processor","os_type");
-    }
-    else if(objectName=="licenses"){
-        path.push("license_id","model");
-    }
-    const objectData = await model.aggregate([
-        {
-            $search: {
-                index: `${objectName}Index`,
-                text: {
-                    query: search_key,
-                    path: path,
-                    fuzzy: {
-                        prefixLength: 2,
-                        // maxEdits: 2,
-                    }
-                }
-            }
-        }, {
-            $match: JSON.parse(filters)
+  const objectName = req.params.objectName;
+  const { search_key, filters, page, page_limit } = req.query;
+  if (search_key == undefined || !filters || !page || !page_limit) {
+    throw new ApiError(
+      400,
+      null,
+      "Invalid search term or filters or page or page_limit",
+    );
+  }
+  const model = getModelByObjectName(objectName);
+  const parsedPageNumber = parseInt(page);
+  const parsedDocumentsLimit = parseInt(page_limit);
+  const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
+  if (!model) {
+    throw new ApiError(400, null, "Invalid object name");
+  }
+  if (search_key.trim().length === 0) {
+    const firstTenDocuments =
+      await fetchPaginatedDocumentsWithFiltersByObjectName(
+        objectName,
+        parsedPageNumber,
+        parsedDocumentsLimit,
+        skip,
+        JSON.parse(filters) ?? {},
+      );
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { documents: firstTenDocuments },
+          `${objectName} fetched successfully`,
+        ),
+      );
+    return;
+  }
+  let path = ["serial_no", "category", "assigned_to", "status"];
+  if (objectName == "assets") {
+    path.push(
+      "asset_id",
+      "make",
+      "model",
+      "ram",
+      "storage",
+      "processor",
+      "os_type",
+    );
+  } else if (objectName == "licenses") {
+    path.push("license_id", "model");
+  }
+  const objectData = await model.aggregate([
+    {
+      $search: {
+        index: `${objectName}Index`,
+        text: {
+          query: search_key,
+          path: path,
+          fuzzy: {
+            prefixLength: 2,
+            // maxEdits: 2,
+          },
         },
+      },
+    },
+    {
+      $match: JSON.parse(filters),
+    },
+    {
+      $facet: {
+        metadata: [{ $count: "total" }],
+        data: [
+          { $skip: skip },
+          { $limit: parsedDocumentsLimit },
+          {
+            $lookup: {
+              from: "invoices",
+              localField: "invoice_id",
+              foreignField: "_id",
+              as: "invoice_info",
+            },
+          },
+          {
+            $lookup: {
+              from: "employees",
+              localField: "assigned_to",
+              foreignField: "_id",
+              as: "employee_info",
+            },
+          },
+          {
+            $addFields: {
+              invoice_id: { $first: "$invoice_info.invoice_id" },
+              date_of_received: {
+                $dateToString: {
+                  date: { $first: "$invoice_info.date_of_received" },
+                  format: "%d/%m/%Y",
+                },
+              },
+              name_of_the_vendor: {
+                $first: "$invoice_info.name_of_the_vendor",
+              },
+              employee_name: {
+                $concat: [
+                  { $first: "$employee_info.firstname" },
+                  " ",
+                  { $first: "$employee_info.lastname" },
+                ],
+              },
+              employee_email: { $first: "$employee_info.email" },
+              assigned_to: { $first: "$employee_info.employee_id" },
+            },
+          },
+          {
+            $project: {
+              invoice_info: 0,
+              employee_info: 0,
+            },
+          },
+        ],
+      },
+    },
+  ]);
+  const totalDocuments = objectData.length;
+  if (totalDocuments === 0) {
+    throw new ApiError(404, null, "No documents found");
+  }
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
         {
-            $facet: {
-                metadata: [{ $count: "total" }],
-                data: [
-                    { $skip: skip },
-                    { $limit: parsedDocumentsLimit },
-                    {
-                        $lookup: {
-                            from: "invoices",
-                            localField: "invoice_id",
-                            foreignField: "_id",
-                            as: "invoice_info"
-                        }
-                    },
-                    {
-                        $lookup: {
-                            from: "employees",
-                            localField: "assigned_to",
-                            foreignField: "_id",
-                            as: "employee_info"
-                        }
-                    },
-                    {
-                        $addFields: {
-                            invoice_id: { $first: "$invoice_info.invoice_id" },
-                            date_of_received: {
-                                $dateToString: {
-                                    date: { $first: "$invoice_info.date_of_received" },
-                                    format: "%d/%m/%Y"
-                                }
-                            },
-                            name_of_the_vendor: { $first: "$invoice_info.name_of_the_vendor" },
-                            employee_name: {
-                                $concat: [
-                                    { $first: "$employee_info.firstname" },
-                                    " ",
-                                    { $first: "$employee_info.lastname" }
-                                ]
-                            },
-                            employee_email: { $first: "$employee_info.email" },
-                            assigned_to: { $first: "$employee_info.employee_id" },
-                        }
-                    },
-                    {
-                        $project: {
-                            invoice_info: 0,
-                            employee_info: 0
-                        }
-                    }
-                ]
-            }
-        }
-    ]);
-    const totalDocuments = objectData.length;
-    if (totalDocuments === 0) {
-        throw new ApiError(404, null, "No documents found");
-    }
-    res.status(200).json(new ApiResponse(200, { documents: [...objectData[0].data], total: objectData[0].metadata[0]?.total!=undefined ? objectData[0].metadata[0]?.total: 0 }, `${objectName} fetched successfully`));
-
+          documents: [...objectData[0].data],
+          total:
+            objectData[0].metadata[0]?.total != undefined
+              ? objectData[0].metadata[0]?.total
+              : 0,
+        },
+        `${objectName} fetched successfully`,
+      ),
+    );
 });
 
 const getAllDataByFilterOfObjectName = asyncHandler(async (req, res) => {
-    const objectName = req.params.objectName;
-    const filter = req.body;
-    if (!filter) {
-        throw new ApiError(400, null, "Invalid filter");
-    }
-    delete filter?.object_name
-    console.log(filter);
+  const objectName = req.params.objectName;
+  const filter = req.body;
+  if (!filter) {
+    throw new ApiError(400, null, "Invalid filter");
+  }
+  delete filter?.object_name;
+  console.log(filter);
 
-    const objectData = await fetchAllDocumentsByFilter(objectName, filter);
-    res.status(200).json(new ApiResponse(200, objectData, `${objectName} fetched successfully`));
+  const objectData = await fetchAllDocumentsByFilter(objectName, filter);
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, objectData, `${objectName} fetched successfully`),
+    );
 });
 
 const updateDocumentOfObjectName = asyncHandler(async (req, res) => {
-    const objectName = req.params.objectName;
-    const {serial_no}=req.body;
-    const model = getModelByObjectName(objectName);
-    if (!model) {
-        throw new ApiError(400, null, "Invalid object name");
-    }
-    const document=req.body;
-    if (!document) {
-        throw new ApiError(400, null, "Invalid request body");
-    }
-    const cleanedDocument = await validateDocuments(objectName,[document],"update");
-    console.log(serial_no);
-    const originalDocument = await model.findOne({ serial_no:serial_no});
-    if (!originalDocument) {
-        throw new ApiError(404, null, "Document not found");
-    }
-    const updatedDocument = await model.findOneAndUpdate({serial_no:serial_no}, cleanedDocument[0], {new:true});
-    if (!updatedDocument) {
-        throw new ApiError(404, null, "Document not found");
-    }
-    res.status(200).json(new ApiResponse(200, updatedDocument, `${objectName} updated successfully`));
+  const objectName = req.params.objectName;
+  const { serial_no } = req.body;
+  const model = getModelByObjectName(objectName);
+  if (!model) {
+    throw new ApiError(400, null, "Invalid object name");
+  }
+  const document = req.body;
+  if (!document) {
+    throw new ApiError(400, null, "Invalid request body");
+  }
+  const cleanedDocument = await validateDocuments(
+    objectName,
+    [document],
+    "update",
+  );
+  console.log(serial_no);
+  const originalDocument = await model.findOne({ serial_no: serial_no });
+  if (!originalDocument) {
+    throw new ApiError(404, null, "Document not found");
+  }
+  const updatedDocument = await model.findOneAndUpdate(
+    { serial_no: serial_no },
+    cleanedDocument[0],
+    { new: true },
+  );
+  if (!updatedDocument) {
+    throw new ApiError(404, null, "Document not found");
+  }
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedDocument,
+        `${objectName} updated successfully`,
+      ),
+    );
 });
 
 const deleteDocumentOfObjectName = asyncHandler(async (req, res) => {
-    const objectName = req.params.objectName;
-    const {serial_no,object_name}=req.body;
-    const model = getModelByObjectName(object_name);
-    console.log(req.body);
-    if (!model) {
-        throw new ApiError(400, null, "Invalid object name");
-    }
-    
-    if (!serial_no) {
-        throw new ApiError(400, null, "Invalid request body");
-    }
-    const document=await model.findOne({serial_no:serial_no});
-    if(document.assigned_to!==null){
-        throw new ApiError(400,null,`Cannot delete assigned ${object_name}`);
-    }
-    const deletedDocument = await model.findOneAndDelete({serial_no:serial_no});
-    if (!deletedDocument) {
-        throw new ApiError(404, null, "Document not found");
-    }
-    res.status(200).json(new ApiResponse(200, deletedDocument, `${objectName} deleted successfully`));
+  const objectName = req.params.objectName;
+  const { serial_no, object_name } = req.body;
+  const model = getModelByObjectName(object_name);
+  console.log(req.body);
+  if (!model) {
+    throw new ApiError(400, null, "Invalid object name");
+  }
+
+  if (!serial_no) {
+    throw new ApiError(400, null, "Invalid request body");
+  }
+  const document = await model.findOne({ serial_no: serial_no });
+  if (document.assigned_to !== null) {
+    throw new ApiError(400, null, `Cannot delete assigned ${object_name}`);
+  }
+  const deletedDocument = await model.findOneAndDelete({
+    serial_no: serial_no,
+  });
+  if (!deletedDocument) {
+    throw new ApiError(404, null, "Document not found");
+  }
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        deletedDocument,
+        `${objectName} deleted successfully`,
+      ),
+    );
 });
 
-
 const deleteBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
-    const objectName = req.params.objectName;
-    const model = getModelByObjectName(objectName);
-    const {serial_nos}=req.body;
-    if (!model) {
-        throw new ApiError(400, null, "Invalid object name");
-    }
-    if(!serial_nos || serial_nos.length==0){
-        throw new ApiError(400,null,"Invalid request body");
-    }
-    const documents = await model.find({ serial_no: { $in: serial_nos }, assigned_to: null });
-    // Try to delete the history of the assets as well.
-    if(!documents){
-        throw new ApiError(404,null,"Invalid serial numbers found");
-    }
-    if(serial_nos.length!=documents.length){
-        throw new ApiError(400,null,"Invalid serial numbers found or cannot delete assigned assets");
-    }
-    const deletedDocuments = await model.deleteMany({ _id: { $in: documents } });
-    res.status(200).json(new ApiResponse(200, deletedDocuments, `${objectName} deleted successfully`));
+  const objectName = req.params.objectName;
+  const model = getModelByObjectName(objectName);
+  const { serial_nos } = req.body;
+  if (!model) {
+    throw new ApiError(400, null, "Invalid object name");
+  }
+  if (!serial_nos || serial_nos.length == 0) {
+    throw new ApiError(400, null, "Invalid request body");
+  }
+  const documents = await model.find({
+    serial_no: { $in: serial_nos },
+    assigned_to: null,
+  });
+  // Try to delete the history of the assets as well.
+  if (!documents) {
+    throw new ApiError(404, null, "Invalid serial numbers found");
+  }
+  if (serial_nos.length != documents.length) {
+    throw new ApiError(
+      400,
+      null,
+      "Invalid serial numbers found or cannot delete assigned assets",
+    );
+  }
+  const deletedDocuments = await model.deleteMany({ _id: { $in: documents } });
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        deletedDocuments,
+        `${objectName} deleted successfully`,
+      ),
+    );
 });
 
 // Functions which can be used for future purpose
@@ -609,17 +808,15 @@ const deleteBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
 //     res.status(200).json(new ApiResponse(200, updatedDocument, `${objectName} unassigned successfully`));
 // });
 
-
-
 // const getDataBySearchTermOfObjectId = asyncHandler(async (req, res) => {
 //     const objectId = req.params.objectId;
 //     console.log(req.body);
-    
+
 //     const {searchKey,category,status} = req.body;
 //     if (searchKey==undefined || !category || !status) {
 //         throw new ApiError(400,null, "Invalid search term or category or status");
 //     }
-//     //check for the category as well 
+//     //check for the category as well
 //     const model = getModelByObjectId(objectId);
 //     if (!model) {
 //         throw new ApiError(400,null, "Invalid object id");
@@ -642,7 +839,7 @@ const deleteBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
 //                             }
 //                           }
 //                       }
-//                } 
+//                }
 //           ]);
 //     const totalDocuments = objectData.length;
 //     if(totalDocuments === 0){
@@ -659,21 +856,21 @@ const deleteBulkDocumentsOfObjectName = asyncHandler(async (req, res) => {
 //     }
 //     delete filter?.object_id
 //     console.log(filter);
-    
+
 //     const objectData = await fetchAllDocumentsByFilter(objectId, filter);
 //     res.status(200).json(new ApiResponse(200, objectData, `${objectId} fetched successfully`));
 // });
 
 module.exports = {
-    getPaginatedDataByObjectName,
-    getUserColumnVisibilitiesByObjectName,
-    createBulkDocumentsOfObjectName,
-    createDocumentOfObjectName,
-    getDataBySearchTermOfObjectName,
-    getAllDataByFilterOfObjectName,
-    getPaginatedDataWithFiltersByObjectName,
-    getModelByObjectName,
-    updateDocumentOfObjectName,
-    deleteDocumentOfObjectName,
-    deleteBulkDocumentsOfObjectName
+  getPaginatedDataByObjectName,
+  getUserColumnVisibilitiesByObjectName,
+  createBulkDocumentsOfObjectName,
+  createDocumentOfObjectName,
+  getDataBySearchTermOfObjectName,
+  getAllDataByFilterOfObjectName,
+  getPaginatedDataWithFiltersByObjectName,
+  getModelByObjectName,
+  updateDocumentOfObjectName,
+  deleteDocumentOfObjectName,
+  deleteBulkDocumentsOfObjectName,
 };

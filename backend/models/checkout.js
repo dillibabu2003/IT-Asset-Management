@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
-const { convertPascaleCaseToSnakeCase, convertSnakeCaseToPascaleCase } = require("../utils/helperFunctions");
+const {
+  convertPascaleCaseToSnakeCase,
+  convertSnakeCaseToPascaleCase,
+} = require("../utils/helperFunctions");
 
 const CheckoutSchema = new mongoose.Schema({
   checkout_id: {
@@ -16,7 +19,7 @@ const CheckoutSchema = new mongoose.Schema({
   },
   type_reference_id: {
     type: mongoose.Schema.Types.ObjectId,
-    refPath: 'type_reference_model',
+    refPath: "type_reference_model",
     required: true,
   },
   type_reference_model: {
@@ -34,7 +37,7 @@ const CheckoutSchema = new mongoose.Schema({
   },
   end: {
     type: Date,
-    default: null
+    default: null,
   },
 });
 

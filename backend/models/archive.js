@@ -6,11 +6,14 @@ const ArchiveSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  asset_id: [{ //multiple persons may have used the same asset
-    type: String,
-    required: true,
-    unique: true,
-  }],
+  asset_id: [
+    {
+      //multiple persons may have used the same asset
+      type: String,
+      required: true,
+      unique: true,
+    },
+  ],
   date_of_received: {
     type: Date,
     required: true,
@@ -24,10 +27,12 @@ const ArchiveSchema = new mongoose.Schema({
     ref: "Invoices",
     required: true,
   },
-  checkout_id: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Checkouts",
-  }],
+  checkout_id: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Checkouts",
+    },
+  ],
   make: {
     type: String,
     required: true,
@@ -38,11 +43,11 @@ const ArchiveSchema = new mongoose.Schema({
   },
   ram: {
     type: String,
-    enum: ["8GB", "16GB", "32GB","64GB","128GB"],
+    enum: ["8GB", "16GB", "32GB", "64GB", "128GB"],
   },
   storage: {
     type: String,
-    enum: ["256GB","512GB", "1TB"],
+    enum: ["256GB", "512GB", "1TB"],
   },
   processor: {
     type: String,
@@ -59,16 +64,18 @@ const ArchiveSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  period:[{
-    start: {
+  period: [
+    {
+      start: {
         type: Date,
         required: true,
-        },
-        end: {
+      },
+      end: {
         type: Date,
         required: true,
-        },
-  }],
+      },
+    },
+  ],
   warranty: {
     type: String,
     required: true,

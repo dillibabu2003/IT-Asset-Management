@@ -1,11 +1,11 @@
-import  { useEffect } from 'react'
-import { useAuth } from '../providers/AuthProvider'
-import PropTypes from 'prop-types';
-import { Navigate } from 'react-router';
+import { useEffect } from "react";
+import { useAuth } from "../providers/AuthProvider";
+import PropTypes from "prop-types";
+import { Navigate } from "react-router";
 
-const ProtectedRoute = ({children, requiredPermission}) => {
-  const { isAuthenticated, user,checkAuthStatus } = useAuth();
- 
+const ProtectedRoute = ({ children, requiredPermission }) => {
+  const { isAuthenticated, user, checkAuthStatus } = useAuth();
+
   useEffect(() => {
     const verifyAuth = async () => {
       if (!isAuthenticated) {
@@ -22,12 +22,16 @@ const ProtectedRoute = ({children, requiredPermission}) => {
     return null;
   }
 
-  if (isAuthenticated && requiredPermission && !user.permissions.includes(requiredPermission)) {
+  if (
+    isAuthenticated &&
+    requiredPermission &&
+    !user.permissions.includes(requiredPermission)
+  ) {
     return <Navigate to={"/no-permission"} replace />;
   }
 
   return <>{children}</>;
-}
+};
 ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
   requiredPermission: PropTypes.string,
