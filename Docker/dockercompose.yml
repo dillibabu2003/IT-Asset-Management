@@ -1,0 +1,43 @@
+services:
+  frontend:
+    build:
+      context: ../
+      dockerfile: dockerfile.frontend
+      args:
+      - .dockerignore=./.dockerignore
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/app
+    env_file:
+      - ../frontend/.env
+    depends_on:
+      - backend
+  backend:
+    build:
+      context: ../
+      dockerfile: dockerfile.backend
+      args:
+      - .dockerignore=./.dockerignore
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ../backend/.env
+    depends_on:
+      - email_server
+  email_server:
+    build:
+      context: ../
+      dockerfile: dockerfile.email_server
+      args:
+      - .dockerignore=./.dockerignore
+    ports:
+      - "8885:8885"
+    volumes:
+      - ./email_server:/app
+    env_file:
+      - ../email-server/.env
+
+
