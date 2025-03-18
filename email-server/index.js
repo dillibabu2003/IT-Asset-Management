@@ -9,7 +9,7 @@ const { encryptData, decryptData } = require("./encrypt");
 const sendEmail = require("./email");
 
 const app = express();
-const PORT = 8885;
+const PORT = process.env.PORT;
 const FRONTEND_BASE_URI=process.env.FRONTEND_BASE_URI;
 
 app.use(cors());
