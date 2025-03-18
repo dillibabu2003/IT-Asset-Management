@@ -1,19 +1,6 @@
-import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableRow, Chip } from '@mui/material';
 import { convertSnakeCaseToPascaleCase, getColorAndBackgroundColorByStatus } from '../utils/helperFunctions';
-
-const getStatusColor = (status) => {
-  switch (status) {
-    case 'Available':
-      return ['#F0FDF4','#15803D'];
-    case 'Checked Out':
-      return ['#FEFCE8',"#AD7523"];
-    case 'Maintenance':
-      return ['#FEF2F2','#BD2929'];
-    default:
-      return ['#ffffff','#6B7280'];
-  }
-};
+import PropTypes from 'prop-types';
 
 function DashboardTable({columns,documents}) {
   return (
@@ -29,7 +16,6 @@ function DashboardTable({columns,documents}) {
       </TableHead>
       <TableBody>
         {documents.map((document,rowIndex) => {
-          const color= getStatusColor(document?.status);
           return (<TableRow key={document._id}>
             {
               columns.map((column,colIndex)=>{                
@@ -55,5 +41,9 @@ function DashboardTable({columns,documents}) {
     </Table>
   );
 }
+DashboardTable.propTypes = {
+  columns: PropTypes.arrayOf(PropTypes.string).isRequired,
+  documents: PropTypes.arrayOf(PropTypes.object).isRequired,
+};
 
 export default DashboardTable;

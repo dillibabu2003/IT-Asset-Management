@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import StatCard from '../components/StatCard';
 import axiosInstance from "../utils/axios";
@@ -13,14 +13,15 @@ import ProtectedComponent from '../protectors/ProtectedComponent';
 function DashboardPage() {
     const [data, setData] = useState(null);
     const currentDashboardId = useParams().dashboardId || "main";
-    if(!["assets","licenses","invoices","configure"].includes(currentDashboardId)){
-        return <Navigate to="/NotFound" replace={true}></Navigate>
-    }
-
     useEffect(() => {
+        if (!["assets", "licenses", "invoices", "configure"].includes(currentDashboardId)) {
+            return;
+        }
+
         console.log("Fetching the data of " + currentDashboardId);
-        //don't fetch data it is not in backend
-        if(currentDashboardId=="configure") return ;
+
+        if (currentDashboardId === "configure") return;
+
         async function fetchData(id) {
             try {
                 const response = await axiosInstance.get(`/dashboards/${id}`);
@@ -33,6 +34,10 @@ function DashboardPage() {
         fetchData(currentDashboardId);
     }, [currentDashboardId]);
 
+    if (!["assets", "licenses", "invoices", "configure"].includes(currentDashboardId)) {
+        return <Navigate to="/NotFound" replace={true}></Navigate>;
+    }
+
     if(currentDashboardId == "configure"){
         return <ProtectedComponent requiredPermission={PERMISSIONS.EDIT_DASHBOARD}><ConfigureDashboard /></ProtectedComponent>
     }
@@ -42,7 +47,7 @@ function DashboardPage() {
             <Box>
                 <Typography variant="h5" gutterBottom>{currentDashboardId.substring(0,1).toUpperCase()+currentDashboardId.substring(1)} Dashboard</Typography>
                 <Grid container spacing={3}>
-                    {data?.tiles.map((stat, index) => (
+                    {data?.tiles.map((stat) => (
                         <Grid item xs={12} sm={6} md={3} key={stat.title}>
                             <StatCard key={stat._id} {...stat} />
                         </Grid>

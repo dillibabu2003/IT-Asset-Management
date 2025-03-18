@@ -1,9 +1,9 @@
-import React from 'react'
 import Pie3D from './Pie3D';
 import Bar3D from './Bar3D';
 import DashboardTable  from './DashboardTable';
 import { BACKGROUND_COLORS } from '../utils/constants';
 import { convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
+import PropTypes from 'prop-types';
 const CustomVisualRender = ({element}) => {
     
     function formattedDataForGraphs(data) {
@@ -43,5 +43,14 @@ const CustomVisualRender = ({element}) => {
     }
   
 }
+CustomVisualRender.propTypes = {
+    element: PropTypes.shape({
+        type: PropTypes.string.isRequired,
+        _id: PropTypes.string.isRequired,
+        data: PropTypes.array,
+        fields: PropTypes.array,
+        count: PropTypes.number,
+    }).isRequired,
+};
 
-export default CustomVisualRender
+export default CustomVisualRender;

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import {
     Box,
     Paper,
@@ -10,7 +11,6 @@ import {
     TableHead,
     TableRow,
     Avatar,
-    Switch,
     IconButton,
     Chip,
     TextField,
@@ -26,13 +26,12 @@ import {
     FormControl,
     InputLabel,
     Select,
-    FormControlLabel,
 } from '@mui/material';
 import Icon from './Icon';
 import axiosInstance from '../utils/axios';
 import toast from 'react-hot-toast';
 
-function ManageUsers({ behavior, ...props }) {
+function ManageUsers({ behavior }) {
     const [users, setUsers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [anchorEl, setAnchorEl] = useState(null);
@@ -54,25 +53,23 @@ function ManageUsers({ behavior, ...props }) {
         });
     }, [updateTable]);
 
-    const fetchUserMatched = async () => {
-        console.log(searchTerm)
-        const response = await axiosInstance.get(`/user/search/${searchTerm}`);
-        return response.data;       
-    };
-    useEffect(()=>{     
-       fetchUserMatched().then((response)=>{
-        setUsers(response.data);
-       });
-       if(searchTerm===""){
-              fetchUserData().then((response) => {
+    useEffect(() => {
+        const fetchUserMatched = async () => {
+            console.log(searchTerm);
+            const response = await axiosInstance.get(`/user/search/${searchTerm}`);
+            return response.data;
+        };
+
+        fetchUserMatched().then((response) => {
+            setUsers(response.data);
+        });
+
+        if (searchTerm === "") {
+            fetchUserData().then((response) => {
                 setUsers(response.data);
             });
-       }
-    },[searchTerm]);
-
-    const handleStatusChange = (userId) => {
-        setUsers(users.map(user => user.id === userId ? { ...user, status: !user.status } : user));
-    };
+        }
+    }, [searchTerm]);
 
     const handleMenuOpen = (event, user) => {
         setAnchorEl(event.currentTarget);
@@ -94,7 +91,7 @@ function ManageUsers({ behavior, ...props }) {
         // console.log(selectedUser);
         
         handleMenuClose();
-        setDeleteDialogOpen(true);user_id
+        setDeleteDialogOpen(true);
     };
 
     const handleDeleteConfirm = async() => {
@@ -118,7 +115,7 @@ function ManageUsers({ behavior, ...props }) {
         formData.forEach((value, key) => {
             jsonData[key] = value;
         });
-        const updatedUser =await axiosInstance.put('/user/update',jsonData);
+        await axiosInstance.put('/user/update',jsonData);
         if (editedUser) {
             console.log(editedUser)
             setEditDialogOpen(false);
@@ -164,13 +161,6 @@ function ManageUsers({ behavior, ...props }) {
                             ),
                         }}
                     />
-                    {/* <Button
-                        variant="outlined"
-                        startIcon={<Icon name="filter" size={18} />}
-                        sx={{ textTransform: 'none' }}
-                    >
-                        Filter
-                    </Button> */}
                 </Box>
 
                 <TableContainer>
@@ -395,5 +385,8 @@ function ManageUsers({ behavior, ...props }) {
         </Box>
     );
 }
+ManageUsers.propTypes = {
+    behavior: PropTypes.string.isRequired,
+};
 
 export default ManageUsers;

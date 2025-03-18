@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import CustomTable from '../components/CustomTable';
 import axiosInstance from '../utils/axios';
 import Loader from '../components/Loader';
@@ -25,7 +25,7 @@ const LicensePage = () => {
     const [bulkAssignInfo, setBulkAssignInfo] = useState({ showBulkAssignDialog: false, selectedRows: [], serialNumbersMappedWithEmployeeIds: [] });
     const [filters, setFilters] = useState(sessionStorage.getItem('licenses-filters') ? JSON.parse(sessionStorage.getItem('licenses-filters')) : null);
     //Fetching Data Functions
-    async function fetchLicensesByPageAndLimit(abortController, page, limit) {
+    const fetchLicensesByPageAndLimit = useCallback(async (abortController, page, limit) => {
         const response = await axiosInstance.get('/objects/licenses/filter-docs/paginate', {
             params: {
                 page: page,
@@ -35,7 +35,7 @@ const LicensePage = () => {
             },
             {signal: abortController.signal});
         return response.data;
-    }
+    }, [filters]);
     async function fetchLicensesMetaData(abortController) {
         const response = await axiosInstance.get("/metadata/licenses", { signal: abortController.signal });
         return response.data;
@@ -44,29 +44,29 @@ const LicensePage = () => {
         const response = await axiosInstance.get("/objects/licenses/column-visibilities", { signal: abortController.signal });
         return response.data;
     }
-    async function fetchData(abortController) {
+    const fetchData = useCallback(async (abortController) => {
         const licensesPromise = fetchLicensesByPageAndLimit(abortController, page, pageLimit);
         const licensesMetadataPromise = fetchLicensesMetaData(abortController);
         const userColumnPreferencesPromise = fetchUserColumnPreferences(abortController);
         return Promise.all([licensesPromise, licensesMetadataPromise, userColumnPreferencesPromise]);
-    }
+    }, [page, pageLimit, fetchLicensesByPageAndLimit]);
 
     // Refersh data after any edits or deletes
-    async function refreshData() {
+    const refreshData = useCallback(async () => {
         setSelectedRows([]);
         const toastId = toast.loading("Refreshing data...");
         const abortController = new AbortController();
-        fetchLicensesByPageAndLimit(abortController,page,pageLimit).then((response) => {
+        fetchLicensesByPageAndLimit(abortController, page, pageLimit).then((response) => {
             const licenses = response.data;
             // const licensesMetaData = response[1].data;
             // const userColumnPreferences = response[2].data;
             toast.success("Data refreshed", { id: toastId });
-            setData(prev=>{return {...prev, data: licenses }});
+            setData(prev => { return { ...prev, data: licenses } });
         }).catch((error) => {
             console.log(error);
             toast.error("An error occurred while refreshing data", { id: toastId });
         });
-    }
+    }, [fetchLicensesByPageAndLimit, page, pageLimit]);
 
     // Creating an asset
     async function createAsset(formData) {
@@ -232,7 +232,7 @@ const LicensePage = () => {
     async function unAssignMultipleLicenses() {
         try {
             const licensesToBeUnAssigned = [];
-            data.data.documents.map((asset, index) => {
+            data.data.documents.map((asset) => {
                 if (selectedRows.includes(asset.serial_no)) {
                     licensesToBeUnAssigned.push({
                         serial_no: asset.serial_no,
@@ -388,7 +388,7 @@ const LicensePage = () => {
     // Employee AutoComplete
     const employeeOptionLabel = (option) => { return option ? `${option.employee_id || ''} ${option.firstname || ''} ${option.lastname || ''}`.trim() : '' };
     const employeeOptionEqualToLabel = (option, value) => { return option?.employee_id === value?.employee_id };
-    const handleAutoCompleteChange = (field) => (event) => {
+    const handleAutoCompleteChange = () => (event) => {
         setEmployeeId(event.target.value.employee_id);
     };
 
@@ -417,9 +417,9 @@ const LicensePage = () => {
         setFilters(newFilters);
     }
     useEffect(() => {
-       if(filters==null || data ==null) return ;
+       if (filters == null) return;
        refreshData();
-    }, [filters]);
+    }, [filters, refreshData]);
     
 
     useEffect(() => {
@@ -430,9 +430,7 @@ const LicensePage = () => {
                 const licenses = response[0].data;
                 const licensesMetaData = response[1].data;
                 const userColumnPreferences = response[2].data;
-                console.log(data)
-                console.log(response);
-                
+
                 setData({ data: licenses, fields: licensesMetaData, userColumnPreferences: userColumnPreferences });
             }).catch((error) => {
                 console.log(error);
@@ -448,7 +446,8 @@ const LicensePage = () => {
         return () => {
             abortController.abort();
         };
-    }, [page, pageLimit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, pageLimit, fetchData, fetchLicensesByPageAndLimit]);
 
     return (
         <React.Fragment>

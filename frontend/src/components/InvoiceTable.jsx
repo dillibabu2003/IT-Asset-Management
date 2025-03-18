@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
+import PropTypes from 'prop-types';
 import { convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 import { Box, Button, Checkbox, FormControlLabel, IconButton, InputAdornment, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, TextField } from '@mui/material';
 import ProtectedComponent from '../protectors/ProtectedComponent';
 import { PERMISSIONS } from '../utils/constants';
 import Icon from './Icon';
 import axiosInstance from '../utils/axios';
-import { toast } from 'react-hot-toast';
 
 const InvoiceTable = (
     {
@@ -18,7 +18,6 @@ const InvoiceTable = (
         setPage,
         setPageLimit,
         setDeleteDialogInfo,
-        ...props
     }
 ) => {
     const [orderBy, setOrderBy] = useState('invoice_id');
@@ -149,7 +148,7 @@ const InvoiceTable = (
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {sortedDocuments.map((document, rowIndex) => (
+                        {sortedDocuments.map((document) => (
                             <TableRow
                                 key={document.invoice_id}
                                 hover
@@ -203,5 +202,20 @@ const InvoiceTable = (
         </Paper>
     )
 }
+InvoiceTable.propTypes = {
+    columns: PropTypes.objectOf(
+        PropTypes.shape({
+            type: PropTypes.string,
+        })
+    ).isRequired,
+    rows: PropTypes.arrayOf(PropTypes.object).isRequired,
+    userColumnPreferences: PropTypes.object.isRequired,
+    page: PropTypes.number.isRequired,
+    totalInvoices: PropTypes.number.isRequired,
+    pageLimit: PropTypes.number.isRequired,
+    setPage: PropTypes.func.isRequired,
+    setPageLimit: PropTypes.func.isRequired,
+    setDeleteDialogInfo: PropTypes.func.isRequired,
+};
 
 export default InvoiceTable

@@ -23,18 +23,18 @@ function getModelByObjectName(objectName) {
     }
 }
 
-const fetchPaginatedDocumentsByFilter = async (objectName, filter, limit, skip) => {
-    const model = getModelByObjectName(objectName);
-    if (!model) {
-        throw new ApiError(400, null, "Invalid object name");
-    }
-    if (limit < 0 || skip < 0) {
-        throw new ApiError(400, null, "Invalid limit or skip value");
-    }
+// const fetchPaginatedDocumentsByFilter = async (objectName, filter, limit, skip) => {
+//     const model = getModelByObjectName(objectName);
+//     if (!model) {
+//         throw new ApiError(400, null, "Invalid object name");
+//     }
+//     if (limit < 0 || skip < 0) {
+//         throw new ApiError(400, null, "Invalid limit or skip value");
+//     }
 
-    const documents = await model.find(filter).skip(skip).limit(limit).exec();
-    return documents;
-}
+//     const documents = await model.find(filter).skip(skip).limit(limit).exec();
+//     return documents;
+// }
 
 async function fetchPaginatedDocumentsByObjectName(objectName, page, limit, skip) {
     const aggregateQuery = [

@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react'
+import  { useEffect } from 'react'
 import { useAuth } from '../providers/AuthProvider'
+import PropTypes from 'prop-types';
 import { Navigate } from 'react-router';
 
 const ProtectedRoute = ({children, requiredPermission}) => {
@@ -27,5 +28,9 @@ const ProtectedRoute = ({children, requiredPermission}) => {
 
   return <>{children}</>;
 }
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  requiredPermission: PropTypes.string,
+};
 
 export default ProtectedRoute;

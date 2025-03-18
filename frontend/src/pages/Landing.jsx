@@ -1,4 +1,3 @@
-import React from 'react';
 import {
     Box,
     Button,
@@ -10,6 +9,8 @@ import {
 } from '@mui/material';
 import { Link } from 'react-router';
 import { features } from '../utils/constants';
+import PropTypes from 'prop-types';
+
 function FeatureCard({ icon, title, description }) {
     return (
         <Box
@@ -49,7 +50,14 @@ function FeatureCard({ icon, title, description }) {
     );
 }
 
+FeatureCard.propTypes = {
+    icon: PropTypes.node.isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+};
+
 function LandingPage({ onGetStarted }) {
+
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     return (
@@ -149,4 +157,7 @@ function LandingPage({ onGetStarted }) {
         </Box>
     );
 }
+LandingPage.propTypes = {
+    onGetStarted: PropTypes.func.isRequired,
+};
 export default LandingPage;

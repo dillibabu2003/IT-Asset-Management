@@ -131,8 +131,6 @@ function constructSumQuery(matcher_field,matcher_value,target){
             }
         }
     ];
-    console.log(query);
-     
     return query;
 }
 function constructAverageQuery(matcher_field,matcher_value,target){
@@ -293,7 +291,9 @@ const handleConfigureDashboard = asyncHandler(async (req,res)=>{
 
     const tilesWithQueries = getTilesWithQueriesAttached(data.tiles);
     const elementsWithQueries = getElementsWithQueriesAttached(data.elements);
+    // eslint-disable-next-line no-unused-vars
     const tilesWithRemovedIds = tilesWithQueries.map(({_id,...rest}) => rest);
+    // eslint-disable-next-line no-unused-vars
     const elementsWithRemovedIds = elementsWithQueries.map(({_id,...rest}) => rest);   
     data.tiles = tilesWithRemovedIds;
     data.elements = elementsWithRemovedIds;

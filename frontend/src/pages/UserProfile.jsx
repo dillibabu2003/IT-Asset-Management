@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { useLocation } from 'react-router';
 import {
   Box,
@@ -12,7 +12,7 @@ import {
 
 function UserProfile() {
   const location = useLocation();
-  const [userData,setUserData] = useState(location.state.userDetails);
+  const [userData] = useState(location.state.userDetails);
   // Format date of birth to a readable format
   const formatDate = (dateString) => {
     const date = new Date(dateString);

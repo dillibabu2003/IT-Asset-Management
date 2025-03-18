@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import  { useEffect, useState } from 'react'
 import { useParams } from 'react-router';
 import axiosInstance from '../utils/axios';
 
@@ -31,7 +31,7 @@ const ActivateAccount = () => {
             abortController.abort();
         }
     }
-    ,[])
+    ,[id])
   return (
     <div>
         {isLoading ? "Verifying Your Email...": result}

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
+import PropTypes from 'prop-types';
 import {
   Box,
   Button,
@@ -83,7 +84,7 @@ function ForgotPassword({ onBack, onSuccess }) {
     }
     setLoading(true);
     try {
-      const response= await axiosInstance.patch('/auth/forgot-password', {
+      await axiosInstance.patch('/auth/forgot-password', {
         new_password: password,
         encrypted_email: email,
         encrypted_code: code
@@ -100,7 +101,7 @@ function ForgotPassword({ onBack, onSuccess }) {
     } catch (error) {
       setNotification({
         open: true,
-        message: 'Failed to reset password. Please try again.',
+        message: error.response.data.message||'Failed to reset password. Please try again.',
         severity: 'error',
       });
     } finally {
@@ -241,5 +242,9 @@ function ForgotPassword({ onBack, onSuccess }) {
     </Container>
   );
 }
+ForgotPassword.propTypes = {
+  onBack: PropTypes.func.isRequired,
+  onSuccess: PropTypes.func.isRequired,
+};
 
 export default ForgotPassword;

@@ -1,6 +1,6 @@
-import React from 'react';
 import { Paper, Box, Typography } from '@mui/material';
 import Icon from './Icon';
+import PropTypes from 'prop-types';
 
 function StatCard({ title, value, icon, color }) {
   return (
@@ -31,5 +31,11 @@ function StatCard({ title, value, icon, color }) {
     </Paper>
   );
 }
+StatCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  icon: PropTypes.string.isRequired,
+  color: PropTypes.string
+};
 
 export default StatCard;

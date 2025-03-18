@@ -1,10 +1,10 @@
 import HighchartsReact from 'highcharts-react-official'
-import Highcharts, { color } from 'highcharts';
+import Highcharts from 'highcharts';
+import PropTypes from 'prop-types';
 import { Box } from '@mui/material';
-import React from 'react'
 import Highcharts3D from "highcharts/highcharts-3d";
 Highcharts3D(Highcharts);
-const Bar3D = ({data,...props}) => {
+const Bar3D = ({data}) => {
   const options={
     chart: {
         renderTo: 'container',
@@ -54,5 +54,8 @@ const Bar3D = ({data,...props}) => {
     
   )
 }
+Bar3D.propTypes = {
+  data: PropTypes.array.isRequired,
+};
 
 export default Bar3D

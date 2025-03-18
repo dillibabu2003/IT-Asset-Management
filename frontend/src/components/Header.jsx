@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { AppBar, Avatar, Box, Button, IconButton, InputBase, Popover, Toolbar, Typography, alpha } from '@mui/material';
+import  { useState } from 'react';
+import { AppBar, Avatar, Box, Button, IconButton, Popover, Toolbar, Typography } from '@mui/material';
+import PropTypes from 'prop-types';
 import Icon from './Icon';
 import { useAuth } from '../providers/AuthProvider';
 import { Link } from 'react-router';
 
-function Header({toggleSidebar,...props}) {
+function Header({toggleSidebar}) {
   const { user, logout } = useAuth();
   const [toggleProfileMenu, setToggleProfileMenu] = useState();
   return (
@@ -86,5 +87,8 @@ function Header({toggleSidebar,...props}) {
     </AppBar>
   );
 }
+Header.propTypes = {
+  toggleSidebar: PropTypes.func.isRequired,
+};
 
 export default Header;

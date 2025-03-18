@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { Drawer, List, ListItem, ListItemIcon, ListItemText, Collapse } from '@mui/material';
-import { Link, useLocation, useParams } from "react-router";
+import { Link, useLocation } from "react-router";
 import Icon from './Icon';
 import ProtectedComponent from '../protectors/ProtectedComponent';
 
@@ -14,7 +15,7 @@ function SubItem({item,openItems,toggleSideBar}) {
       key={item.id}            
       >
         {item.subItems.map((subItem) => (
-          <ProtectedComponent requiredPermission={subItem.requiredPermission}>
+          <ProtectedComponent requiredPermission={subItem.requiredPermission} key={subItem.id}>
           <Link
             to={'/'+item.id+"/"+subItem.id}
             key={item.id+subItem.id}
@@ -47,7 +48,23 @@ function SubItem({item,openItems,toggleSideBar}) {
     </Collapse>
   )
 }
-function Sidebar({isSideBarOpen,toggleSideBar,...props}) {
+
+SubItem.propTypes = {
+  item: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    subItems: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        text: PropTypes.string.isRequired,
+        icon: PropTypes.node,
+        requiredPermission: PropTypes.string,
+      })
+    ).isRequired,
+  }).isRequired,
+  openItems: PropTypes.object.isRequired,
+  toggleSideBar: PropTypes.func.isRequired,
+};
+function Sidebar({isSideBarOpen,toggleSideBar}) {
   const location = useLocation();
   const [openItems, setOpenItems] = React.useState({
     dashboard: location.pathname.startsWith("/dashboard"),
@@ -192,5 +209,9 @@ function Sidebar({isSideBarOpen,toggleSideBar,...props}) {
     </Drawer>
   );
 }
+Sidebar.propTypes = {
+  isSideBarOpen: PropTypes.bool.isRequired,
+  toggleSideBar: PropTypes.func.isRequired,
+};
 
 export default Sidebar;

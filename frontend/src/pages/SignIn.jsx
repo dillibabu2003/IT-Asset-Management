@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import {
     Box,
     Button,
@@ -24,7 +24,7 @@ function SignIn() {
         if (user) {
             navigate('/dashboard/assets', { replace: true });
         }
-    }, [user]);
+    }, [user, navigate]);
 
     const onBack = () => {
         navigate('/');

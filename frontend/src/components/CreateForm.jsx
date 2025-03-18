@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -15,20 +15,19 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import { convertPascaleCaseToSnakeCase } from '../utils/helperFunctions';
-
+import PropTypes from 'prop-types';
 
 
 export default function CreateForm({ isDialogOpen, closeDialog, currentSection, fields, values, saveData }) {
-  if (!fields || !values) return null;
-
-  console.log(isDialogOpen);
-  
-
   const [formData, setFormData] = useState(values);
 
   useEffect(() => {
     setFormData(values);
   }, [values]);
+
+  if (!fields || !values) return null;
+
+  console.log(isDialogOpen);
 
   const handleChange = (fieldId, value) => {
     setFormData(prev => ({
@@ -128,3 +127,11 @@ export default function CreateForm({ isDialogOpen, closeDialog, currentSection, 
     </Dialog>
   );
 }
+CreateForm.propTypes = {
+  isDialogOpen: PropTypes.bool.isRequired,
+  closeDialog: PropTypes.func.isRequired,
+  currentSection: PropTypes.string.isRequired,
+  fields: PropTypes.object.isRequired,
+  values: PropTypes.object.isRequired,
+  saveData: PropTypes.func.isRequired,
+};

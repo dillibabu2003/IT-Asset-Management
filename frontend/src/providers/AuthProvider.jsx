@@ -1,6 +1,7 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import  { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import axiosInstance from "../utils/axios.js";
 import { useNavigate } from 'react-router';
+import PropTypes from 'prop-types';
 
 const AuthContext = createContext();
 
@@ -41,7 +42,7 @@ const AuthProvider = (props) => {
         }
     };
 
-    const checkAuthStatus = async () => {
+    const checkAuthStatus = useCallback(async () => {
         try {
             const response = await axiosInstance.get("/user/profile");
             if (response.data.success) {
@@ -60,14 +61,13 @@ const AuthProvider = (props) => {
             if(error.status==401){
                 navigate("/login",{replace:true});
             }
-        }finally{
-            return false;
         }
-    };
+            return false;
+    }, [navigate]);
 
     useEffect(() => {
         checkAuthStatus();
-    }, []);
+    }, [checkAuthStatus]);
 
     return (
         <AuthContext.Provider value={{ isAuthenticated, user, login, logout,checkAuthStatus }}>
@@ -76,6 +76,7 @@ const AuthProvider = (props) => {
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     const context = useContext(AuthContext);
     if (context === undefined) {
@@ -83,5 +84,8 @@ export function useAuth() {
     }
     return context;
 }
+AuthProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+};
 
 export default AuthProvider;

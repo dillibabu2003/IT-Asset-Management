@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Box,
     Paper,
@@ -10,10 +10,7 @@ import {
     MenuItem,
     Button,
     Grid,
-    FormControlLabel,
-    Switch,
     Avatar,
-    IconButton,
 } from '@mui/material';
 import Icon from './Icon';
 import axiosInstance from '../utils/axios';
@@ -29,6 +26,7 @@ function CreateUser() {
     useEffect(() => {
         async function fetchUserMetaData() {
             try {
+                 // eslint-disable-next-line react-hooks/exhaustive-deps
                  metaDataResponse = await axiosInstance.get('/metadata/users');
                 if (metaDataResponse.data.success) {
                     setFields(metaDataResponse.data.data);

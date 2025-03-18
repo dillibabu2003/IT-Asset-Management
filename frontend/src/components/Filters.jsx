@@ -13,6 +13,7 @@ Box,
 Chip
 } from '@mui/material';
 import Icon from '../components/Icon';
+import PropTypes from 'prop-types';
 
 const Filters = (
   {
@@ -28,6 +29,7 @@ const Filters = (
   
   // Convert columns object to array and filter for select types
   const selectColumns = columns ? Object.entries(columns)
+    // eslint-disable-next-line no-unused-vars
     .filter(([id, column]) => column.type === 'select')
     .map(([id, column]) => ({ id, ...column })) 
     : [];
@@ -168,5 +170,10 @@ const Filters = (
     </div>
   );
 }
+Filters.propTypes = {
+  currentSection: PropTypes.string.isRequired,
+  columns: PropTypes.object.isRequired,
+  sendFilters: PropTypes.func.isRequired,
+};
 
 export default Filters

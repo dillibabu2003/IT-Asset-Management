@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
 import axiosInstance from "../utils/axios";
 import React from "react";
-
+import PropTypes from "prop-types";
 export default function AsynchronousAutoComplete({
   fetchUrl,
   optionLabelFunction,
@@ -13,6 +14,7 @@ export default function AsynchronousAutoComplete({
   const [open, setOpen] = React.useState(false);
   const [options, setOptions] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [inputValue, setInputValue] = React.useState("");
 
   // Fetch initial 10 documents when component mounts
@@ -104,3 +106,10 @@ export default function AsynchronousAutoComplete({
     />
   );
 }
+AsynchronousAutoComplete.propTypes = {
+  fetchUrl: PropTypes.string.isRequired,
+  optionLabelFunction: PropTypes.func.isRequired,
+  filters: PropTypes.object,
+  sendInputToParent: PropTypes.func,
+  optionaEqualToValueFunction: PropTypes.func,
+};

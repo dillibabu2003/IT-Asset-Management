@@ -1,17 +1,11 @@
 import HighchartsReact from 'highcharts-react-official'
 import Highcharts from 'highcharts';
 import { Box } from '@mui/material';
-import React from 'react'
 import Highcharts3D from "highcharts/highcharts-3d";
+import PropTypes from 'prop-types';
 Highcharts3D(Highcharts);
-// const data = [
-//     { name: 'Available', y: 1189, color: '#2e7d32' },
-//     { name: 'Checked Out', y: 793, color: '#ed6c02' },
-//     { name: 'Maintenance', y: 396, color: '#d32f2f' },
-//     { name: 'Other', y: 265, color: '#757575' },
-//   ];
 
-const Pie3D = ({data,...props}) => {
+const Pie3D = ({data}) => {
  
     const options = {
         chart: {
@@ -64,5 +58,14 @@ const Pie3D = ({data,...props}) => {
     </Box>
   )
 }
+Pie3D.propTypes = {
+  data: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      y: PropTypes.number.isRequired,
+      color: PropTypes.string
+    })
+  ).isRequired,
+};
 
 export default Pie3D

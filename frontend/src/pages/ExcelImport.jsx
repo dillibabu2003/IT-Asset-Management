@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -21,12 +21,13 @@ import { convertPascaleCaseToSnakeCase, convertSnakeCaseToPascaleCase } from '..
 import toast from 'react-hot-toast';
 import CreateForm from '../components/CreateForm';
 import { useNavigate } from 'react-router';
+import PropTypes from 'prop-types';
 
-function ExcelImport({objectId,...props}) {
+function ExcelImport({objectId}) {
   const [columnMetadata, setColumnMetadata] = useState(null);
   const [columnIds, setColumnIds] = useState([]);
   const [data, setData] = useState([]);
-  const [errors, setErrors] = useState([]);
+  const [errors] = useState([]);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const [editingCell, setEditingCell] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -108,7 +109,7 @@ function ExcelImport({objectId,...props}) {
   };
 
   const handleCellEdit = (columnMetaData, rowIndex) => {
-    setEditingCell(prev=>{return {index:rowIndex,data: {...data[rowIndex]}}})
+    setEditingCell({index: rowIndex, data: {...data[rowIndex]}})
     setEditDialogOpen(true);
   };
   const handleCellDelete = (columnMetaData, rowIndex) => {
@@ -258,5 +259,8 @@ function ExcelImport({objectId,...props}) {
     </Box>
   );
 }
+ExcelImport.propTypes = {
+  objectId: PropTypes.string.isRequired,
+};
 
 export default ExcelImport;

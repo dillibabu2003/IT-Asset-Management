@@ -12,7 +12,6 @@ import {
   TextField,
   IconButton,
   Chip,
-  Pagination,
   Menu,
   MenuItem,
   Checkbox,
@@ -35,7 +34,7 @@ import Filters from './Filters';
 
 function EnhancedTableHead(props) {
   const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort, visibleColumns } = props;
-  const createSortHandler = (property) => (event) => {
+  const createSortHandler = (property) => () => {
     onRequestSort(property);
   };
 
@@ -258,7 +257,12 @@ EnhancedTableToolbar.propTypes = {
   setVisibleColumns: PropTypes.func.isRequired,
   setItemSerialNumbersToBeUnassigned: PropTypes.func.isRequired,
   setItemSerialNumbersToBeDeleted: PropTypes.func.isRequired,
+  setItemSerialNumbersToBeAssigned: PropTypes.func.isRequired,
+  selectedRows: PropTypes.array.isRequired,
+  searchText: PropTypes.func.isRequired,
+  handleFilterChange: PropTypes.func.isRequired,
 };
+
 
 export default function CustomTable(
   { 
@@ -469,3 +473,24 @@ export default function CustomTable(
     </Paper>
   );
 }
+CustomTable.propTypes = {
+  currentSection: PropTypes.string.isRequired,
+  data: PropTypes.object.isRequired,
+  page: PropTypes.number.isRequired,
+  setPage: PropTypes.func.isRequired,
+  pageLimit: PropTypes.number.isRequired,
+  handleFilterChange: PropTypes.func.isRequired,
+  setEditingRowIndex: PropTypes.func.isRequired,
+  setAssignRowIndex: PropTypes.func.isRequired,
+  setUnAssignRowIndex: PropTypes.func.isRequired,
+  setDeleteRowIndex: PropTypes.func.isRequired,
+  setItemSerialNumbersToBeAssigned: PropTypes.func.isRequired,
+  setItemSerialNumbersToBeUnassigned: PropTypes.func.isRequired,
+  setItemSerialNumbersToBeDeleted: PropTypes.func.isRequired,
+  setPageLimit: PropTypes.func.isRequired,
+  userVisibleColumns: PropTypes.object.isRequired,
+  selectedRows: PropTypes.array.isRequired,
+  setSelectedRows: PropTypes.func.isRequired,
+  searchText: PropTypes.func.isRequired,
+};
+

@@ -1,4 +1,5 @@
-import React, { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import {
   Dialog,
   DialogTitle,
@@ -19,16 +20,15 @@ import { convertPascaleCaseToSnakeCase } from '../utils/helperFunctions';
 
 
 export default function EditForm({ isDialogOpen, closeDialog, currentSection, fields, values, saveData }) {
-  if (!fields || !values) return null;
-
-  console.log(values);
-  
-
   const [formData, setFormData] = useState(values);
 
   useEffect(() => {
     setFormData(values);
   }, [values]);
+
+  if (!fields || !values) return null;
+
+  console.log(values);
 
   const handleChange = (fieldId, value) => {
     setFormData(prev => ({
@@ -120,5 +120,15 @@ export default function EditForm({ isDialogOpen, closeDialog, currentSection, fi
         </Button>
       </DialogActions>
     </Dialog>
-  );
+)
 }
+
+EditForm.propTypes = {
+  isDialogOpen: PropTypes.bool.isRequired,
+  closeDialog: PropTypes.func.isRequired,
+  currentSection: PropTypes.string.isRequired,
+  fields: PropTypes.object.isRequired,
+  values: PropTypes.object.isRequired,
+  saveData: PropTypes.func.isRequired,
+};
+

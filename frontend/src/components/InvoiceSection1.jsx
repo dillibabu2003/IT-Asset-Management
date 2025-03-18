@@ -1,27 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     Box,
     Button,
     Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
     TextField,
     Typography,
-    IconButton,
-    Chip,
-    Pagination,
     Stack,
-    InputAdornment,
     CircularProgress,
     Alert,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     Grid,
     Select,
     FormControl,
@@ -35,8 +21,7 @@ import Icon from "../components/Icon";
 import { convertPascaleCaseToSnakeCase, convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 import axiosInstance from '../utils/axios';
 import toast from 'react-hot-toast';
-import { PAGE_LIMIT } from '../utils/constants';
-// import ApiError from '../../../backend/utils/ApiError';
+import PropTypes from 'prop-types';
 
 
 function InputField({ label, type, id, value, options, required, setInputValue }) {
@@ -90,6 +75,16 @@ function InputField({ label, type, id, value, options, required, setInputValue }
                 />
             ));
 }
+InputField.propTypes = {
+    label: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
+    value: PropTypes.any,
+    options: PropTypes.array,
+    required: PropTypes.bool,
+    setInputValue: PropTypes.func.isRequired,
+};
+
 function ParsedInvoiceData({ items, columns, onEdit, onDelete }) {
     if (items.length == 0) return <>No items found.</>;
 
@@ -97,7 +92,7 @@ function ParsedInvoiceData({ items, columns, onEdit, onDelete }) {
         {
             items.map((item, index) => {
                 return (
-                    <Grid container spacing={3} sx={{ mt: 0 }}>
+                    <Grid container spacing={3} sx={{ mt: 0 }} key={`item-${index}`}>
                         {Object.keys(columns).map((key) => {
                             const column = columns[key];
                             return (
@@ -127,7 +122,12 @@ function ParsedInvoiceData({ items, columns, onEdit, onDelete }) {
     </Box>
 }
 
-
+ParsedInvoiceData.propTypes = {
+    items: PropTypes.array.isRequired,
+    columns: PropTypes.object.isRequired,
+    onEdit: PropTypes.func.isRequired,
+    onDelete: PropTypes.func.isRequired,
+}
 
 const columns = {
     invoice_id: { id: 'invoice_id', label: 'Invoice ID', type: 'text', required: true,visible: true,create:true,edit: true},
@@ -352,24 +352,10 @@ const columns = {
     total_amount: { id: 'total_amount', label: 'Total Amount', type: 'number' }
 };
 
-const filterColumns = {
-    invoice_id: { id: 'invoice_id', label: 'Invoice ID', type: 'text' },
-    vendor_name: { id: 'vendor_name', label: 'Vendor Name', type: 'text' },
-    invoice_type: {
-        id: 'invoice_type',
-        label: 'Invoice Type',
-        type: 'select',
-        options: ['own', 'rental']
-    },
-    total_amount: { id: 'total_amount', label: 'Total Amount', type: 'number' },
-};
-
-
 
 function InvoiceSection(
     {
         refreshData,
-        ...props
     }
 ) {
     
@@ -447,7 +433,7 @@ function InvoiceSection(
             console.log(err);
             setError('Error processing invoice. Please try again.');
         } finally {
-            setProcessingStatus(prev => { return { loading: false, message: null } });
+            setProcessingStatus({ loading: false, message: null });
         }
     };
 
@@ -500,7 +486,7 @@ function InvoiceSection(
                 "file_name": invoice.invoice_id
             });
             if (preSignedUrlResponse.data.success) {
-                const { url, file_name } = preSignedUrlResponse.data.data;
+                const { url } = preSignedUrlResponse.data.data;
                 const response = await uploadFileToS3(url, file, fileType);
                 if (response) {
                     toast.success("Invoice uploaded and data saved successfully.", { id: toastId });
@@ -662,4 +648,10 @@ function InvoiceSection(
     );
 }
 
+
+InvoiceSection.propTypes = {
+    refreshData: PropTypes.func.isRequired,
+}
+
 export default InvoiceSection;
+

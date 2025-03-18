@@ -1,5 +1,6 @@
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from '@mui/material'
-import React, { useState } from 'react'
+import  { useState } from 'react'
+import PropTypes from 'prop-types';
 import AsynchronousAutoComplete from './AsynchronousAutoComplete';
 import { convertSnakeCaseToPascaleCase } from '../utils/helperFunctions';
 
@@ -8,7 +9,6 @@ const AssignMultipleItems = (
         currentSection,
         isDialogOpen,
         closeDialog,
-        fields,
         items,
         employeeOptionLabel,
         employeeOptionEqualToLabel,
@@ -65,7 +65,7 @@ const AssignMultipleItems = (
                                     {
                                         items.map(item => (item.serial_no == serial_no &&
                                             
-                                            Object.entries(item).map(([key,value], index) => (
+                                            Object.entries(item).map(([key,value]) => (
                                                 ([ '__v','employee_name'].includes(key) || key.match(/^[a-zA-Z]*_id$/))? null :
                                                 <Typography key={`${serial_no}-${key}`}>{convertSnakeCaseToPascaleCase(key)}: {value}</Typography>
                                             ))
@@ -83,5 +83,16 @@ const AssignMultipleItems = (
         </Dialog>
     )
 }
+AssignMultipleItems.propTypes = {
+    isDialogOpen: PropTypes.bool.isRequired,
+    closeDialog: PropTypes.func.isRequired,
+    currentSection: PropTypes.string.isRequired,
+    fields: PropTypes.array.isRequired,
+    employeeOptionLabel: PropTypes.func.isRequired,
+    employeeOptionEqualToLabel: PropTypes.func.isRequired,
+    selectedItemsSerialNumbers: PropTypes.array.isRequired,
+    saveData: PropTypes.func.isRequired,
+    items: PropTypes.array.isRequired,
+};
 
 export default AssignMultipleItems

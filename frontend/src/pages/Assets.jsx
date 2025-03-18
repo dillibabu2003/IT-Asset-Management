@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import CustomTable from '../components/CustomTable';
 import axiosInstance from '../utils/axios';
 import Loader from '../components/Loader';
@@ -25,7 +25,7 @@ const AssetsPage = () => {
     const [bulkAssignInfo, setBulkAssignInfo] = useState({ showBulkAssignDialog: false, selectedRows: [], serialNumbersMappedWithEmployeeIds: [] });
     const [filters, setFilters] = useState(sessionStorage.getItem('assets-filters') ? JSON.parse(sessionStorage.getItem('assets-filters')) : null);
     //Fetching Data Functions
-    async function fetchAssetsByPageAndLimit(abortController, page, limit) {
+    const fetchAssetsByPageAndLimit = useCallback(async (abortController, page, limit) => {
         const response = await axiosInstance.get('/objects/assets/filter-docs/paginate', {
             params: {
                 page: page,
@@ -35,7 +35,7 @@ const AssetsPage = () => {
         },
             { signal: abortController.signal });
         return response.data;
-    }
+    }, [filters]);
     async function fetchAssetsMetaData(abortController) {
         const response = await axiosInstance.get("/metadata/assets", { signal: abortController.signal });
         return response.data;
@@ -44,15 +44,15 @@ const AssetsPage = () => {
         const response = await axiosInstance.get("/objects/assets/column-visibilities", { signal: abortController.signal });
         return response.data;
     }
-    async function fetchData(abortController) {
+    const fetchData = useCallback(async (abortController) => {
         const assetsPromise = fetchAssetsByPageAndLimit(abortController, page, pageLimit);
         const assetsMetadataPromise = fetchAssetsMetaData(abortController);
         const userColumnPreferencesPromise = fetchUserColumnPreferences(abortController);
         return Promise.all([assetsPromise, assetsMetadataPromise, userColumnPreferencesPromise]);
-    }
+    }, [page, pageLimit, fetchAssetsByPageAndLimit]);
 
     // Refersh data after any edits or deletes
-    async function refreshData() {
+    const refreshData = useCallback(async () => {
         setSelectedRows([]);
         const toastId = toast.loading("Refreshing data...");
         const abortController = new AbortController();
@@ -68,7 +68,7 @@ const AssetsPage = () => {
             console.log(error);
             toast.error("An error occurred while refreshing data", { id: toastId });
         });
-    }
+    }, [page, pageLimit, fetchAssetsByPageAndLimit]);
 
     // Creating an asset
     async function createAsset(formData) {
@@ -234,7 +234,7 @@ const AssetsPage = () => {
     async function unAssignMultipleAssets() {
         try {
             const assetsToBeUnAssigned = [];
-            data.data.documents.map((asset, index) => {
+            data.data.documents.map((asset) => {
                 if (selectedRows.includes(asset.serial_no)) {
                     assetsToBeUnAssigned.push({
                         serial_no: asset.serial_no,
@@ -386,7 +386,7 @@ const AssetsPage = () => {
     // Employee AutoComplete
     const employeeOptionLabel = (option) => { return option ? `${option.employee_id || ''} ${option.firstname || ''} ${option.lastname || ''}`.trim() : '' };
     const employeeOptionEqualToLabel = (option, value) => { return option?.employee_id === value?.employee_id };
-    const handleAutoCompleteChange = (field) => (event) => {
+    const handleAutoCompleteChange = () => (event) => {
         setEmployeeId(event.target.value.employee_id);
     };
 
@@ -417,7 +417,8 @@ const AssetsPage = () => {
     useEffect(() => {
         if (filters == null || data == null) return;
         refreshData();
-    }, [filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters, refreshData]);
 
 
     useEffect(() => {
@@ -446,7 +447,8 @@ const AssetsPage = () => {
         return () => {
             abortController.abort();
         };
-    }, [page, pageLimit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, pageLimit, fetchAssetsByPageAndLimit, fetchData]);
 
     return (
         <React.Fragment>

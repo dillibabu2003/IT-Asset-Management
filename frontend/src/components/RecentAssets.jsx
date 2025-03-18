@@ -1,4 +1,3 @@
-import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableRow, Chip } from '@mui/material';
 
 const recentAssets = [

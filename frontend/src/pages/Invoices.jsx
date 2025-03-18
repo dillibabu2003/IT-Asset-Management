@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react'
-import CustomTable from '../components/CustomTable';
 import axiosInstance from '../utils/axios';
 import Loader from '../components/Loader';
 import { PAGE_LIMIT } from "../utils/constants";
-import InvoiceSection from '../components/InvoiceSection';
 import InvoiceSection1 from '../components/InvoiceSection1';
 import InvoiceTable from '../components/InvoiceTable';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import toast from 'react-hot-toast';
+import { useEffect, useState } from 'react';
 const InvoicesPage = () => {
 
 
@@ -33,12 +31,6 @@ const InvoicesPage = () => {
     async function fetchUserColumnPreferences(abortController) {
         const response = await axiosInstance.get("/invoices/column-visibilities", { signal: abortController.signal });
         return response.data;
-    }
-    async function fetchData(abortController) {
-        const invoicesPromise = fetchInvoicesByPageAndLimit(abortController, page, pageLimit);
-        const invoicesMetadataPromise = fetchInvoicesMetaData(abortController);
-        const userColumnPreferencesPromise = fetchUserColumnPreferences(abortController);
-        return Promise.all([invoicesPromise, invoicesMetadataPromise, userColumnPreferencesPromise]);
     }
     async function refreshData() {
         const toastId = toast.loading("Refreshing data...");
@@ -77,29 +69,31 @@ const InvoicesPage = () => {
     useEffect(() => {
         const abortController = new AbortController();
         if (!data) {
-            fetchData(abortController).then((response) => {
-                const invoices = response[0].data;
-                const invoicesMetaData = response[1].data;
-                const userColumnPreferences = response[2].data;
-                console.log(data)
-                console.log(response);
+            const fetchData = async () => {
+                const invoicesPromise = fetchInvoicesByPageAndLimit(abortController, page, pageLimit);
+                const invoicesMetadataPromise = fetchInvoicesMetaData(abortController);
+                const userColumnPreferencesPromise = fetchUserColumnPreferences(abortController);
+                try {
+                    const response = await Promise.all([invoicesPromise, invoicesMetadataPromise, userColumnPreferencesPromise]);
+                    const invoices = response[0].data;
+                    const invoicesMetaData = response[1].data;
+                    const userColumnPreferences = response[2].data;
+                    console.log(data);
+                    console.log(response);
 
-                setData({ data: invoices, fields: invoicesMetaData, userColumnPreferences: userColumnPreferences });
-            }).catch((error) => {
-                console.log(error);
-            });
+                    setData({ data: invoices, fields: invoicesMetaData, userColumnPreferences: userColumnPreferences });
+                } catch (error) {
+                    console.log(error);
+                }
+            };
+            fetchData();
         } else {
             fetchInvoicesByPageAndLimit(abortController, page, pageLimit).then((response) => {
                 setData(prev => ({ ...prev, data: response.data }));
             }).catch((error) => {
                 console.log(error);
             });
-        }
-
-        return () => {
-            abortController.abort();
-        };
-    }, [page, pageLimit]);
+        }},[]);
     return (
         !data ? <Loader /> :
             // <InvoiceSection />

@@ -8,8 +8,6 @@ import DashboardPage from './pages/Dashboard';
 import AssetsPage from './pages/Assets';
 import LicensePage from './pages/Licenses';
 import InvoicesPage from './pages/Invoices';
-import CheckoutPage from './pages/Checkout';
-
 import CreateUser from './components/CreateUser';
 import ManageUsers from './components/ManageUsers';
 
@@ -27,10 +25,19 @@ import UserProfile from './pages/UserProfile';
 import ExcelImport from './pages/ExcelImport';
 import { createTheme, ThemeProvider } from '@mui/material';
 
+import { Link as RouterLink } from 'react-router';
+import PropTypes from 'prop-types';
+
 export const LinkBehavior = React.forwardRef((props, ref) => {
   const { href, ...other } = props;
   return <RouterLink ref={ref} to={href} {...other} />;
 });
+
+LinkBehavior.displayName = 'LinkBehavior';
+
+LinkBehavior.propTypes = {
+  href: PropTypes.string.isRequired,
+};
 const theme = createTheme({
   palette: {
     primary: {
@@ -77,14 +84,14 @@ function App() {
       reverseOrder={false}
     />
       <Routes>
-        //Home Page Here
+        {/* Home Page Here */}
         <Route index element={<LandingPage />} />
-        //Login Page Here
+        {/* Login Page Here */}
         <Route path="/login" element={<AuthProvider><SignInPage /></AuthProvider>} />
         <Route path="/verify-email/:id" element={<ActivateAccount/>} />
         <Route path="/forgot-password/:email/:code" element={<ForgotPassword/>} />
         
-        //Protected Routes
+        {/* Protected Routes */}
         <Route element={<AuthProvider><ProtectedRoute ><MainLayout /></ProtectedRoute></AuthProvider>}>
           <Route path="/dashboard" element={<DashboardPage />}>
             <Route path=":dashboardId" element={<DashboardPage />} />
@@ -97,7 +104,6 @@ function App() {
               <Route index element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_LICENSES} redirect={true}><LicensePage /></ProtectedComponent>}/>
               <Route path="import" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_LICENSES} redirect={true}><ExcelImport objectId="licenses"/></ProtectedComponent>}/>
           </Route>
-          <Route path="/checkouts" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_CHECKOUTS} redirect={true}><CheckoutPage /></ProtectedComponent>} />
           <Route path="/invoices" element={<ProtectedComponent requiredPermission={PERMISSIONS.VIEW_INVOICES} redirect={true}><InvoicesPage /></ProtectedComponent>} />
           <Route path="/users">
             <Route path="create" element={<ProtectedComponent requiredPermission={PERMISSIONS.CREATE_USERS} redirect={true}><CreateUser /></ProtectedComponent>} />
