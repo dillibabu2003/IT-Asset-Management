@@ -293,8 +293,8 @@ const handleConfigureDashboard = asyncHandler(async (req,res)=>{
 
     const tilesWithQueries = getTilesWithQueriesAttached(data.tiles);
     const elementsWithQueries = getElementsWithQueriesAttached(data.elements);
-    const tilesWithRemovedIds = tilesWithQueries.map(({...rest}) => rest);
-    const elementsWithRemovedIds = elementsWithQueries.map(({...rest}) => rest);   
+    const tilesWithRemovedIds = tilesWithQueries.map(({_id,...rest}) => rest);
+    const elementsWithRemovedIds = elementsWithQueries.map(({_id,...rest}) => rest);   
     data.tiles = tilesWithRemovedIds;
     data.elements = elementsWithRemovedIds;
 

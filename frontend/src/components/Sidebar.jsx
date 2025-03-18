@@ -104,7 +104,7 @@ function Sidebar({isSideBarOpen,toggleSideBar,...props}) {
       requiredPermission:"view:assets"
     },
     { text: 'Licenses', icon: <Icon name="key" />, id: 'licenses',requiredPermission:"view:licenses" },
-    { text: 'Checkouts', icon: <Icon name="clipboard-list" />, id: 'checkouts',requiredPermission:"view:checkouts" },
+    // { text: 'Checkouts', icon: <Icon name="clipboard-list" />, id: 'checkouts',requiredPermission:"view:checkouts" },
     { text: 'Invoices', icon: <Icon name="receipt" />, id: 'invoices',requiredPermission:"view:invoices" },
     { 
       text: 'Users',

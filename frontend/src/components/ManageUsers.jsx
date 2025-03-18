@@ -206,11 +206,7 @@ function ManageUsers({ behavior, ...props }) {
                                     </TableCell>
                                     {behavior === "edit" &&
                                         <TableCell>
-                                            <Switch
-                                                checked={user.status}
-                                                onChange={() => handleStatusChange(user.id)}
-                                                size="small"
-                                            />
+                                            {user.status}
                                         </TableCell>
                                     }
                                     {behavior === "edit" &&
@@ -370,16 +366,20 @@ function ManageUsers({ behavior, ...props }) {
                                                 </Select>
                                             </FormControl>
                                         </Grid>
-                                        <Grid item xs={12}>
-                                            <FormControlLabel
-                                                control={
-                                                    <Switch
-                                                        checked={editedUser.status}
-                                                        onChange={(e) => handleEditChange('status', e.target.checked)}
-                                                    />
-                                                }
-                                                label="Active Status"
-                                            />
+                                        <Grid item xs={12} md={6}>
+                                             <FormControl fullWidth>
+                                                <InputLabel>Role</InputLabel>
+                                                <Select
+                                                    value={editedUser.status}
+                                                    label="Status"
+                                                    name='status'
+                                                    onChange={(e) => handleEditChange('status', e.target.value)}
+                                                >
+                                                    <MenuItem value="active">Active</MenuItem>
+                                                    <MenuItem value="inactive">Inactive</MenuItem>
+                                                    <MenuItem value="blocked">Blocked</MenuItem>
+                                                </Select>
+                                            </FormControl>
                                         </Grid>
                                     </Grid>
                                     <DialogActions>
