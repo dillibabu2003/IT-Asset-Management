@@ -364,8 +364,8 @@ const handleConfigureDashboard = asyncHandler(async (req, res) => {
   const elementsWithQueries = getElementsWithQueriesAttached(data.elements);
   // eslint-disable-next-line no-unused-vars
   const tilesWithRemovedIds = tilesWithQueries.map(({ _id, ...rest }) => rest);
-  // eslint-disable-next-line no-unused-vars
   const elementsWithRemovedIds = elementsWithQueries.map(
+    // eslint-disable-next-line no-unused-vars
     ({ _id, ...rest }) => rest,
   );
   data.tiles = tilesWithRemovedIds;

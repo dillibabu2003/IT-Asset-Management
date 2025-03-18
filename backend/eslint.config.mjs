@@ -1,7 +1,7 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
-import prettier from "eslint-plugin-prettier";
-import prettierConfig from "eslint-config-prettier";
+import eslintConfigPrettier from "eslint-config-prettier/flat";
+import pluginJest from "eslint-plugin-jest";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -9,11 +9,18 @@ export default [
   { languageOptions: { globals: globals.node } },
   pluginJs.configs.recommended,
   {
-    plugins: { prettier },
+    files: ['**/*.spec.js', '**/*.test.js'],
+    plugins: { jest: pluginJest },
+    languageOptions: {
+      globals: pluginJest.environments.globals.globals,
+    },
     rules: {
-      ...prettier.configs.recommended.rules,
-      "prettier/prettier": "error",
+      'jest/no-disabled-tests': 'warn',
+      'jest/no-focused-tests': 'error',
+      'jest/no-identical-title': 'error',
+      'jest/prefer-to-have-length': 'warn',
+      'jest/valid-expect': 'error',
     },
   },
-  prettierConfig,
+  eslintConfigPrettier,
 ];

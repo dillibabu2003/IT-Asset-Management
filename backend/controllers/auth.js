@@ -75,7 +75,8 @@ const handleRefreshAccessToken = asyncHandler(async (req, res) => {
     refreshToken,
     cleanedEnv.REFRESH_TOKEN_SECRET,
   );
-  if (!refreshToken || !decodedInfo) {
+  const storedRefreshToken = await redisClient.get("REFRESH_TOKEN_" + decodedInfo.id);
+  if(storedRefreshToken != refreshToken){
     throw new ApiError(
       400,
       { error: "Invalid refresh token" },
@@ -83,6 +84,7 @@ const handleRefreshAccessToken = asyncHandler(async (req, res) => {
       null,
     );
   }
+
   const [newAccessToken, newRefreshToken] =
     await generateAccessTokenAndRefreshToken({
       _id: decodedInfo._id,
@@ -133,15 +135,15 @@ const handleLogout = asyncHandler(async (req, res) => {
 const handleForgotPassword = asyncHandler(async (req, res) => {
   const email = req.body.email;
   if (!email) {
-    throw new ApiError(422, null, "Email is required.");
+    throw new ApiError(422, {error: "Email is required."}, "Email is required.");
   }
   const currentUserData = await User.findOne({ email: email });
   console.log("curr :" + currentUserData);
   if (!currentUserData) {
-    throw new ApiError(422, null, "Email is Not valid");
+    throw new ApiError(422, {error: "Email is Not valid"}, "Email is Not valid");
   }
   if (currentUserData.status != "active") {
-    throw new ApiError(422, null, "Your account is inactive or blocked");
+    throw new ApiError(422, {error: "Your account is inactive or blocked"}, "Your account is inactive or blocked");
   }
   const code = Math.floor(100000 + Math.random() * 900000);
   const fetchPromise = await fetch(cleanedEnv.EMAIL_API, {
@@ -169,18 +171,18 @@ const handleForgotPassword = asyncHandler(async (req, res) => {
 const handleResetPassword = asyncHandler(async (req, res) => {
   const { encrypted_email, encrypted_code, new_password } = req.body;
   if (!encrypted_email || !encrypted_code || !new_password) {
-    throw new ApiError(422, null, "Email, code and password are required.");
+    throw new ApiError(422, {error: "Email, code and password are required."}, "Email, code and password are required.");
   }
   const decryptedEmail = decryptData(encrypted_email);
   const decryptedCode = decryptData(encrypted_code);
 
   const storedCode = await redisClient.get(decryptedEmail);
   if (!storedCode || storedCode != decryptedCode) {
-    throw new ApiError(400, null, "Link is invalid or expired.");
+    throw new ApiError(400, {error: "Link is invalid or expired."}, "Link is invalid or expired.");
   }
   const user = await User.findOne({ email: decryptedEmail });
   if (!user) {
-    throw new ApiError(400, null, "Link is invalid or expired.");
+    throw new ApiError(400, {error: "Link is invalid or expired."}, "Link is invalid or expired.");
   }
   user.password = new_password;
   await user.save();
@@ -193,12 +195,12 @@ const handleResetPassword = asyncHandler(async (req, res) => {
 const handleVerifyEmail = asyncHandler(async (req, res) => {
   const id = req.params.id;
   if (!id) {
-    throw new ApiError(422, null, "Invalid verification link.");
+    throw new ApiError(422, {error: "Invalid verification link."}, "Invalid verification link.");
   }
   const email = decryptData(id);
   const user = await User.findOne({ email });
   if (!user) {
-    throw new ApiError(400, null, "Invalid email.");
+    throw new ApiError(400, {error: "Invalid email."}, "Invalid email.");
   }
   if (user.status == "inactive") {
     user.status = "active";
@@ -207,7 +209,7 @@ const handleVerifyEmail = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, null, "Email verified successfully."));
   }
-  throw new ApiError(400, null, "Email is already verified.");
+  throw new ApiError(400, {error: "Email is already verified."}, "Email is already verified.");
 });
 
 module.exports = {
