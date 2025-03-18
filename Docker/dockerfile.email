@@ -1,7 +1,7 @@
 FROM node:alpine
 WORKDIR /usr/src/app
-COPY ./email/package* ./
+COPY package* ./
 RUN npm install
-COPY ./email ./
+COPY ./ ./
 EXPOSE 8885
-CMD ["npm", "start"]
+CMD ["npm","start"]

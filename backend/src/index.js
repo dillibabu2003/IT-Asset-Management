@@ -9,7 +9,7 @@ const PORT = cleanedEnv.PORT;
         await connectToDB;
         await redisClient.connect();
         app.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}`);
+            console.log(`Server is running on ${PORT}`);
         });
     }catch(err){
         console.error(err);

@@ -1,12 +1,12 @@
 services:
   frontend:
     build:
-      context: ../
-      dockerfile: dockerfile.frontend
+      context: ../frontend
+      dockerfile: ../Docker/dockerfile.frontend
       args:
-      - .dockerignore=./.dockerignore
+      - .dockerignore=../Docker/.dockerignore
     ports:
-      - "80:80"
+      - "801:80"
     volumes:
       - ./frontend:/app
     env_file:
@@ -15,10 +15,10 @@ services:
       - backend
   backend:
     build:
-      context: ../
-      dockerfile: dockerfile.backend
+      context: ../backend
+      dockerfile: ../Docker/dockerfile.backend
       args:
-      - .dockerignore=./.dockerignore
+      - .dockerignore=../Docker/.dockerignore
     ports:
       - "8000:8000"
     volumes:
@@ -29,15 +29,19 @@ services:
       - email_server
   email_server:
     build:
-      context: ../
-      dockerfile: dockerfile.email_server
+      context: ../email-server
+      dockerfile: ../Docker/dockerfile.email
       args:
-      - .dockerignore=./.dockerignore
+      - .dockerignore=../Docker/.dockerignore
     ports:
       - "8885:8885"
     volumes:
       - ./email_server:/app
     env_file:
       - ../email-server/.env
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
 
 

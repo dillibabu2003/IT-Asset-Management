@@ -16,7 +16,8 @@ const envSchema=zod.object({
     S3_INVOICES_FOLDER: zod.string({message:"S3 invoices folder name is required"}),
     AWS_SECRET_KEY: zod.string({message:"AWS secret key is required"}),
     AWS_ACCESS_KEY: zod.string({message:"AWS access key is required"}),
-    EMAIL_API: zod.string({message: "Email Api is required."})
+    EMAIL_API: zod.string({message: "Email Api is required."}),
+    CORS_FRONTEND_BASE_URI: zod.string({message: "CORS frontend base uri is required."}),
 });
 
 const loginSchema = zod.object({

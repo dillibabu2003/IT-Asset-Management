@@ -2,13 +2,14 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const cors=require("cors");
+const cleanedEnv = require('../utils/cleanedEnv');
 
 const app = express();
 
 const indexRouter = require('../routes/index');
 
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: cleanedEnv.CORS_FRONTEND_BASE_URI,
     credentials: true
 }));
 // app.use(bodyParser.urlencoded())
