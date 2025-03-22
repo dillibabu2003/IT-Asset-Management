@@ -127,7 +127,6 @@ const createUser = asyncHandler(async (req, res) => {
       "Unable to create user. Failed to send email verification link",
     );
   }
-  console.log(user);
   const userInfo = await user.save({ session: session });
   await initailizeAllObjectsFieldsAsVisibleWithUserid(userInfo._id, session);
   await session.commitTransaction();
@@ -143,7 +142,6 @@ const createUser = asyncHandler(async (req, res) => {
 
 const getOtherUserData = asyncHandler(async (req, res) => {
   const userId = req.body.user_id;
-
   const userData = await User.findOne({ user_id: userId });
   if (!userData) {
     throw new ApiError(400, null, "Invalid user id");
