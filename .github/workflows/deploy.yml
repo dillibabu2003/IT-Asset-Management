@@ -14,6 +14,7 @@ jobs:
   # Job: Setup EC2 Instance
   setup-ec2:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Install AWS CLI
         uses: aws-actions/configure-aws-credentials@v1
@@ -89,6 +90,7 @@ jobs:
   # Job: Deploy Frontend
   frontend:
     runs-on: ubuntu-latest
+    environment: production
     needs: 
       - setup-ec2
       - backend
@@ -134,6 +136,7 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
+    environment: production
     needs: 
       - setup-ec2
       - redis
@@ -179,6 +182,7 @@ jobs:
 
   email:
     runs-on: ubuntu-latest
+    environment: production
     needs: setup-ec2
     if: ${{ github.event_name == 'push' && contains(join(github.event.paths, ','), 'email-server/') }}
     steps:
@@ -221,6 +225,7 @@ jobs:
           rm private_key.pem
   redis:
     runs-on: ubuntu-latest
+    environment: production
     needs: setup-ec2
     steps:
       - name: Deploy Redis to EC2
