@@ -57,13 +57,6 @@ async function executeAssignItemsCheckoutTransaction(
       const employeeDetails = await validateEmployeeAndReturnEmployeeDetails(
         employees_info[i].employee_id,
       );
-      if (!employeeDetails) {
-        throw new ApiError(
-          400,
-          null,
-          `Employee does not exist with id ${employees_info[i].employee_id}`,
-        );
-      }
       const totalCheckoutsTillNowOfEmployee = await Checkout.countDocuments(
         { employee_id: employeeDetails._id },
         { session: session },
@@ -174,13 +167,7 @@ const assignItem = asyncHandler(async (req, res) => {
   if (!model) {
     throw new ApiError(400, null, "Invalid Checkout");
   }
-  await executeAssignItemsCheckoutTransaction(
-    model,
-    [serial_no],
-    object_name,
-    [employee_info],
-    1,
-  );
+  await executeAssignItemsCheckoutTransaction(model,[serial_no],object_name,[employee_info],1,);
   res.status(200).json(new ApiResponse(200, null, "Checkout successfull"));
 });
 
@@ -188,11 +175,7 @@ const assignBulkItems = asyncHandler(async (req, res) => {
   const { object_name, info_to_assign } = req.body;
   //Write zod schema for this
   if (!object_name || !info_to_assign || info_to_assign.length == 0) {
-    throw new ApiError(
-      422,
-      null,
-      "Invalid checkout information object_name or info_to_assing is missing.",
-    );
+    throw new ApiError(422,null,"Invalid checkout information object_name or info_to_assing is missing.",);
   }
   const model = getModelByObjectName(object_name);
   if (!model) {
@@ -217,8 +200,6 @@ const assignBulkItems = asyncHandler(async (req, res) => {
 
 const unAssignItem = asyncHandler(async (req, res) => {
   const { object_name, info_to_unassign } = req.body;
-  console.log(req.body);
-
   //Write zod schema for this
   if (
     !object_name ||
@@ -226,11 +207,7 @@ const unAssignItem = asyncHandler(async (req, res) => {
     !info_to_unassign.serial_no ||
     !info_to_unassign.employee_id
   ) {
-    throw new ApiError(
-      422,
-      null,
-      "Invalid checkout information item type or employee info or filters or required count is missing.",
-    );
+    throw new ApiError(422,null,"Invalid checkout information item type or employee info or filters or required count is missing.");
   }
   const model = getModelByObjectName(object_name);
   if (!model) {
@@ -247,11 +224,7 @@ const unAssignBulkItems = asyncHandler(async (req, res) => {
   const { object_name, info_to_unassign } = req.body;
   //Write zod schema for this
   if (!object_name || !info_to_unassign || info_to_unassign.length == 0) {
-    throw new ApiError(
-      422,
-      null,
-      "Invalid checkout information item type or employee info or filters or required count is missing.",
-    );
+    throw new ApiError(422,null,"Invalid checkout information item type or employee info or filters or required count is missing.");
   }
   const model = getModelByObjectName(object_name);
   if (!model) {
@@ -269,13 +242,13 @@ const unAssignBulkItems = asyncHandler(async (req, res) => {
 const getPaginatedCheckouts = asyncHandler(async (req, res) => {
   const { page, limit } = req.query;
   if (!page || !limit) {
-    throw new ApiError(400, "Invalid query parameters");
+    throw new ApiError(422, {error: "Invalid query parameters"},"Invalid query parameters");
   }
   const parsedPageNumber = parseInt(page);
   const parsedDocumentsLimit = parseInt(limit);
   const skip = (parsedPageNumber - 1) * parsedDocumentsLimit;
   if (isNaN(parsedPageNumber) || isNaN(parsedDocumentsLimit)) {
-    throw new ApiError(400, "Invalid query parameters");
+    throw new ApiError(422, {error: "Invalid query parameters"},"Invalid query parameters");
   }
   const totalCheckouts = await Checkout.countDocuments();
   const checkouts = await Checkout.find()
