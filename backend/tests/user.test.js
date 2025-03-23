@@ -1,8 +1,11 @@
 const request = require("supertest");
 const app = require("../src/app");
 const User = require("../models/user");
+const Permission = require("../models/permission");
 const redisClient = require("../config/redis");
 const jwt = require("jsonwebtoken");
+const ApiError = require("../utils/ApiError");
+const { encryptData } = require("../utils/encrypt");
 const { uploadFileToS3 } = require("../services/s3");
 const { hitEmailServerApi} = require("../services/email");
 const mongoose = require("mongoose");
@@ -68,6 +71,9 @@ jest.mock("jsonwebtoken", () => {
     TokenExpiredError: actualJwt.TokenExpiredError,
   };
 });
+jest.mock("../models/permission", () => ({
+  findOne: jest.fn(),
+}));
 jest.mock("../middlewares/authorizeClient", () => {
   return jest.fn(() => {
     return async (req, res, next) => {
@@ -88,6 +94,15 @@ jest.mock("../services/email", () => ({
 describe("User Controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    const mockUser = {
+      _id: "123",
+      user_id: "U00000000000001",
+      email: "test@example.com",
+      role: "admin",
+      status: "active",
+      password: "password123",
+      save: jest.fn().mockResolvedValue(true),
+    };
     const demoDecodedToken = { _id: "6bdfjdkj45763", id: "DBOX001", email: "dboxtest@test.com", role: "admin" };
     jwt.verify.mockResolvedValueOnce(demoDecodedToken);
     redisClient.get.mockResolvedValue("ACCESS_TOKEN_"+demoDecodedToken.id);
