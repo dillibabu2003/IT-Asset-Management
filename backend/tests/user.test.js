@@ -1,5 +1,5 @@
 const request = require("supertest");
-const app = require("../src/app"); // Import your Express app
+const app = require("../src/app");
 const User = require("../models/user");
 const Permission = require("../models/permission");
 const redisClient = require("../config/redis");
