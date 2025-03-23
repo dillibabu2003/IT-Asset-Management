@@ -153,8 +153,8 @@ const getOtherUserData = asyncHandler(async (req, res) => {
 
 const updateUserDetails = asyncHandler(async (req, res) => {
   const userId = req.body.user_id;
-  console.log(req.body);
-  console.log("User id:", userId);
+  // console.log(req.body);
+  // console.log("User id:", userId);
   const userData = await User.findOneAndUpdate({ user_id: userId }, req.body);
   if (!userData) {
     throw new ApiError(400, null, "Invalid user id");
@@ -165,7 +165,7 @@ const updateUserDetails = asyncHandler(async (req, res) => {
 });
 const deleteUser = asyncHandler(async (req, res) => {
   const userId = req.body.user_id;
-  console.log("User id:", userId);
+  // console.log("User id:", userId);
   const deletedUser = await User.findOneAndDelete({ user_id: userId });
   if (!deletedUser) {
     throw new ApiError(404, null, "User not found");
@@ -200,7 +200,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 const searchUsers = asyncHandler(async (req, res) => {
   const { searchKey } = req.params;
-  console.log("Search Key:", searchKey);
+  // console.log("Search Key:", searchKey);
   const users = await User.aggregate([
     {
       $search: {

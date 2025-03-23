@@ -43,7 +43,7 @@ describe("Auth Controller", () => {
 
   describe("POST /auth/login", () => {
     afterEach(() => {
-      console.log("Resetting all mocks");
+      // console.log("Resetting all mocks");
       jest.resetAllMocks();
     });
     it("should return 200 and tokens for valid credentials", async () => {
@@ -146,8 +146,8 @@ describe("Auth Controller", () => {
     });
 
     it("should return 400 for invalid refresh token", async () => {
-      jwt.verify.mockImplementation((token,secret) => {
-        console.log(secret, token);
+      jwt.verify.mockImplementation(() => {
+        // console.log(secret, token);
         throw new ApiError(400, { error: "Invalid refresh token" }, "Invalid refresh token");
       }
       );
@@ -160,8 +160,8 @@ describe("Auth Controller", () => {
     });
 
     it("should return 400 for missing refresh token", async () => {
-      jwt.verify.mockImplementation((token,secret) => {
-        console.log(secret, token);
+      jwt.verify.mockImplementation(() => {
+        // console.log(secret, token);
         throw new ApiError(400, { error: "Invalid refresh token" }, "Invalid refresh token");
       }
       );
@@ -172,8 +172,8 @@ describe("Auth Controller", () => {
     });
 
     it("should return 400 for expired refresh token", async () => {
-      jwt.verify.mockImplementation((token,secret) => {
-        console.log(secret, token);
+      jwt.verify.mockImplementation(() => {
+        // console.log(secret, token);
         throw new jwt.JsonWebTokenError("Token expired", new jwt.TokenExpiredError("Token expired", new Date()));
       }
       );
@@ -241,7 +241,7 @@ describe("Auth Controller", () => {
         .send({});
 
       expect(response.status).toBe(422);
-      console.log(response.body);
+      // console.log(response.body);
       
       expect(response.body.errors.error).toBe("Email is required.");
     });
