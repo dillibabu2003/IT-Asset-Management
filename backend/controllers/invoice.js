@@ -3,7 +3,7 @@ const Invoice = require("../models/invoice");
 const License = require("../models/license");
 const Asset = require("../models/asset");
 const ApiResponse = require("../utils/ApiResponse");
-const { default: mongoose } = require("mongoose");
+const mongoose = require("mongoose");
 const ApiError = require("../utils/ApiError");
 const UserColumnVisibilities = require("../models/userPreference");
 
@@ -28,6 +28,7 @@ async function fetchPaginatedDocuments(limit, skip) {
 
 const createInvoice = asyncHandler(async (req, res) => {
   const allInvoiceData = req.body;
+  console.log("allInvoiceData: " + JSON.stringify(allInvoiceData));
   const requiredInvoicedata = {};
   //Creating Invoices
   requiredInvoicedata.upload_date = new Date();
@@ -40,10 +41,11 @@ const createInvoice = asyncHandler(async (req, res) => {
   requiredInvoicedata.invoice_filename = allInvoiceData.invoice_filename;
   requiredInvoicedata.data = {};
   const session = await mongoose.startSession();
+  console.log("requiredInvoicedata: " + JSON.stringify(requiredInvoicedata));
   try {
     session.startTransaction();
     const invoice = new Invoice(requiredInvoicedata);
-    console.log(invoice);
+    console.log("Invoice ------------->"+invoice);
     await invoice.save({ session: session });
 
     // Adding Licenses
@@ -105,20 +107,7 @@ const createInvoice = asyncHandler(async (req, res) => {
     session.endSession();
   }
 });
-const updateInvoice = asyncHandler(async (req, res) => {
-  try {
-    const invoice = await Invoice.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (invoice) {
-      res.json(invoice);
-    } else {
-      res.status(404).json({ message: "Invoice not found" });
-    }
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
+
 const deleteInvoice = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   try {
@@ -216,7 +205,6 @@ const getUserColumnVisibilities = asyncHandler(async (req, res) => {
 });
 module.exports = {
   createInvoice,
-  updateInvoice,
   deleteInvoice,
   getPaginatedInvoices,
   getInvoiceById,

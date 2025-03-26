@@ -1,7 +1,7 @@
 const redisClient = require("../config/redis"); // Assuming you have a redis client configured
 const Permission = require("../models/permission"); // Assuming you have a database connection and models set up
 const ApiError = require("../utils/ApiError");
-
+ 
 const authorizeClient = (requiredPermissions) => {
   return async (req, res, next) => {
     try {
@@ -9,9 +9,9 @@ const authorizeClient = (requiredPermissions) => {
       // console.log(req.body);
       const userRole = req.user.role;
       const redisKey = `${userRole}:permissions`;
-
+ 
       let permissions = await redisClient.get(redisKey);
-
+ 
       if (!permissions) {
         // Fetch permissions from the database
         const permissionDocument = await Permission.findOne({
@@ -22,9 +22,9 @@ const authorizeClient = (requiredPermissions) => {
       } else {
         permissions = JSON.parse(permissions);
       }
-
+ 
       let permissionsEnabled = true;
-
+ 
       for (const permission of requiredPermissions) {
         if (!permissions.includes(permission)) {
           permissionsEnabled = false;
@@ -33,7 +33,7 @@ const authorizeClient = (requiredPermissions) => {
       }
       // console.log(requiredPermissions);
       // console.log(permissions);
-
+ 
       if (permissionsEnabled) {
         return next();
       } else {
@@ -46,5 +46,5 @@ const authorizeClient = (requiredPermissions) => {
     }
   };
 };
-
+ 
 module.exports = authorizeClient;

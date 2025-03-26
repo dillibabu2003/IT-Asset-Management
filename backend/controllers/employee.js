@@ -2,7 +2,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const Employee = require("../models/employee");
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
-
+ 
 const getEmployeesBySearchTerm = asyncHandler(async (req, res) => {
   const { search_key } = req.body;
   if (search_key == undefined) {
@@ -44,7 +44,7 @@ const getEmployeesBySearchTerm = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, employeeData, `Users fetched successfully`));
 });
-
+ 
 module.exports = {
   getEmployeesBySearchTerm,
 };

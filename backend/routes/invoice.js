@@ -3,7 +3,6 @@ const authorizeClient = require("../middlewares/authorizeClient");
 const invoiceRouter = express.Router();
 const {
   createInvoice,
-  updateInvoice,
   deleteInvoice,
   getPaginatedInvoices,
   getInvoiceById,
@@ -26,15 +25,6 @@ invoiceRouter.post(
     authorizeClient(["create:invoices"])(req, res, next);
   },
   createInvoice,
-);
-
-// // Update invoice
-invoiceRouter.put(
-  "/update",
-  (req, res, next) => {
-    authorizeClient(["edit:invoices"])(req, res, next);
-  },
-  updateInvoice,
 );
 
 // Delete invoice
